@@ -1,0 +1,51 @@
+body {
+	background: var(--background-body); color: var(--color-fontsize-selector); font-family: sans-serif;
+}
+
+ul { list-style: none; border: 1px solid var(--color-statusbar); border-radius: 5px; font-size: 2rem; }
+li { display: inline; margin-right: 1rem; }
+a, a:visited { text-decoration: none; color: var(--color-statusbar); }
+a:hover { text-decoration: none; color: var(--color-fontsize-selector); }
+#db_options { border: 1px solid var(--color-statusbar); padding: 2%; width: 96%; border-radius: 5px;}
+#db_options legend, #db_options label { font: sans-serif condensed; }
+
+#db_results th { font-variant: small-caps; font-weight: bold; }
+#db_results tbody > :nth-child(even) { background-color: var(--background-row-even); }
+#db_results td { max-width: 12rem; overflow: hidden; }
+
+#db_headline { background-image: url('/wp-content/themes/ntfn2/images/DGPPN_Logo.png'); background-repeat: no-repeat; background-size: auto 1.5rem; background-position: center right; }
+
+.db_formbox {float: left; width: 60%;}
+label {float: left; width: 20%; text-align: left; padding-right: 1%;}
+input[type="button"] { margin: 0 auto; float: left; }
+
+#backbtn { display: none; }
+
+#message { margin: 0 auto; }
+#message.true { background: var(--background-goodmessage); color: #000000; }
+#message.false { background: var(--background-badmessage); color: #ffffff; }
+
+#title {
+	text-align: center;
+	color: transparent;
+	font-family: sans-serif;
+	font-size: 3rem;
+	font-weight: bold;
+	margin: 2rem;
+	background: linear-gradient(#949494,#747474);
+	background-clip: text;
+}
+
+#title::after {
+	position: relative;
+	top: -1rem;
+	content: ' ';
+	display: inline-block;
+	width: 1.5rem;
+	height: 1.5rem;
+	background-image: url('/img/cclogo.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+

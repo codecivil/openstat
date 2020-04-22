@@ -1,0 +1,9 @@
+html {
+	--background-body: linear-gradient(#4e4e4e,#404040) no-repeat;
+	--background-wrapper: linear-gradient(#afafaf, #adadad);
+	--background-loginform: linear-gradient(#ffffff,#fffff0);
+	--background-login-error: #ffaaaa;
+	--background-login-actionneeded: #bdbdff;
+	--color-loginform: #4e4e4e;
+	--color: #111;
+}

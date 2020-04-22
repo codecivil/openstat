@@ -1,0 +1,30 @@
+body {
+	--background-body: linear-gradient(#4e4e4e,#404040);
+	--background-statusbar: #000;
+	--background-important: #fafaf0;
+	--background-addfilters: #f4f4f4;
+	--background-filters: #e4e4e4;
+	--background-functions: #3e883e /*#8787dd*/;
+	--background-config: #ececec;
+	--background-tables: #ececec;
+	--background-resultswrapper: linear-gradient(#afafaf, #adadad);
+	--background-statwrapper: linear-gradient(#ffffff,#fffff0);
+	--background-detailswrapper: linear-gradient(#ffffff,#fffff0);
+	--background-goodmessage: #eeffee;
+	--background-badmessage: #ffaaaa;
+	--background-action: #3e883e;
+	/*--background-detailswrapper: #fff;*/
+	--background-row-odd: transparent;
+	--background-row-even: rgb(128,128,128,0.1);
+	--background-details: linear-gradient(#fffff0,#ffffe0);	
+	--background-details-new: linear-gradient(#f4fff4,#f0fff0);	
+	--color-statusbar: #8e8e8e;
+	--color-resultswrapper: #000;
+	--color-statwrapper: #000;
+	--color-detailswrapper: #000;
+	--color-hits: #000;
+	--color-unique: #3e883e;	
+	--color-fontsize-selector: #c4c4c4;
+	--color-sidebar-inactive: #808080;
+	--color-sidebar-changed: #3e883e;	
+}

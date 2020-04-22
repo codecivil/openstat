@@ -1,0 +1,3 @@
+<?php
+$fileroot = "/mnt/opsz";
+?>

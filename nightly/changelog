@@ -1,0 +1,17 @@
+11.4.2020
+
+* added decryption test in functio login of class OpenStatAuth.
+
+19.2.2020
+
+* notes on import of csv files are added to the import popup
+
+v1.1.3
+======
+
+17.2.2020
+
+* replace fieldsets by divs: firefox cannot distribute fieldsets to more than one printing page, so printing of large forms was not possible 
+* named changeConfig executions: so php waits for return before continuing, most frequently by reading the config!
+* new functionality: importCSV for multiple tables, exportCSV
+* new function scope: RESULTDETAILS, used for exportCSV
