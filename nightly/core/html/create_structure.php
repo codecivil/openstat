@@ -669,7 +669,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 		case 'os_users':
 			switch($PARAMETER['dbAction']) {
 				case 'insert':
-				//insert encrypted role password into os_passwd
+				//insert encrypted role password into os_passwords
 					$_stmt_array = array();
 					$_stmt_array['stmt'] = "SELECT id,roleid FROM os_users WHERE username = ?";
 					$_stmt_array['str_types'] = "s";
@@ -720,7 +720,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 						$_stmt_array['arr_values'][] = sodium_bin2hex($nonce);
 						_execute_stmt($_stmt_array,$conn);
 						}
-					//insert defaultconfig, create config view and grant permissons on view
+					//insert defaultconfig, create config and users views and grant permissons on views
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "SELECT rolename,defaultconfig FROM os_roles WHERE id = ?;";
 					$_stmt_array['str_types'] = "i";
@@ -740,6 +740,12 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "GRANT SELECT,UPDATE,INSERT,DELETE ON os_userconfig_".$_id." TO ".$_select['rolename'].";";
+					_execute_stmt($_stmt_array,$conn); 
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW os_users_".$_id." AS SELECT username FROM os_users WHERE id = '".$_id."';";
+					_execute_stmt($_stmt_array,$conn); 
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "GRANT SELECT,UPDATE ON os_users_".$_id." TO ".$_select['rolename'].";";
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";

@@ -605,3 +605,11 @@ function selectRange(event,svg,y_max,y_total,type,statArrayString) {
 //} catch (err) { console.log(err); }
 
 function exportCSV() { return false; }
+
+function changeUserName(form,arg,_response) {
+	if ( _response.indexOf('false') > -1 ) {
+		document.getElementById('userName').classList.add("error");
+	} else {
+		document.getElementById('userName').classList.remove("error") ;
+	}
+}

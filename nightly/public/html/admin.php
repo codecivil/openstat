@@ -78,15 +78,15 @@ $_ext = scandir('../xpi',SCANDIR_SORT_DESCENDING)[0];
 				if ( isset($_success['error']) ) { echo($_success['error']); }; 
 				if ( isset($_GET['e']) AND $_GET['e'] == "noextension" ) { ?>
 					<p>Bitte aktiviere die <b>openStat</b>-Erweiterung für Firefox.</p>
-					<p>Wenn Du sie noch nicht installierst hast, klicke hier:
-					<a href="xpi/openStat-1.0-fx.xpi">openStat-1.0-fx.xpi</a>
-					und erlaube die Aktivierung der Erweiterung in privaten Fenstern.</p>
+					<p>Wenn Du sie noch nicht installiert hast, kannst Du das hier tun:</p>
+					<p><a href="https://addons.mozilla.org/addon/openstat/">https://addons.mozilla.org/addon/openstat/</a></p>
+					<p>und <b>erlaube die Aktivierung der Erweiterung in privaten Fenstern</b>.</p>
 					<p>Benutze bitte den "Zurück"-Button des Browsers, um die Seite danach neu zu laden.</p>
 				<?php };
 				if ( isset($_GET['e']) AND $_GET['e'] == "extensionupdate" ) { ?>
 					<p>Bitte aktualisiere die <b>openStat</b>-Erweiterung für Firefox:</p>
-					<a href="xpi/<?php echo($_ext); ?>"><?php echo($_ext); ?></a>
-					und erlaube die Aktivierung der Erweiterung in privaten Fenstern.</p>
+					<p><a href="https://addons.mozilla.org/addon/openstat/">https://addons.mozilla.org/addon/openstat/</a></p>
+					<p>und <b>erlaube die Aktivierung der Erweiterung in privaten Fenstern</b>.</p>
 				<?php };
 				if ( isset($_GET['e']) AND $_GET['e'] == "notprivate" ) { ?>
 					Bitte öffne das Administrationspanel (ohne Parameter) in einem privaten Fenster (Strg+Umschalt+P). 

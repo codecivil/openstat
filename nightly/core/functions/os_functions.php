@@ -85,6 +85,13 @@ function newEntry(array $PARAM,$conn) {
 				<label for="db_search">Suche</label>
 				<input type="text" name="db_search" id="db_search">
 		-->
+				<div class="actionwrapper">
+					<label for="_action<?php echo($table.$id[0].$rnd); ?>_sticky" class="action">Aktion</label>
+					<select id="_action<?php echo($table.$id[0].$rnd); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction',''); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this); document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+						<option value="" selected>[Bitte erst nach Bearbeitung wählen]</option>
+						<option value="insert">als neuen Eintrag anlegen</option>
+					</select>
+				</div>
 				<?php 
 				// to do: mass edit: do here the multiple $id s and edit dbAction 'insert' to allow for multiple inserts (like in 'edit')
 				foreach( $PARAMETER as $key )
@@ -125,13 +132,6 @@ function newEntry(array $PARAM,$conn) {
 				}
 				
 				?>
-				<div class="action">
-					<label for="_action<?php echo($rnd); ?>" class="action">Aktion</label>
-					<select id="_action<?php echo($rnd); ?>" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,'<?php html_echo(json_encode($PARAMTYPE)); ?>'); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($rnd); ?>'); callFunction(this.closest('form'),'calAction',''); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this); document.getElementById('_action<?php echo($rnd); ?>').value = ''; return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
-						<option value="" selected>[Bitte wählen]</option>
-						<option value="insert">als neuen Eintrag anlegen</option>
-					</select>
-				</div>
 				<input type="submit" hidden>	
 			<//div> <!-- END OF div of class fieldset -->
 		</form>
@@ -457,4 +457,15 @@ function exportCSV (array $PARAM, $conn) {
 	<?php
 	//How to destroy this file most efficiently? By using dataURLs, so the file is only created at the client!
 	$_content = '';
+}
+
+function changeUserName(array $PARAM, $conn) {
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "UPDATE os_users_".$_SESSION['os_user']." SET username=? ";
+	$_stmt_array['str_types'] = "s";
+	$_stmt_array['arr_values'] = array();
+	$_stmt_array['arr_values'][] = $PARAM['userName'];
+	unset($_result_array);
+	$_result_array = _execute_stmt($_stmt_array,$conn); 
+	return $_result_array['dbMessageGood'];			
 }

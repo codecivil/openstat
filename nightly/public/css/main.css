@@ -19,6 +19,7 @@ hr, .clear { clear: both; }
 .bold { font-weight: bold; }
 .left { float: left; }
 .filelink { color: var(--color-filelink); cursor: pointer; }
+.error { color: red; }
 input,select,textarea { font-size: 1rem;}
 input[type='checkbox'] + label, label.orand { position: relative; top: -0.2rem; }
 /*label:active { filter: invert(100%); transition: 0s ease; }*/
@@ -52,6 +53,7 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #user { border: 1px var(--color-statusbar) solid; border-radius: 5px; }
 #statusbar #opszInfo + div { display: none; font-size: 0.7rem; overflow-y: scroll; }
 #statusbar #opszInfo:checked + div { display: block; }
+#statusbar #loggedin input { border: none; background: transparent; font-weight: bold; }
 
 #important, #alsoimportant { 
 	font: 1rem sans-serif;

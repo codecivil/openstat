@@ -104,7 +104,11 @@ $_config = getConfig($conn);
 					</label>
 				</form>
 			</div>
-			<div id="loggedin"><b><?php echo($_SESSION['os_username']); ?></b> als <b><?php
+			<div id="loggedin">
+				<form method="POST" id="usernameForm" onsubmit="callFunction(this,'changeUserName','',false,'','changeUserName',''); return false;" class="inline">
+					<input id="userName" name="userName" type="text" value="<?php echo($_SESSION['os_username']); ?>" title="Geänderte Benutzernamen werden erst beim nächsten Login aktiv.">
+				</form>
+				als <b><?php
 				if ( $_SESSION['os_parent'] > 0 ) {
 					echo($_SESSION['os_parentname']); 
 				} else {

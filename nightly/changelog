@@ -1,6 +1,14 @@
+v1.1.4
+======
+
+24.4.2020
+
+* action form is now sticky in newEntry
+* username can be changed by clicking it (red font color if name already exists)
+
 11.4.2020
 
-* added decryption test in functio login of class OpenStatAuth.
+* added decryption test in function login of class OpenStatAuth.
 
 19.2.2020
 
