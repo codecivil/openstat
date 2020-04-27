@@ -53,7 +53,7 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #user { border: 1px var(--color-statusbar) solid; border-radius: 5px; }
 #statusbar #opszInfo + div { display: none; font-size: 0.7rem; overflow-y: scroll; }
 #statusbar #opszInfo:checked + div { display: block; }
-#statusbar #loggedin input { border: none; background: transparent; font-weight: bold; }
+#statusbar #loggedin input { border: none; background: transparent; font-weight: bold; color: var(--color-statusbar); }
 
 #important, #alsoimportant { 
 	font: 1rem sans-serif;
