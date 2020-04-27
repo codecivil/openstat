@@ -19,7 +19,7 @@ hr, .clear { clear: both; }
 .bold { font-weight: bold; }
 .left { float: left; }
 .filelink { color: var(--color-filelink); cursor: pointer; }
-.error { color: red; }
+.error { color: red !important; }
 input,select,textarea { font-size: 1rem;}
 input[type='checkbox'] + label, label.orand { position: relative; top: -0.2rem; }
 /*label:active { filter: invert(100%); transition: 0s ease; }*/
@@ -50,6 +50,7 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #colorsForm legend { display: inline; }
 #statusbar :checked + label { color: var(--color-fontsize-selector); }
 #statusbar #usermenu #logout { font-size: 1.2rem; border-right: 1px var(--color-statusbar) dashed; }
+#statusbar #usermenu #loggedin { border-right: 1px var(--color-statusbar) dashed; }
 #statusbar #user { border: 1px var(--color-statusbar) solid; border-radius: 5px; }
 #statusbar #opszInfo + div { display: none; font-size: 0.7rem; overflow-y: scroll; }
 #statusbar #opszInfo:checked + div { display: block; }

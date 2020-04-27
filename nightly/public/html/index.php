@@ -46,7 +46,8 @@ require_once('../../core/getParameters.php');
 */
 
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'logout' ) { logout(); }
-if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] != 'logout' ) { logout('login.php?e='.$PARAMETER['submit']); }
+if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'changePassword' ) { logout('changePassword.php'); }
+if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] != 'logout' AND $PARAMETER['submit'] != 'changePassword' ) { logout('login.php?e='.$PARAMETER['submit']); }
 /*if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'noextension' ) { logout('login.php?e=noextension'); }
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'notprivate' ) { logout('login.php?e=notprivate'); }
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'extensionupdate' ) { logout('login.php?e=extensionupdate'); }
@@ -106,7 +107,7 @@ $_config = getConfig($conn);
 			</div>
 			<div id="loggedin">
 				<form method="POST" id="usernameForm" onsubmit="callFunction(this,'changeUserName','',false,'','changeUserName',''); return false;" class="inline">
-					<input id="userName" name="userName" type="text" value="<?php echo($_SESSION['os_username']); ?>" title="Geänderte Benutzernamen werden erst beim nächsten Login aktiv.">
+					<input id="userName" name="userName" type="text" value="<?php echo($_SESSION['os_username']); ?>" title="Benutzernamen ändern">
 				</form>
 				als <b><?php
 				if ( $_SESSION['os_parent'] > 0 ) {
@@ -115,6 +116,15 @@ $_config = getConfig($conn);
 					echo($_SESSION['os_rolename']); 				
 				} ?>
 				</b>
+			</div>
+			<div id="changePassword">
+				<form method="post" id="changePasswordForm">
+					<!-- to be implemented -->
+					<!-- <input type="submit" name="submit" value="changePassword" id="changePwdBtn" hidden /> -->
+					<label for="changePwdBtn" class="disabled">  <!-- disabled until implemented -->
+						<i class="fas fa-key"></i>
+					</label>
+				</form>				
 			</div>
 		</div>
 		<div id="fontsize">

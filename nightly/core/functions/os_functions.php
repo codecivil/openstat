@@ -468,5 +468,10 @@ function changeUserName(array $PARAM, $conn) {
 	$_stmt_array['arr_values'][] = $PARAM['userName'];
 	unset($_result_array);
 	$_result_array = _execute_stmt($_stmt_array,$conn); 
-	return $_result_array['dbMessageGood'];			
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "SELECT username from os_users_".$_SESSION['os_user'];
+	unset($_result_username);
+	$_SESSION['os_username'] = execute_stmt($_stmt_array,$conn)['result']['username'][0];
+//	return $_result_array['dbMessageGood'];			
+	return $_SESSION['os_username'];			
 }
