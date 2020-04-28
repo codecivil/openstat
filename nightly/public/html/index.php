@@ -46,7 +46,12 @@ require_once('../../core/getParameters.php');
 */
 
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'logout' ) { logout(); }
-if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'changePassword' ) { logout('changePassword.php'); }
+if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'changePassword' ) { 
+	$vtime = floor(time()/300);
+	$v = hash("sha512", $vtime.$_SESSION['os_user'].$_SESSION['os_dbpwd'], false);
+	$u = $_SESSION['os_username'];
+	logout('html/changePassword.php?v='.$v.'&u='.$u);
+}
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] != 'logout' AND $PARAMETER['submit'] != 'changePassword' ) { logout('login.php?e='.$PARAMETER['submit']); }
 /*if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'noextension' ) { logout('login.php?e=noextension'); }
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'notprivate' ) { logout('login.php?e=notprivate'); }
@@ -120,8 +125,8 @@ $_config = getConfig($conn);
 			<div id="changePassword">
 				<form method="post" id="changePasswordForm">
 					<!-- to be implemented -->
-					<!-- <input type="submit" name="submit" value="changePassword" id="changePwdBtn" hidden /> -->
-					<label for="changePwdBtn" class="disabled">  <!-- disabled until implemented -->
+					<input type="submit" name="submit" value="changePassword" id="changePwdBtn" hidden /> 
+					<label for="changePwdBtn" class="submit">  <!-- disabled until implemented -->
 						<i class="fas fa-key"></i>
 					</label>
 				</form>				
