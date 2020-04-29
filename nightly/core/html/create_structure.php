@@ -42,7 +42,7 @@ foreach($_POST as $key=>$value)
 	if ( $value != 'none' AND $value != '' ) {
 		$PARAMETER[$key] = $value;
 	}
-	if ( $key == "pwdhash" AND in_array($_POST['dbAction'],array("delete","insert")) ) {
+	if ( $key == "pwdhash" AND in_array($_POST['dbAction'],array("delete","insert","edit")) ) {
 		switch($PARAMETER['table']) {
 			case 'os_users':
 				$PARAMETER['key'] = $PARAMETER['pwdhash'];
@@ -750,7 +750,48 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";
 					//_execute_stmt($_stmt_array,$conn); 						
-					break;						
+					break;
+				case 'edit':
+				//insert encrypted role password into os_passwords
+					$_stmt_array = array();
+					$_stmt_array['stmt'] = "SELECT id,roleid FROM os_users WHERE username = ?";
+					$_stmt_array['str_types'] = "s";
+					$_stmt_array['arr_values'] = array();
+					$_stmt_array['arr_values'][] = $PARAMETER['username'];
+					$_result_array = execute_stmt($_stmt_array,$conn,true); $_result = $_result_array['result'][0];
+					if ( isset($_result) ) {
+						$_id = $_result['id'];
+						$_roleid = $_result['roleid'];
+					}
+					unset($_stmt_array);
+					$_stmt_array['stmt'] = "SELECT password,nonce,salt FROM os_passwords WHERE userid = (SELECT id FROM os_users WHERE username = (SELECT rolename FROM os_roles WHERE id = '".$PARAMETER['roleid']."') )";
+					$_result_array = _execute_stmt($_stmt_array,$conn); $_result=$_result_array['result'];
+					$_result_user = array();
+					if ( $_result AND $_result->num_rows > 0 ) {
+						while ($row=$_result->fetch_assoc()) {
+							foreach ($row as $key=>$value) {
+									$_result_user[$key] = sodium_hex2bin($value);
+//										$_result_user[$key] = $value;
+							}
+						}
+					} else { $_stmt_array['error'] = "Kein Rolleneintrag gefunden."; break; }
+					$_result_user['key'] = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$PARAMETER['rolepwd'],$_result_user['salt'],SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
+					unset($PARAMETER['rolepwd']); //too early?
+					$dbpwd = sodium_crypto_secretbox_open($_result_user['password'],$_result_user['nonce'],$_result_user['key']);
+					$salt = random_bytes(SODIUM_CRYPTO_PWHASH_SALTBYTES);
+					$nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+					$PARAMETER['genkey'] = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$PARAMETER['key'],$salt,SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
+					$passwd = sodium_crypto_secretbox($dbpwd,$nonce,$PARAMETER['genkey']);
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "UPDATE os_passwords SET password=?, salt=?, nonce=? WHERE userid=?";
+					$_stmt_array['str_types'] = "sssi";
+					$_stmt_array['arr_values'] = array();
+					$_stmt_array['arr_values'][] = sodium_bin2hex($passwd);
+					$_stmt_array['arr_values'][] = sodium_bin2hex($salt);
+					$_stmt_array['arr_values'][] = sodium_bin2hex($nonce);
+					$_stmt_array['arr_values'][] = $_id;
+					_execute_stmt($_stmt_array,$conn);
+					break;
 			}
 			break;
 		case str_replace('_permissions','',$PARAMETER['table']).'_permissions':

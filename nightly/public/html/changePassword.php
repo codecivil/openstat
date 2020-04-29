@@ -143,7 +143,7 @@ $conn->close();
 		</div>
 		<form action="" method="post" onsubmit="if ( ! passwordsMatch(this) ){ return false; }">
 			<label for="user" title="Benutzername"><i class="fas fa-user"></i></label>
-			<input id="user" type="text" name="user" value="<?php echo($_GET['u']); ?>"required <?php echo($disabled); ?>><br /><br />
+			<input id="user" type="text" name="user" value="<?php echo($_GET['u']); ?>" readonly required <?php echo($disabled); ?>><br /><br />
 			<label for="pwd" title="Aktuelles Passwort"><i class="fas fa-key"></i></label>
 			<input id="pwd" type="password" name="password" required <?php echo($disabled); ?>><br /><br />
 			<label for="pwdnew" title="Neues Passwort (mind. 8 Stellen; Buchstaben und Zahlen; Sonderzeichen optional)" class="white"><i class="fas fa-key"></i></label>
