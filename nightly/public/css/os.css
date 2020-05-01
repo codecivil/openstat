@@ -6,6 +6,10 @@ ul { list-style: none; border: 1px solid var(--color-statusbar); border-radius: 
 li { display: inline; margin-right: 1rem; }
 a, a:visited { text-decoration: none; color: var(--color-statusbar); }
 a:hover { text-decoration: none; color: var(--color-fontsize-selector); }
+
+.warning { background: #204060; }
+.reset { background: #286820; }
+
 #db_options { border: 1px solid var(--color-statusbar); padding: 2%; width: 96%; border-radius: 5px;}
 #db_options legend, #db_options label { font: sans-serif condensed; }
 

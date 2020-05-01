@@ -147,14 +147,13 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					if ( ! isset($PARAMETER['rolepwd']) OR $PARAMETER['rolepwd'] == '' ) { unset($PARAMETER['pwdhash']); };
 					break;
 			 }
-			 break;
 		case 'os_roles':
 			$_warning = "Bei Wechsel des Rollenpassworts werden alle bisherigen Benutzer mit dieser Rolle gelöscht!";
 			switch($PARAMETER['dbAction']) {
 				case 'insert':
 					//create new user of database ('role'), generate password and save it in os_passwords encrypted with the given pwd; after this, create new user
 					//of same name and password
-					$db_pwd = sodium_bin2hex(random_bytes(32));
+					$db_pwd = sodium_bin2hex(random_bytes(32)); //password is too long! to be corrected!!!
 					$salt = random_bytes(SODIUM_CRYPTO_PWHASH_SALTBYTES);
 					$nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
 					$PARAMETER['genkey'] = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$PARAMETER['key'],$salt,SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
@@ -168,6 +167,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					_execute_stmt($_stmt_array,$conn);
 					$PARAMETER['rolename'] = substr($PARAMETER['rolename'],0,16);
 					unset($_stmt_array); $_stmt_array = array();
+					print_r($db_pwd);
 					$_stmt_array['stmt'] = "CREATE USER IF NOT EXISTS ".$PARAMETER['rolename']." IDENTIFIED BY '".$db_pwd."';";
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
@@ -1095,10 +1095,6 @@ if ( isset($result) AND $result->num_rows > 0 ) {
 	while ($row=$result->fetch_assoc()) {
 		$tableel .= "<tr>";
 		if ( $rcount == 0 ) {
-			$tableel .= "<th></th>";
-			if ( $PARAMETER['table'] == 'os_tables' ) {
-				$tableel .= "<th></th><th></th>";
-			}
 			foreach ($row as $key=>$value) {
 				$options[$key] = array();
 //				if ( ! in_array($key,$main_keys['default']) ) { continue; }
@@ -1106,11 +1102,6 @@ if ( isset($result) AND $result->num_rows > 0 ) {
 				$tableel .= "<th>" . $key . "</th>";
 			}
 			$tableel .= "</tr>";
-		}
-		$tableel .= "<td><a href=\"?table=".$PARAMETER['table']."&id=". $row['id'] . "\"><i class=\"fas fa-edit\" title=\"Bearbeiten\"></i></a></td>";
-		if ( $PARAMETER['table'] == 'os_tables' ) {
-			$tableel .= "<td><a href=\"?table=".$row['tablemachine']."_permissions\"><i class=\"fas fa-columns\" title=\"Spalten bearbeiten\"></i></a></td>";
-			$tableel .= "<td><a href=\"?table=".$row['tablemachine']."_references\"><i class=\"fas fa-tags\" title=\"Referenzen bearbeiten\"></i></a></td>";
 		}
 		foreach ($row as $key=>$value) {
 			//create, uniquify and sort options
@@ -1120,6 +1111,11 @@ if ( isset($result) AND $result->num_rows > 0 ) {
 //			if ( ! in_array($key,$main_keys['default']) ) { continue; }
 //			if ( $key == "id" ) { continue; }
 			$tableel .= "<td class=\"" . $key . "\">" . $value . "</td>";
+		}
+		$tableel .= "<td><a href=\"?table=".$PARAMETER['table']."&id=". $row['id'] . "\"><i class=\"fas fa-edit\" title=\"Bearbeiten\"></i></a></td>";
+		if ( $PARAMETER['table'] == 'os_tables' ) {
+			$tableel .= "<td><a href=\"?table=".$row['tablemachine']."_permissions\"><i class=\"fas fa-columns\" title=\"Spalten bearbeiten\"></i></a></td>";
+			$tableel .= "<td><a href=\"?table=".$row['tablemachine']."_references\"><i class=\"fas fa-tags\" title=\"Referenzen bearbeiten\"></i></a></td>";
 		}
 		$tableel .= "</tr>";
 		$rcount++;
@@ -1148,7 +1144,7 @@ $tableel .= "</table>";
 	<form id="db_options" method="POST" action="">
 		<fieldset>
 			<legend></legend>
-			<legend class="reset"><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?table='.$PARAMETER['table']); ?>" title="Alle Parameter zurücksetzen">Alle Filter zurücksetzen</a></legend>
+			<legend><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?table='.$PARAMETER['table']); ?>" title="Alle Parameter zurücksetzen">Alle Filter zurücksetzen</a></legend>
 	<!--	Freitextsuche vielleicht später	
 			<label for="db_search">Suche</label>
 			<input type="text" name="db_search" id="db_search">

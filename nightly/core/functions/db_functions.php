@@ -8,11 +8,11 @@ function _execute_stmt(array $stmt_array, mysqli $conn)
 	if (isset($stmt_array['arr_values']) ) {  $arr_values = $stmt_array['arr_values']; };
 	if (isset($stmt_array['message']) ) { $message = $stmt_array['message']; }
 	$dbMessage = ''; $dbMessageGood = '';
-	if ( !$statement = $conn->prepare($stmt) ) { $dbMessage = "Verbindung war nicht erfolgreich."; $dbMessageGood = "false"; }
+	if ( !$statement = $conn->prepare($stmt) ) { $dbMessage = "Verbindung war nicht erfolgreich. "; $dbMessageGood = "false"; }
 	else {
-		if ( $str_types != '' AND !$statement->bind_param($str_types, ...$arr_values) ) { $dbMessage = "Übertragung war nicht erfolgreich."; $dbMessageGood = "false"; }
+		if ( $str_types != '' AND !$statement->bind_param($str_types, ...$arr_values) ) { $dbMessage = "Übertragung war nicht erfolgreich. "; $dbMessageGood = "false"; }
 		else {
-			if ( !$statement->execute() ) { $dbMessage = "Operation war nicht erfolgreich."; $dbMessageGood = "false"; }
+			if ( !$statement->execute() ) { $dbMessage = "Operation war nicht erfolgreich. "; $dbMessageGood = "false"; }
 			else {
 				$dbMessage = $message; $dbMessageGood = "true";
 				$result = $statement->get_result();
@@ -716,7 +716,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 					$_stmt_array['str_types'] = "i";
 					$_stmt_array['arr_values'] = array();
 					$_stmt_array['arr_values'][] = $PARAMETER['id_'.$PARAMETER['table']];
-					$message = "Eintrag ". $PARAMETER['id_'.$PARAMETER['table']] . " wurde gelöscht.";
+					$message = "Eintrag ". $PARAMETER['id_'.$PARAMETER['table']] . " wurde gelöscht. ";
 					execute_stmt($_stmt_array,$conn);
 				}
 				
