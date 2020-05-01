@@ -1,3 +1,11 @@
+v1.1.7
+======
+01.05.2020
+
+* more functionality for openStatAdmin, nearing functional completion; but
+be aware: it's still possible to reach inconsistent states!
+* minor changes like unalterable username at password change site for users
+
 v1.1.6
 ======
 28.4.2020
