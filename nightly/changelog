@@ -1,3 +1,10 @@
+v1.1.8
+======
+02.05.2020
+
+* better delete functions for openStatAdmin
+* readable column names for openStatAdmin
+
 v1.1.7
 ======
 01.05.2020
