@@ -112,6 +112,30 @@ $_ROLES_NAME = $_roles_array['rolename'];
 $_ROLES_ARRAY = array_combine($_ROLES,$_ROLES_NAME);
 $_PARENTS_ARRAY = array_combine($_ROLES,$_PARENTS);
 
+function readable(string $_string) {
+	$_translate = array(
+		"parentid" => "Eltern-ID",
+		"rolename" => "Rollenbezeichnung",
+		"pwdhash" => "Passwort",
+		"defaultconfig" => "Standardkonfiguration",
+		"username" => "Benutzername",
+		"roleid" => "Rollen-ID",
+		"rolepwd" => "Rollenpasswort",
+		"iconname" => "Name des Icons",
+		"tablemachine" => "interner Tabellenname",
+		"tablereadable" => "angezeigter Tabellenname",
+		"allowed_roles" => "berechtigte Rollen",
+		"delete_roles" => "Rollen mit Löschberechtigung",
+		"displayforeign"=> "Anzeigen aus anderen Tabellen",
+		"functionmachine" => "interner Funktionsname",
+		"functionreadable" => "angezeigter Funktionsname",
+		"functionscope" => "Anwendungsfeld",
+		"functionclasses" => "CSS Klassen",
+		"functiontarget" => "Zielbereich der Funktion",	
+	);
+	if ( isset($_translate[$_string]) ) { return $_translate[$_string]; } else { return $_string; }
+}
+
 function collectInfo(mysqli $conn) {
 	global $_TABLES, $_TABLES_ARRAY, $_TABLES_ALLOW_ARRAY, $_ROLES, $_ROLES_ARRAY, $_PARENTS, $_PARENTS_ARRAY;
 	//collect most important info
@@ -149,7 +173,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 			 }
 			 break;
 		case 'os_roles':
-			$_warning = "Bei Wechsel des Rollenpassworts werden alle bisherigen Benutzer mit dieser Rolle gelöscht!";
+			$_warning = "Bei Wechsel des Passworts werden alle bisherigen Benutzer mit dieser Rolle gelöscht!";
 			switch($PARAMETER['dbAction']) {
 				case 'insert':
 					//create new user of database ('role'), generate password and save it in os_passwords encrypted with the given pwd; after this, create new user
@@ -282,6 +306,12 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 						unset($_stmt_array); $_stmt_array = array();
 						$_stmt_array['stmt'] = "ALTER TABLE `".$_table."_permissions` DROP COLUMN `restrictrole_".$PARAMETER['id']."`";
 						_execute_stmt($_stmt_array,$conn);
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "ALTER TABLE `".$_table."_permissions` DROP COLUMN `restrictrole_".$PARAMETER['id']."`";
+						_execute_stmt($_stmt_array,$conn);
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "DROP VIEW `view__".$_table."__".$PARAMETER['id']."`";
+						_execute_stmt($_stmt_array,$conn);
 					}
 					$_stmt_array['stmt'] = "DROP USER ".$PARAMETER['rolename'];
 					_execute_stmt($_stmt_array,$conn);
@@ -290,11 +320,32 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					foreach ( $_TABLES as $_table ) {
 						recreateView($_table,$conn);
 					}					
+					//delete all users with that role consistently
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "SELECT `id` FROM `os_users` WHERE `roleid` = ?;";
+					$_stmt_array['str_types'] = "i";
+					$_stmt_array['arr_values'] = array();
+					$_stmt_array['arr_values'][] = $PARAMETER['id'];
+					$_doomedusers = execute_stmt($_stmt_array,$conn)['result']['id'];
+					unset($_doomeduser);
+					foreach ( $_doomedusers as $_doomeduser ) {
+						$USERPARAMETER = array();
+						$USERPARAMETER['id'] = $_doomeduser;
+						$USERPARAMETER['table'] = "os_users";
+						$USERPARAMETER['dbAction'] = $PARAMETER['dbAction'];
+						_adminActionBefore($USERPARAMETER,$conn);
+						_dbAction($USERPARAMETER,$conn);
+						_adminActionAfter($USERPARAMETER,$conn);
+						unset($USERPARAMETER);
+					
+					}
+					/*
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "DELETE FROM `os_users` WHERE `roleid` = ?;";
 					$_stmt_array['str_types'] = "i";
 					$_stmt_array['arr_values'] = array();
 					$_stmt_array['arr_values'][] = $PARAMETER['id'];
+					*/
 					break;
 			}
 			break;
@@ -712,7 +763,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 			}
 			break;
 		case 'os_users':
-			$_warning = "Passwortwechsel kann nur bei angegebenem rolepwd durchgeführt werden.<br />Bitte geben Sie in pwdhash das neue Passwort im Klartext ein.";
+			$_warning = "Passwortwechsel kann nur bei angegebenem Rollenpasswort durchgeführt werden.<br />Bitte geben Sie unter Passwort das neue Passwort im Klartext ein.<br />Die Nutzer mit Rollennamen als Name dürfen nicht gelöscht werden.";
 			switch($PARAMETER['dbAction']) {
 				case 'insert':
 				//insert encrypted role password into os_passwords
@@ -799,16 +850,16 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 					break;
 				case 'delete':
 					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "DROP VIEW os_userconfig_".$_id;
+					$_stmt_array['stmt'] = "DROP VIEW os_userconfig_".$PARAMETER['id'];
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "DROP VIEW os_users_".$_id;
+					$_stmt_array['stmt'] = "DROP VIEW os_users_".$PARAMETER['id'];
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "DELETE FROM os_passwords WHERE userid=?";
 					$_stmt_array['str_types'] = "i";
 					$_stmt_array['arr_values'] = array();
-					$_stmt_array['arr_values'][] = $_id;
+					$_stmt_array['arr_values'][] = $PARAMETER['id'];
 					_execute_stmt($_stmt_array,$conn); 
 					break;	
 				case 'edit':
@@ -1103,7 +1154,7 @@ if ( isset($result) AND $result->num_rows > 0 ) {
 				$options[$key] = array();
 //				if ( ! in_array($key,$main_keys['default']) ) { continue; }
 //				if ( $key == "id" ) { continue; }
-				$tableel .= "<th>" . $key . "</th>";
+				$tableel .= "<th>" . readable($key) . "</th>";
 			}
 			$tableel .= "</tr>";
 		}
@@ -1175,7 +1226,7 @@ $tableel .= "</table>";
 						break;
 					case 'list': 
 					?>
-						<label for="db_<?php echo($key); ?>"><?php echo($key); ?></label>
+						<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
 								<input type="text" id="db_<?php echo($key); ?>_text" name="<?php echo($key); ?>" class="db_formbox" value="" onkeyup='_autoComplete(<?php echo(json_encode($optionlist)); ?>,this)' autofocus disabled hidden>
 								<select id="db_<?php echo($key); ?>_list" name="<?php echo($key); ?>" class="db_formbox" onchange="_onResetFilter(this.value)">
 									<option value="none"></option>
@@ -1191,7 +1242,7 @@ $tableel .= "</table>";
 						<?php break;
 					default:
 					?>
-						<label for="db_<?php echo($key); ?>"><?php echo($key); ?></label>
+						<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
 						<input type="text" id="db_<?php echo($key); ?>" name="<?php echo($key); ?>" class="db_formbox" value="<?php echo(htmlentities($default)); ?>">
 						<br>
 						<?php break;

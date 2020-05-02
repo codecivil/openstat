@@ -1,0 +1,115 @@
+#!/bin/bash
+#
+# update script for openStat and openPSZ
+#
+# if you start from a fresh "v1.0" installation, remember: 
+#  copy color_css (vendor specific) to vendor/css in v1.0
+#  ln -s v1.0 latest
+#  sed -i 's/v1\.0/latest/g' /etc/apache2/sites-available/ntfnopsz-ssl.conf
+#  crontab -e ...
+#
+USAGE="updateOS [--opsz] [--webdir ABSOLUTEPATHTOWEBDIR]\n\n--webdir defaults to /var/www/html/openStat or /var/www/html/openPSZ."
+function php_no_error_reporting {
+        cd /var/www/html/openPSZ/latest
+        _files=( public/html/index.php public/php/browseFileserver.php public/php/callFunction.php public/html/login.php public/html/changePassword.php )
+        for _file in ${_files[@]}; do
+                sed -i 's/\/\/error_reporting/error_reporting/' $_file
+        done
+        cd
+}
+
+# parse options
+_opsz=false
+WEBDIR=''
+while [[ "$@" != "" ]]; do
+	case "$1" in
+		"--opsz")
+			_opsz=true
+			;;
+		"--webdir")
+			shift
+			WEBDIR="$1"
+			;;
+		"--help")
+			echo -e "$USAGE"; exit 0;
+			;;
+		*) echo "Unknown option $1 (fatal)."; exit 1
+			;;
+	esac
+	shift
+done
+if $_opsz; then DEFAULTWEBDIR="/var/www/html/openPSZ"; else DEFAULTWEBDIR="/var/www/html/openStat"; fi
+if [[ "$WEBDIR" == "" ]]; then WEBDIR="$DEFAULTWEBDIR"; fi
+# get latest openStat release
+REPO="openstat"
+VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/latest | grep 'tag_name' | sed 's/.*\": //;s/,//;s/\"//g' )" 
+# make new dir if new version is available
+mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
+	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O openStat.tgz
+	# extract and install...
+	mv openStat.tgz "$WEBDIR/$VERSION"
+	cd "$WEBDIR/$VERSION"
+	tar xzf openStat.tgz && {
+		# renew license and readme
+		cp codecivil-*/LICENSE "$WEBDIR/LICENSE.oStat"
+		cp codecivil-*/README "$WEBDIR/README.oStat"
+		# update this script
+		cp codecivil-*/updateOS /usr/local/bin/
+		# get correct files
+		mv codecivil-*/nightly/* ./
+		# reestablish customer specifics and plugins
+		cp core/data/info.php  core/data/info.php.bkp
+		cp -a "$WEBDIR/v1.0/core/data" "$WEBDIR/$VERSION/core/"
+		mv core/data/info.php.bkp  core/data/info.php
+		rm -r codecivil-*
+		cp -a "$WEBDIR/v1.0/vendor/" "$WEBDIR/$VERSION/"
+		cp -a "$WEBDIR/v1.0/vendor/css/" "$WEBDIR/$VERSION/public/"
+		cp -a "$WEBDIR/v1.0/plugins/" "$WEBDIR/$VERSION/"
+		# cleanup
+		rm "$WEBDIR/latest"
+		ln -s "$WEBDIR/$VERSION" "$WEBDIR/latest"
+		chown -R www-data:www-data "$WEBDIR/latest/"
+	} && {
+		echo "$(date): openStat updated to version $VERSION"
+	}
+	rm openStat.tgz
+	php_no_error_reporting
+}
+cd
+## continue if opsz option is set
+if ! $_opsz; then exit 0; fi
+# get latest openPSZ release
+REPO="openPSZ"
+VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/latest | grep 'tag_name' | sed 's/.*\": //;s/,//;s/\"//g' )"
+read OLDVERSION < "$WEBDIR/openPSZ.version"
+if [[ "$VERSION" != "$OLDVERSION" ]]; then
+	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O openPSZ.tgz
+	mv openPSZ.tgz "$WEBDIR/latest/"
+fi
+# make new dir if new version is available
+# extract and install...
+cd "$WEBDIR/latest/"
+tar xzf openPSZ.tgz && {
+	# renew license and readme
+	cp codecivil-*/LICENSE "$WEBDIR/LICENSE.opsz"
+	cp codecivil-*/README "$WEBDIR/README.opsz"
+	# update this script
+	cp codecivil-*/updateOS /usr/local/bin/
+	#
+	cp -a codecivil-*/nightly/* ./
+	cp -a "$WEBDIR/v1.0/core/data/" "$WEBDIR/latest/core/"
+	cp codecivil-*/nightly/core/data/info.php "$WEBDIR/latest/core/data/"
+	rm -r codecivil-*
+	cp -a "$WEBDIR/v1.0/vendor/" "$WEBDIR/latest/"
+	cp -a "$WEBDIR/v1.0/vendor/css/" "$WEBDIR/latest/public/"
+	cp -a "$WEBDIR/v1.0/plugins/" "$WEBDIR/latest/"
+	chown -R www-data:www-data "$WEBDIR/latest/"
+} && {
+	echo "$(date): openPSZ updated to version $VERSION"
+	echo "$VERSION" > "$WEBDIR/openPSZ.version"
+}
+#rm openPSZ.tgz
+php_no_error_reporting
+cd
+
+exit 0
