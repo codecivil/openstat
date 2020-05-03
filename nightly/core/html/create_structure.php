@@ -131,7 +131,17 @@ function readable(string $_string) {
 		"functionreadable" => "angezeigter Funktionsname",
 		"functionscope" => "Anwendungsfeld",
 		"functionclasses" => "CSS Klassen",
-		"functiontarget" => "Zielbereich der Funktion",	
+		"functiontarget" => "Zielbereich der Funktion",
+		"keymachine" => "interner Feldname",
+		"keyreadable" => "angezeigter Feldname",
+		"realid" => "Reihenfolge",
+		"typelist" => "Datentyp",
+		"edittype" => "Datenmodell",
+		"defaultvalue" => "Standardwert",
+		"referencetag" => "Referenz",
+		"depends_on_key" => "Feldbedingung",
+		"depends_on_value" => "Wertbedingung",
+		"allowed_values" => "mögliche Werte",
 	);
 	if ( isset($_translate[$_string]) ) { return $_translate[$_string]; } else { return $_string; }
 }
