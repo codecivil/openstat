@@ -80,8 +80,11 @@ cd
 if ! $_opsz; then exit 0; fi
 # get latest openPSZ release
 REPO="openPSZ"
-VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/latest | grep 'tag_name' | sed 's/.*\": //;s/,//;s/\"//g' )"
 read OLDVERSION < "$WEBDIR/openPSZ.version"
+#make old version available
+cp -a "$WEBDIR/$OLDVERSION/openPSZ.tgz" "$WEBIDR/latest/"
+#check for new version
+VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/latest | grep 'tag_name' | sed 's/.*\": //;s/,//;s/\"//g' )"
 if [[ "$VERSION" != "$OLDVERSION" ]]; then
 	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O openPSZ.tgz
 	mv openPSZ.tgz "$WEBDIR/latest/"

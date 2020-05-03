@@ -1,5 +1,9 @@
+v1.1.9
+======
 03.05.2020
 
+* os.sql for sql installation
+* updated updateOS
 * readable translations of _permissions and _references columns
 
 v1.1.8
