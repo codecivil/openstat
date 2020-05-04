@@ -100,8 +100,9 @@ tar xzf openPSZ.tgz && {
 	cp codecivil-*/updateOS /usr/local/bin/
 	#
 	cp -a codecivil-*/nightly/* ./
-	cp -a "$WEBDIR/v1.0/core/data/" "$WEBDIR/latest/core/"
-	cp codecivil-*/nightly/core/data/info.php "$WEBDIR/latest/core/data/"
+	cp core/data/info.php  core/data/info.php.bkp
+	cp -a "$WEBDIR/v1.0/core/data" "$WEBDIR/$VERSION/core/"
+	mv core/data/info.php.bkp  core/data/info.php
 	rm -r codecivil-*
 	cp -a "$WEBDIR/v1.0/vendor/" "$WEBDIR/latest/"
 	cp -a "$WEBDIR/v1.0/vendor/css/" "$WEBDIR/latest/public/"

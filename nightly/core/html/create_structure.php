@@ -1128,6 +1128,30 @@ function recreateView(string $_propertable, mysqli $conn) {
 	}
 }
 
+function importSQL(array $PARAMETER,mysqli $conn) {
+	if ( ! isset($PARAMETER['sqlfile']) ) { return; }
+	$_return = array('dbMessage' => '', 'dbMessageGood' => 'true');
+	$_sqllines = file('../../sql/'.$PARAMETER['sqlfile']);
+	$_tmpline = '';
+	$conn->begin_transaction();
+	$conn->query("START TRANSACTION;");
+	foreach( $_sqllines  as $_index => $_sqlline ) {
+		$_lineno = $_index + 1;
+		if (substr(trim($_sqlline), 0, 1) != '#' AND substr(trim($line), 0, 2) != '--') {
+			$_tmpline .= $_sqlline;
+		}
+		if (substr(trim($_tmpline), -1, 1) == ';') {
+			if ( !$conn -> query($_tmpline) ) { $_return['dbMessage'] .= "Importfehler in Zeile ".$_lineno." von ".$PARAMETER['sqlfile'].": ". $conn -> error; $_return['dbMessageGood'] = "false"; };
+			$_tmpline = '';
+		}
+	}
+	$conn->query("COMMIT;");
+	$conn->commit();
+	if ( $_return['dbMessageGood'] == 'true' ) { $_return['dbMessage'] = "Import erfolgreich. "; }
+	return $_return;
+}
+
+$result_sql = importSQL($PARAMETER,$conn);
 $result_admin_before = _adminActionBefore($PARAMETER,$conn);
 $result_array = _dbAction($PARAMETER,$conn);
 $result_admin_after = _adminActionAfter($PARAMETER,$conn);
@@ -1204,79 +1228,112 @@ $tableel .= "</table>";
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_users"><i class="fas fa-users" title="Benutzer"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_tables"><i class="fas fa-table" title="Nutzertabellen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_functions"><i class="fas fa-briefcase" title="Funktionen"></i></a></li>
+			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_sql"><i class="fas fa-database" title="SQL Import"></i></a></li>
 		</ul>
 	</div>
-	<form id="db_options" method="POST" action="">
-		<fieldset>
-			<legend></legend>
-			<legend class="reset"><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?table='.$PARAMETER['table']); ?>" title="Alle Parameter zurücksetzen">Alle Filter zurücksetzen</a></legend>
-	<!--	Freitextsuche vielleicht später	
-			<label for="db_search">Suche</label>
-			<input type="text" name="db_search" id="db_search">
-	-->
-			<div class="warning"><?php echo($_warning); ?></div>
-			<?php //filter $options
-			foreach ( $options as $key=>$optionlist ) { 
-				$default = "";
-				if ( count($optionlist) == 1 ) { 
-					$default = $optionlist[0];
-				};
-				$_type = '';
-				foreach ( $edittype  as $type=>$list )
-				{
-					if ( in_array($key,$list) ) { $_type = $type; }
-				}
-				//implement edittype, referencetable and referencekey for better flexibility (you cannot change key names just in order
-				// to change from list to free text...)
-				switch($_type) {
-					case 'id': 
+	<?php
+	switch($PARAMETER['site']) {
+		case 'os_sql':
+			$_sql = scandir('../../sql',SCANDIR_SORT_DESCENDING);
+			$_warning = "Importieren Sie nur SQL-Dateien, denen Sie vertrauen!"
+			?>
+			<div id="message" class="<?php echo($result_sql['dbMessageGood']); ?>"><?php echo($result_sql['dbMessage']); ?></div>
+			<form id="sql_options" method="POST" action="">
+				<fieldset>
+					<legend>SQL-Import</legend>
+					<label for="submitSQL" class="reset">Importieren</label>
+					<input id="submitSQL" type="submit" class="db_formbox" hidden>
+					<br><br>
+					<div class="warning"><?php echo($_warning); ?></div>
+					<select class="db_formbox" name="sqlfile">
+						<?php
+						foreach ( $_sql as $_sqlfile ){
+						?>
+							<option value="<?php html_echo($_sqlfile); ?>"><?php html_echo($_sqlfile); ?></option>
+						<?php	
+						}
+						?>
+					</select>
+				</fieldset>
+			</form>
+			<?php
+			break;
+		default:
+			?>
+			<form id="db_options" method="POST" action="">
+				<fieldset>
+					<legend></legend>
+					<legend class="reset"><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME'].'?table='.$PARAMETER['table']); ?>" title="Alle Parameter zurücksetzen">Alle Filter zurücksetzen</a></legend>
+			<!--	Freitextsuche vielleicht später	
+					<label for="db_search">Suche</label>
+					<input type="text" name="db_search" id="db_search">
+			-->
+					<div class="warning"><?php echo($_warning); ?></div>
+					<?php //filter $options
+					foreach ( $options as $key=>$optionlist ) { 
+						$default = "";
 						if ( count($optionlist) == 1 ) { 
-							$PARAMETER['id'] = $optionlist[0];
+							$default = $optionlist[0];
 						};
-						break;
-					case 'list': 
-					?>
-						<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
-								<input type="text" id="db_<?php echo($key); ?>_text" name="<?php echo($key); ?>" class="db_formbox" value="" onkeyup='_autoComplete(<?php echo(json_encode($optionlist)); ?>,this)' autofocus disabled hidden>
-								<select id="db_<?php echo($key); ?>_list" name="<?php echo($key); ?>" class="db_formbox" onchange="_onResetFilter(this.value)">
-									<option value="none"></option>
-									<?php foreach ( $optionlist as $value ) { 
-										$_sel = '';
-										if ( (isset($PARAMETER[$key]) AND $PARAMETER[$key] == $value) OR $default == $value ) { $_sel = 'selected'; };
-										?>				
-										<option value="<?php html_echo($value); ?>" <?php echo($_sel); ?> ><?php html_echo($value); ?></option>
-									<?php } ?>
-								</select>
-								<input class="minus" type="button" value="+" onclick="_addOption('<?php echo($key); ?>')" title="Erlaubt die Eingabe eines neuen Wertes">
-						<br><br>
-						<?php break;
-					default:
-					?>
-						<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
-						<input type="text" id="db_<?php echo($key); ?>" name="<?php echo($key); ?>" class="db_formbox" value="<?php echo(htmlentities($default)); ?>">
-						<br>
-						<?php break;
-				}; } ?>
-			<label for="_action" class="action">Aktion</label>
-			<select id="_action" name="dbAction" class="db_formbox action" onchange="_onActionCreate(this.value)" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
-				<option value="search" selected>[Bitte wählen]</option>
-				<option value="search">Suchen</option>
-				<?php if ( isset($PARAMETER['id']) ) { ?>
-					<option value="edit">Eintrag ändern</option>
-					<option value="delete">Eintrag löschen</option>
-				<?php } ?>
-				<option value="insert">als neuen Eintrag anlegen</option>
-			</select>
-			<input type="submit" hidden>	
-		</fieldset>
-	</form>
+						$_type = '';
+						foreach ( $edittype  as $type=>$list )
+						{
+							if ( in_array($key,$list) ) { $_type = $type; }
+						}
+						//implement edittype, referencetable and referencekey for better flexibility (you cannot change key names just in order
+						// to change from list to free text...)
+						switch($_type) {
+							case 'id': 
+								if ( count($optionlist) == 1 ) { 
+									$PARAMETER['id'] = $optionlist[0];
+								};
+								break;
+							case 'list': 
+							?>
+								<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
+										<input type="text" id="db_<?php echo($key); ?>_text" name="<?php echo($key); ?>" class="db_formbox" value="" onkeyup='_autoComplete(<?php echo(json_encode($optionlist)); ?>,this)' autofocus disabled hidden>
+										<select id="db_<?php echo($key); ?>_list" name="<?php echo($key); ?>" class="db_formbox" onchange="_onResetFilter(this.value)">
+											<option value="none"></option>
+											<?php foreach ( $optionlist as $value ) { 
+												$_sel = '';
+												if ( (isset($PARAMETER[$key]) AND $PARAMETER[$key] == $value) OR $default == $value ) { $_sel = 'selected'; };
+												?>				
+												<option value="<?php html_echo($value); ?>" <?php echo($_sel); ?> ><?php html_echo($value); ?></option>
+											<?php } ?>
+										</select>
+										<input class="minus" type="button" value="+" onclick="_addOption('<?php echo($key); ?>')" title="Erlaubt die Eingabe eines neuen Wertes">
+								<br><br>
+								<?php break;
+							default:
+							?>
+								<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
+								<input type="text" id="db_<?php echo($key); ?>" name="<?php echo($key); ?>" class="db_formbox" value="<?php echo(htmlentities($default)); ?>">
+								<br>
+								<?php break;
+						}; } ?>
+					<label for="_action" class="action">Aktion</label>
+					<select id="_action" name="dbAction" class="db_formbox action" onchange="_onActionCreate(this.value)" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+						<option value="search" selected>[Bitte wählen]</option>
+						<option value="search">Suchen</option>
+						<?php if ( isset($PARAMETER['id']) ) { ?>
+							<option value="edit">Eintrag ändern</option>
+							<option value="delete">Eintrag löschen</option>
+						<?php } ?>
+						<option value="insert">als neuen Eintrag anlegen</option>
+					</select>
+					<input type="submit" hidden>	
+				</fieldset>
+			</form>
 
-	<?php if ( $filtered == 1 ) { ?>
-		<?php echo($tableel); ?>
-	<?php } else { ; ?>
-		<hr>
-		<div>Bitte wählen Sie einen Filter.</div>
-	<?php }; ?>
+			<?php if ( $filtered == 1 ) { ?>
+				<?php echo($tableel); ?>
+			<?php } else { ; ?>
+				<hr>
+				<div>Bitte wählen Sie einen Filter.</div>
+			<?php };
+			break; 
+		}
+	?>
 	<hr>
 </div>
 
