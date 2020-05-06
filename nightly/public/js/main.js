@@ -112,6 +112,9 @@ function _close(el,local) {
 }
 
 function callFunction(form,phpfunction,id,add,classes,callback,arg) {
+	//do not callFunction again before completing this call
+	if ( document.body.style.cursor == 'progress' ) { setTimeout(function(){ callFunction(form,phpfunction,id,add,classes,callback,arg); },200); return false; }
+	//
 	document.body.style.cursor = 'progress';	
 	var _request = new XMLHttpRequest();
 	if ( form == '_') { form = document.getElementById('trashForm'); };
@@ -137,7 +140,6 @@ function callFunction(form,phpfunction,id,add,classes,callback,arg) {
 		var el = document.getElementById(id);
 //		if (add) { var oldhtml = el.innerHTML; } else { var oldhtml = ''; }
 		_request.onload = function() {
-			document.body.style.cursor = 'auto';	
 			if (add) { 
 				el.innerHTML += _request.responseText;
 			} else {
@@ -145,6 +147,7 @@ function callFunction(form,phpfunction,id,add,classes,callback,arg) {
 			}
 			el.className += " "+classes; tinyMCEinit();
 			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) ) { el.closest('.popup_wrapper').scrollIntoView(); }
+			document.body.style.cursor = 'auto';	
 			if (callback) { return window[callback](form,arg,_request.responseText); } else { return false; };	
 		}
 	} else {

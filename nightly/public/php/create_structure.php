@@ -1,0 +1,1 @@
+../../core/create_structure.php
