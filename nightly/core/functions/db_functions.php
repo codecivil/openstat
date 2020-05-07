@@ -1156,8 +1156,10 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	if ( isset($_config_array['configname']) ) {
 		$_config_custom = getConfig($conn,$_config_array['configname']);
 		if ( $custom != '' ) { $_config_array = $_config_custom; }
-		$_compare1 = $_config_array; $_compare2 = $_config_custom;
-		unset($_compare1['configname']); unset($_compare2['configname']);
+		$_compare1 = array(); $_compare2 = array();
+		$_compare1['filters'] = $_config_array['filters']; $_compare2['filters'] = $_config_custom['filters'];
+		$_compare1['table'] = $_config_array['table']; $_compare2['table'] = $_config_custom['table'];
+//		unset($_compare1['configname']); unset($_compare2['configname']);
 		if ( $_compare1 == $_compare2 ) { $config_save_class = "disabled"; } else { $config_save_class = "unsaved"; }
 		unset($_compare1); unset($_compare2);
 		if ( $_config_array['configname'] == 'Default') { $config_remove_class = 'disabled'; } 
@@ -1168,7 +1170,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	$options = execute_stmt($_stmt_array,$conn)['result']['configname'];
 	?>
 	<div id="config" class="section">
-		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig'); return callFunction('_','updateSidebarCustom','sidebar');" >
+		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;" >
 		<?php //save button and load input like in openStat.plan explained ?>
 			<label 
 				for="config_save" 
@@ -1178,13 +1180,14 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			><i class="fas fa-save"></i></label>
 			<input hidden type="submit" id="config_save">
 			<label class="load <?php echo($config_save_class); ?>" for="config_load" title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
-			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig'); callFunction('_','updateSidebarCustom','sidebar'); setTimeout(function(){callFunction(document.querySelector('form#formChooseTables'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');},500);">
+			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ return result; });">
 			<label class="<?php echo($config_remove_class); ?> " for="config_remove" title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
-			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig'); setTimeout(function(){ return callFunction('_','updateSidebarCustom','sidebar'); },200);">
+			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;">
 			<div class="unite">
 				<label for="db__config__list"></label>
 				<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
-				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig'); callFunction('_','updateSidebarCustom','sidebar'); setTimeout(function(){callFunction(document.querySelector('form#formChooseTables'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');},500);">
+				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ return result; });">
+<!--				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig'); callFunction('_','updateSidebarCustom','sidebar'); setTimeout(function(){callFunction(document.querySelector('form#formChooseTables'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');},500);"> -->
 				<!--	<option value="none"></option> -->
 					<?php foreach ( $options as $value ) { 
 						$_sel = '';
@@ -1203,7 +1206,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<?php updateTime(); includeFunctions('TABLES',$conn); ?>
 		<label for="notoggleTables"><h1 class="center"><i class="fas fa-table"></i></h1></label>
 		<input type="checkbox" hidden id="notoggleTables" class="notoggle">
-		<form id="formChooseTables" class="noform" method="post" action="" onsubmit="callFunction(this,'changeConfig'); return callFunction('_','updateSidebar','sidebar');" >
+		<form id="formChooseTables" class="noform" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ return false; });return false;" >
 			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
 			<?php
 				unset($_stmt_array); $_stmt_array = array();
@@ -1263,7 +1266,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<div id="addfilters">
 			<label for="toggleAddFilter"><h2 class="center"><i class="fas fa-filter"></i><i class="fas fa-plus"></i></h2></label>
 			<input type="checkbox" hidden id="toggleAddFilter" class="toggle">
-			<form id="formAddFilters" class="form" method="post" action="../php/addFilters.php" onsubmit="return addFilters(this);">
+			<form id="formAddFilters" class="form" method="post" action="../php/addFilters.php" onsubmit="addFilters(this); return false;">
 					<label class="submitAddFilters" for="submitAddFilters"><h2 class="center"><i class="fas fa-exchange-alt"></i></h2></label>
 					<input hidden id="submitAddFilters" type="submit" value="Auswählen" ><br />
 				<?php
@@ -1305,7 +1308,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			</form>
 		</div>
 		<hr>
-		<form id="formFilters" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper'); return callFunction('_','updateSidebar','sidebar');">
+		<form id="formFilters" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ return false; }); return false; ">
 			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>

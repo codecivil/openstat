@@ -112,8 +112,13 @@ function _close(el,local) {
 }
 
 function callFunction(form,phpfunction,id,add,classes,callback,arg) {
-	//do not callFunction again before completing this call
-	if ( document.body.style.cursor == 'progress' ) { setTimeout(function(){ callFunction(form,phpfunction,id,add,classes,callback,arg); },200); return false; }
+	return new Promise((resolve,reject) => {
+		callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve);
+	})
+}
+function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve) {
+	//postpone other calls to callFunction (works only for second calls; thirds, fourths... need an additional setTimeout > max(200 ms,process time of first call) in order not to be processed before!)
+	//if ( document.body.style.cursor == 'progress' ) { setTimeout(function(){ callFunction(form,phpfunction,id,add,classes,callback,arg); },200); return false; }
 	//
 	document.body.style.cursor = 'progress';	
 	var _request = new XMLHttpRequest();
@@ -146,12 +151,12 @@ function callFunction(form,phpfunction,id,add,classes,callback,arg) {
 				el.innerHTML = _request.responseText;
 			}
 			el.className += " "+classes; tinyMCEinit();
-			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) ) { el.closest('.popup_wrapper').scrollIntoView(); }
 			document.body.style.cursor = 'auto';	
-			if (callback) { return window[callback](form,arg,_request.responseText); } else { return false; };	
+			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) ) { el.closest('.popup_wrapper').scrollIntoView(); }
+			if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; };	
 		}
 	} else {
-		_request.onload = function() { 	document.body.style.cursor = 'auto'; if (callback) { console.log(callback); return window[callback](form,arg,_request.responseText); } else { return false; }; }
+		_request.onload = function() { 	document.body.style.cursor = 'auto'; if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; }; }
 	}
 	_request.open(form.method,'../php/callFunction.php',true);
 	//next line is unstable, better use new form field, see below
@@ -165,17 +170,21 @@ function callFunction(form,phpfunction,id,add,classes,callback,arg) {
 
 //add or remove filters; remove for add=false;
 function addFilters(form,add) {
+	var myPromise = '';
 	if ( add == false ) 
 	{
-		callFunction(form,'removeFromConfig','sidebar',true);
+		myPromise = callFunction(form,'removeFromConfig','sidebar',true);
 	}
 	else 
 	{
-		callFunction(form,'addToConfig');
+		myPromise = callFunction(form,'addToConfig');
 	} 
-	form.reset();
-//	processForm(document.getElementById('formFilters'),'../php/updateSidebar.php','sidebar');
-	callFunction(document.getElementById('formFilters'),'updateSidebar','sidebar');
+	myPromise.then(()=> {
+		form.reset();
+	//	processForm(document.getElementById('formFilters'),'../php/updateSidebar.php','sidebar');
+		callFunction(document.getElementById('formFilters'),'updateSidebar','sidebar').then(()=>{ return false; });
+		return false;
+	});
 	return false;
 }
 
@@ -184,7 +193,7 @@ function removeOpenId(form) {
 }
 
 function openIds(form) {
-	callFunction(form,'getDetails','_popup_',false,'details');	
+	callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ return false; });	
 	//processForm(form,'../php/getDetails.php','_popup_',false,'details');
 	return false;
 }
@@ -193,7 +202,7 @@ function callJSFunction(_string,_onsubmit) {
 	var _trash = document.getElementById('trash');
 	var _trashForm = document.getElementById('trashForm');
 	_trash.value = _string;
-	_onsubmit(trashForm,false);
+	_onsubmit(_trashForm,false);
 	_trashForm.reset();
 	return false;
 }

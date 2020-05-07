@@ -175,18 +175,18 @@ $_config = getConfig($conn);
 <div id="wrapper">
 <div id="sidebar">
 	<div id="config" class="section">
-		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig'); return callFunction('_','updateSidebarCustom','sidebar');" >
+		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });" >
 		<?php //save button and load input like in openStat.plan explained ?>
 			<label for="config_save" class="<?php echo($config_save_class); ?>" title="Konfiguration speichern"><i class="fas fa-save"></i></label>
 			<input hidden type="submit" id="config_save">
 			<label for="config_load" title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
-			<input hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');">
+			<input hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
 			<label for="config_remove" title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
-			<input hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');">
+			<input hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
 			<div class="unite">
 				<label for="db__config__list"></label>
 				<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
-				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');">
+				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
 				<!--	<option value="none"></option> -->
 					<?php foreach ( $options as $value ) { 
 						$_sel = '';
@@ -263,7 +263,7 @@ $_config = getConfig($conn);
 		}
 	},500);
 	setTimeout(function () {
-		callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth');
+		callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth').then(()=>{
 	//	processForm(document.getElementById('formAddFilters'),'../php/updateSidebar.php','sidebar');
 		<?php 
 			unset($value);
@@ -276,6 +276,7 @@ $_config = getConfig($conn);
 				<?php } 
 				}
 			}  ?>
+		})
 	},1000);
 </script> 
 </body>

@@ -1,5 +1,9 @@
-v1.1.10
+v1.2.0
 =======
+07.05.2020
+
+* adaptations for using promises for async functions, mainly: callFunction returns a promise which are chained in order to preserve order of calls; no postponing any more...
+
 06.05.2020
 
 * config load works now rather properly (if the users pc is not too old...); alas, the current setTimeout in the config load button's onClick should be recoded to some promise/async stuff
