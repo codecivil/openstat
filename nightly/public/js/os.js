@@ -25,8 +25,8 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 				break;
 		}
 		callFunction(el,fct,div,add,classes,callback,arg);
-		el = clone_el.cloneNode(true);
 		if ( val == "delete" ) { _close(el); };
+		el = clone_el.cloneNode(true);
  	}
 //	}
 }
