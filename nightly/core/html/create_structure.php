@@ -658,6 +658,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 			}
 			break;
 		case str_replace('_permissions','',$PARAMETER['table']).'_permissions':
+			$_warning = "Explizite Defaultwerte müssen in einfachen Hochkommata stehen, Ausdrücke als Defaultwerte in runden Klammern."
 			$_propertable = str_replace('_permissions','',$PARAMETER['table']);
 			unset($_stmt_array);
 			if ( $PARAMETER['dbAction'] != '' ) {

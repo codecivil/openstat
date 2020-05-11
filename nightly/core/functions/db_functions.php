@@ -666,6 +666,8 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			$maintable = $config['table'][0];
 			//if there is no assignment, define empty $_MAINIDS as array of length 1
 			if ( isset($PARAMETER['id_'.$maintable]) ) { $_MAINIDS = json_decode($PARAMETER['id_'.$maintable],true); } else { $_MAINIDS = array(""); };
+			//this is only an array for maintable entries, but we need an array always:
+			if ( ! is_array($_MAINIDS) ) { $_MAINIDS = array($_MAINIDS); }
  			foreach ( $_MAINIDS as $_index=>$mainid ) {
 				if ( isset($PARAMETER['id_'.$maintable]) ) { $PARAMETER['id_'.$maintable] = $mainid; }; 
 				$into = " INTO `view__" . $PARAMETER['table'] . "__". $_SESSION['os_role']."` ";
