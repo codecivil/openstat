@@ -2,7 +2,7 @@
 //error_reporting(0); //just in case the webserver does not comply...
 
 session_start();
-if ( ! isset($_SESSION['os_user']) ) { header('Location:/login.php'); } //redirect to login page if not logged in
+if ( ! isset($_SESSION['os_user']) ) { /*header('Location:/login.php');*/ echo("LOGGEDOUT"); return "LOGGEDOUT"; } //redirect to login page if not logged in; handle in callFunction (main.js) in order to redirect whole page, not parts of it!
 
 //include system classes
 $core = glob('../../core/classes/*.php');

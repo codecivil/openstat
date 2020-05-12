@@ -1,3 +1,16 @@
+v1.2.2
+======
+12.05.2020
+
+* bugfix timeout: logout does now properly redirect to login page, independent of the current task
+
+v1.2.1
+======
+11.05.2020
+
+* bugfix: attributions to minor tables vie drag&drop did not work, since there is a confusion of strings and arrays; workaround: test if it is array and make it one if not in dbAction()
+
+
 v1.2.0
 =======
 07.05.2020

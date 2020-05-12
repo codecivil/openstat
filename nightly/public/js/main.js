@@ -145,6 +145,7 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 		var el = document.getElementById(id);
 //		if (add) { var oldhtml = el.innerHTML; } else { var oldhtml = ''; }
 		_request.onload = function() {
+			if ( _request.responseText == "LOGGEDOUT" ) { window.location = "/login.php"; };
 			if (add) { 
 				el.innerHTML += _request.responseText;
 			} else {
@@ -156,7 +157,11 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; };	
 		}
 	} else {
-		_request.onload = function() { 	document.body.style.cursor = 'auto'; if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; }; }
+		_request.onload = function() { 	
+ 			if ( _request.responseText == "LOGGEDOUT" ) {  window.location = "/login.php"; };
+			document.body.style.cursor = 'auto';
+			if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; };
+		}
 	}
 	_request.open(form.method,'../php/callFunction.php',true);
 	//next line is unstable, better use new form field, see below

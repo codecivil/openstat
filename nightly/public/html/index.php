@@ -150,9 +150,15 @@ $_config = getConfig($conn);
 			<form method="post" id="colorsForm" onchange="callFunction(this,'changeConfig'); reloadCSS();">
 				<legend><i class="fas fa-palette"></i></legend>
 				<select id="colorsSelect" name="_colors">
-					<option value="dark" <?php if ( $_config['_colors'] == "dark") { ?>selected<?php }?>>Standard</option>
-					<option value="ntfn" <?php if ( $_config['_colors'] == "ntfn") { ?>selected<?php }?>>NTFN</option>
-					<option value="basic" <?php if ( $_config['_colors'] == "basic") { ?>selected<?php }?>>Bunt</option>
+					<?php
+					$_colors = glob('../css/config_colors_*.css');
+					foreach ( $_colors as $_color ) {
+						$colorname = str_replace('.css','',str_replace('../css/config_colors_','',$_color));
+					?>
+						<option value="<?php echo($colorname); ?>" <?php if ( $_config['_colors'] == $colorname) { ?>selected<?php }?>><?php echo($colorname); ?></option>
+					<?php
+					}
+					?>
 				</select>
 			</form>
 		</div>

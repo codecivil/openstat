@@ -295,7 +295,6 @@ function _toggleStat(property) {
 
 
 function editEntries(form,tablename) {
-	console.log(form);
 	thecheckbox = form.closest('tr').querySelector('td').getElementsByTagName('input')[0];
 	if ( thecheckbox.checked ) {
 		document.getElementById('editTableName').value = tablename;
