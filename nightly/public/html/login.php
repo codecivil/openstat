@@ -98,7 +98,8 @@ $conn->close();
 			<input id="user" type="text" name="user" required <?php echo($disabled); ?>><br /><br />
 			<label for="pwd"><i class="fas fa-key"></i></label>
 			<input id="pwd" type="password" name="password" required <?php echo($disabled); ?>><br />
-			<input id="test" type="checkbox" hidden onclick="this.closest('form').submit();" <?php echo($disabled); ?>><br /><br />
+			<input id="test" type="submit" hidden <?php echo($disabled); ?>><br /><br />
+<!--			<input id="test" type="checkbox" hidden onclick="this.closest('form').submit();" <?php echo($disabled); ?>><br /><br /> -->
 			<label for="test"><i class="fas fa-arrow-right"></i></label>
 		</form>
 	</div>

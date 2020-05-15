@@ -17,7 +17,8 @@ body {
 	--background-row-odd: transparent;
 	--background-row-even: rgb(128,128,128,0.1);
 	--background-details: linear-gradient(#fffff0,#ffffe0);	
-	--background-details-new: linear-gradient(#f4fff4,#f0fff0);	
+	--background-details-new: linear-gradient(#f4fff4,#f0fff0);
+	--background-marked: #a0ffa0;
 	--color-statusbar: #8e8e8e;
 	--color-resultswrapper: #000;
 	--color-statwrapper: #000;

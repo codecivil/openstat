@@ -20,6 +20,8 @@ hr, .clear { clear: both; }
 .left { float: left; }
 .filelink { color: var(--color-filelink); cursor: pointer; }
 .error { color: red !important; }
+.marked { background: var(--background-marked); }
+
 input,select,textarea { font-size: 1rem;}
 input[type='checkbox'] + label, label.orand { position: relative; top: -0.2rem; }
 /*label:active { filter: invert(100%); transition: 0s ease; }*/
