@@ -44,7 +44,7 @@ while [[ "$@" != "" ]]; do
 	shift
 done
 if $_opsz; then INSTANCE="$INSTANCE"; fi
-if [[ "$INSTANCE" != "" ]];
+if [[ "$INSTANCE" != "" ]]; then
 	DEFAULTWEBDIR="/var/www/html/$INSTANCE";
 else
 	DEFAULTWEBDIR="/var/www/html/openStat";
