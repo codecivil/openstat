@@ -88,7 +88,7 @@ function newEntry(array $PARAM,$conn) {
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table.$id[0].$rnd); ?>_sticky" class="action">Aktion</label>
 					<select id="_action<?php echo($table.$id[0].$rnd); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($rnd); ?>'); callFunction(this.closest('form'),'calAction',''); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this); document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
-						<option value="" selected>[Bitte erst nach Bearbeitung wählen]</option>
+						<option value="pleasechoose" selected>[Bitte erst nach Bearbeitung wählen]</option> <!-- pleasechoose: arbitrary non-empty value, so that the message is returned and not an array-->
 						<option value="insert">als neuen Eintrag anlegen</option>
 					</select>
 				</div>

@@ -14,6 +14,7 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 	//full argument set (classes,callback,arg) added on 2019-09-02
 // make new query at every change; uncomment to restrict to filter removals
 //	if ( val == "none" ) {
+	if ( val == "pleasechoose" ) { return; }
 	if ( val != "delete" || confirm("Wollen Sie den Eintrag wirklich löschen? Davon abhängige Einträge werden ebenfalls gelöscht.") ) {
 		var clone_el = el.cloneNode(true);
 		switch(val) {

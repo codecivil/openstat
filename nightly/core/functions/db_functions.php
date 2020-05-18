@@ -661,6 +661,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 				$return = '<div class="dbMessage">'.$_id.'</div>';
 				return $return;				
 			}
+			break; //correct? inserted on 20200516
 		case 'insert':
 			$config = getConfig($conn);
 			$maintable = $config['table'][0];

@@ -115,7 +115,7 @@ $conn->close();
 	<div hidden id="generator"></div>
 	<div id="wrapper">
 		<a href="/"><div id="logo"></div></a>
-		<div id="title"><img src="/img/openStat.svg"><span style="font-size: 0.8rem">openStat</span><br />Passwort ändern</div>	
+		<div id="title"><img src="/img/openStat.svg"><span style="font-size: 0.8rem">openStat</span><br /><i class="fas fa-user-lock"></i> newPass</div>	
 		<div id="countDown"></div>
 		<div id="title_after"></div>
 		<div id="actionneeded">
