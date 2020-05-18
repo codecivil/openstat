@@ -29,7 +29,7 @@ while [[ "$@" != "" ]]; do
 			INSTANCE="$1"
 			;;
 		"--opsz")
-			_opsz=true
+			INSTANCE="openPSZ"
 			;;
 		"--webdir")
 			shift
@@ -43,7 +43,6 @@ while [[ "$@" != "" ]]; do
 	esac
 	shift
 done
-if $_opsz; then INSTANCE="$INSTANCE"; fi
 if [[ "$INSTANCE" != "" ]]; then
 	DEFAULTWEBDIR="/var/www/html/$INSTANCE";
 else
