@@ -1119,7 +1119,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 						$CREATEVIEW_ID .= 'id_'.$_TABLES_ARRAY[$_tableid].$CREATEVIEW_KOMMA;
 					}	
 				}
-				$conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE."') INTO @qry2;");
+				$conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
 				$conn->query("PREPARE stmt FROM @qry2;");
 				$conn->query("EXECUTE stmt;");
 				$conn->query("COMMIT;");
