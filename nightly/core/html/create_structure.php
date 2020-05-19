@@ -142,6 +142,7 @@ function readable(string $_string) {
 		"depends_on_key" => "Feldbedingung",
 		"depends_on_value" => "Wertbedingung",
 		"allowed_values" => "mögliche Werte",
+		"tietotables" => "Binde an Tabellen"
 	);
 	if ( isset($_translate[$_string]) ) { return $_translate[$_string]; } else { return $_string; }
 }
@@ -360,6 +361,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 			}
 			break;
 		case 'os_tables':
+			$_warning = "Bitte erzeugen Sie in 'Binde an Tabellen' keine geschlossenen Abhängigkeitsketten!";
 			switch($PARAMETER['dbAction']) {
 				case 'insert':
 					unset($_stmt_array); $_stmt_array = array();
@@ -455,14 +457,14 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 							_execute_stmt($_stmt_array,$conn); 
 						}
 					}
-					//recreate views
-					unset($_table);
-					foreach ( $_TABLES as $_table ) {
-						recreateView($_table,$conn);
-					}
+					//recreate views (after dbAction!)
+//					unset($_table);
+//					foreach ( $_TABLES as $_table ) {
+//						recreateView($_table,$conn);
+//					}
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";
-					//_execute_stmt($_stmt_array,$conn); 	
+					//_execute_stmt($_stmt_array,$conn);  	
 					break;
 				case 'delete':
 					unset($_stmt_array); $_stmt_array = array();
@@ -519,11 +521,12 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";
 					_execute_stmt($_stmt_array,$conn); 	
-					//recreate views
-					unset($_table);
+					//recreate views (after dbAction!)
+/*					unset($_table);
 					foreach ( $_TABLES as $_table ) {
 						recreateView($_table,$conn);
 					}
+*/
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "DROP TABLE ".$PARAMETER['tablemachine']."_references";
 					//_execute_stmt($_stmt_array,$conn);
@@ -646,14 +649,16 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 							_execute_stmt($_stmt_array,$conn); 
 						}
 					}
-					//recreate views
-					unset($_table);
+					//recreate views (after dbAction!)
+/*					unset($_table);
 					foreach ( $_TABLES as $_table ) {
 						recreateView($_table,$conn);
 					}
+*/					
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";
-					_execute_stmt($_stmt_array,$conn); 	
+					_execute_stmt($_stmt_array,$conn); 
+	
 					break;
 			}
 			break;
@@ -926,6 +931,22 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 					break;
 			}	
 			break;
+		case 'os_tables':
+			switch($PARAMETER['dbAction']) {
+				case 'delete':
+				case 'edit':
+				case 'insert':
+					//recreate views (after dbAction!)
+					unset($_table);
+					foreach ( $_TABLES as $_table ) {
+						recreateView($_table,$conn);
+					}
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";
+					//_execute_stmt($_stmt_array,$conn);
+					break;
+			}
+			break;	
 		}
 }
 
@@ -1070,6 +1091,20 @@ function recreateView(string $_propertable, mysqli $conn) {
 							}
 						}
 					}	
+				}
+				//add WHERE to include tietotables restrictions (do this separately for backward compatibility of older table structures)
+				unset($_stmt_array); $_stmt_array = array();
+				$_stmt_array['stmt'] = "SELECT tietotables FROM os_tables WHERE tablemachine = ?";
+				$_stmt_array['str_types'] = "s";
+				$_stmt_array['arr_values'] = array();
+				$_stmt_array['arr_values'][] = $_propertable;
+				$_tietotables = execute_stmt($_stmt_array,$conn,true)['result'][0]['tietotables'];
+				$_tietotables_array = json_decode($_tietotables,true);
+				if ( isset($_tietotables_array[$PARAMETER['roleid']]) ) {
+					foreach ( $_tietotables_array[$PARAMETER['roleid']] as $_tieingtable ) {
+						$CREATEVIEW_WHERE .= $CREATEVIEW_AND." id_".$_tieingtable." IN ( SELECT id_".$_tieingtable." FROM view__".$_tieingtable."__".$PARAMETER['roleid']." ) ";
+						$CREATEVIEW_AND = ' AND ';
+					}
 				}
 				if ( $CREATEVIEW_WHERE != '' ) { $CREATEVIEW_WHERE = " WHERE ".$CREATEVIEW_WHERE; }
 				$conn->begin_transaction();

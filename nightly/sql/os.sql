@@ -239,6 +239,7 @@ CREATE TABLE `os_tables` (
   `allowed_roles` text DEFAULT NULL,
   `delete_roles` text DEFAULT NULL,
   `displayforeign` text DEFAULT NULL,
+  `tietotables` text DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 `ENCRYPTED`=YES;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -249,7 +250,7 @@ CREATE TABLE `os_tables` (
 
 LOCK TABLES `os_tables` WRITE;
 /*!40000 ALTER TABLE `os_tables` DISABLE KEYS */;
-INSERT INTO `os_tables` VALUES (1,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `os_tables` VALUES (1,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `os_tables` ENABLE KEYS */;
 UNLOCK TABLES;
 
