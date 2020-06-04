@@ -102,7 +102,7 @@ $_config = getConfig($conn);
 	</div>
 	<div id="usermenu">
 		<div id="user">
-			<div id="logout">
+			<div id="logout" title="Abmelden">
 				<form method="post" id="logoutForm">
 					<input type="submit" name="submit" value="logout" id="logoutBtn" hidden />
 					<label for="logoutBtn"> 
@@ -122,11 +122,10 @@ $_config = getConfig($conn);
 				} ?>
 				</b>
 			</div>
-			<div id="changePassword">
+			<div id="changePassword" title="Passwort ändern (mit automatischer Abmeldung!)">
 				<form method="post" id="changePasswordForm">
-					<!-- to be implemented -->
 					<input type="submit" name="submit" value="changePassword" id="changePwdBtn" hidden /> 
-					<label for="changePwdBtn" class="submit">  <!-- disabled until implemented -->
+					<label for="changePwdBtn" class="submit">
 						<i class="fas fa-key"></i>
 					</label>
 				</form>				
@@ -179,6 +178,22 @@ $_config = getConfig($conn);
 <div id="important"></div>
 <div id="alsoimportant"></div>
 <div id="wrapper">
+		<div id="showHistory" title="Chronik">
+		<div class="inline"><i class="fas fa-history"></i></div>
+		<div id="showHistoryBack" class="inline disabled" hidden onclick="restoreHistory(-1);" title="zurück"><i class="fas fa-chevron-left"></i></div>				
+		<div id="showHistory11" class="hidden" hidden onclick="restoreHistory(11);">&bull;</div>	
+		<div id="showHistory10" class="hidden" hidden onclick="restoreHistory(10);">&bull;</div>	
+		<div id="showHistory9" class="hidden" hidden onclick="restoreHistory(9);">&bull;</div>	
+		<div id="showHistory8" class="hidden" hidden onclick="restoreHistory(8);">&bull;</div>	
+		<div id="showHistory7" class="hidden" hidden onclick="restoreHistory(7);">&bull;</div>	
+		<div id="showHistory6" class="hidden" hidden onclick="restoreHistory(6);">&bull;</div>	
+		<div id="showHistory5" class="hidden" hidden onclick="restoreHistory(5);">&bull;</div>	
+		<div id="showHistory4" class="hidden" hidden onclick="restoreHistory(4);">&bull;</div>	
+		<div id="showHistory3" class="hidden" hidden onclick="restoreHistory(3);">&bull;</div>	
+		<div id="showHistory2" class="hidden" hidden onclick="restoreHistory(2);">&bull;</div>	
+		<div id="showHistory1" class="hidden" hidden onclick="restoreHistory(1);">&bull;</div>	
+		<div id="showHistoryForward" class="inline disabled" hidden onclick="restoreHistory(0);" title="vor"><i class="fas fa-chevron-right"></i></div>				
+		</div>
 <div id="sidebar">
 	<div id="config" class="section">
 		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });" >
@@ -238,6 +253,7 @@ $_config = getConfig($conn);
 	</div>
 </div>
 </div>
+<div hidden id="history"><div hidden id="history_level">1</div></div>
 <div id="results_wrapper" class="popup">
 	<?php includeFunctions('RESULTS',$conn); ?>
 <!--	<div class="headline"><h1></h1></div> -->

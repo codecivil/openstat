@@ -9,6 +9,8 @@ a:hover { text-decoration: none; color: var(--color-fontsize-selector); }
 
 .warning { background: #204060; padding: 0.5rem; box-shadow: 2px 2px 2px 2px #4e4e4e; margin: 0.5rem; border-radius: 5px; }
 .reset { background: #488325; padding: 0.5rem; box-shadow: 2px 2px 2px 2px #4e4e4e; margin: 0.5rem; border-radius: 5px; }
+.recreateViews { display: inline; }
+.recreateViews label { width: auto; float: none; }
 
 #db_options { border: 1px solid var(--color-statusbar); padding: 2%; width: 96%; border-radius: 5px;}
 #db_options legend, #db_options label { font: sans-serif condensed; }

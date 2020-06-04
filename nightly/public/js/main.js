@@ -381,3 +381,78 @@ function scrollTo(form,arg,text) {
 	arg.closest('.popup_wrapper').scrollIntoView({behavior: "smooth"});
 }
 
+//remove oldest for first five levles, newest for older ones
+function rotateHistory() {
+	var sidebar = document.getElementById('sidebar');
+	var el = document.getElementById('history');
+	var level = parseInt(el.querySelector('#history_level').innerText);
+	var tmpel = document.createElement('div');
+	tmpel.innerText = sidebar.innerHTML;
+	// do nothing if user has not changed historic settings (apart from time stamps) //still wrong: random ids are different: how to eliminate?
+	if ( el.querySelector('#history'+level) && (
+		el.querySelector('#history'+level).innerText.replace(/[0-9]{2}:[0-9]{2}:[0-9]{2}/g,'').replace(/(id|for)=*.{0,40}[0-9]{1,9}/g,'') == tmpel.innerText.replace(/[0-9]{2}:[0-9]{2}:[0-9]{2}/g,'').replace(/(id|for)=*.{0,40}[0-9]{1,9}/g,'')
+		)
+	) { return; }
+	// for debug only
+/*	if ( el.querySelector('#history'+level) ) {
+		_eq = true;
+		cp1 = el.querySelector('#history'+level).innerText.replace(/[0-9]{2}:[0-9]{2}:[0-9]{2}/g,'');
+		cp2 = tmpel.innerText.replace(/[0-9]{2}:[0-9]{2}:[0-9]{2}/g,'');
+		for ( var i = 0; i < cp1.length; i++ ) {
+			if ( ! _eq ) { continue; }
+			if ( cp1.substring(0,i).localeCompare(cp2.substring(0,i)) != 0 ) {
+				_eq = false;
+				console.log(cp1.substring(0,i));
+				console.log(cp2.substring(0,i));
+			} 
+		}
+	}
+*/
+	//
+	if ( level < 6 ) {
+		if ( el.querySelector('#history11') ) { el.querySelector('#history11').remove(); };
+		for ( var i = 10; i >= level ; i-- ) {
+			if ( el.querySelector('#history'+i) ) { el.querySelector('#history'+i).id = 'history'+(i+1); } 
+		}
+		var hist1 = document.createElement('div');
+		hist1.id = "history"+level;
+		hist1.innerText = document.getElementById('sidebar').innerHTML;
+		el.appendChild(hist1);
+		showHistoryLevel(level);
+	} else {
+		if ( el.querySelector('#history1') ) { el.querySelector('#history1').remove(); };
+		for ( var i = 2; i < level ; i++ ) {
+			if ( el.querySelector('#history'+i) ) { el.querySelector('#history'+i).id = 'history'+(i-1); } 
+		}
+		var hist1 = document.createElement('div');
+		var newlevel = level - 1;
+		hist1.id = "history"+newlevel;
+		hist1.innerText = document.getElementById('sidebar').innerHTML;
+		el.appendChild(hist1);		
+		document.getElementById('history_level').innerText = newlevel;
+		showHistoryLevel(newlevel);
+	}
+}
+
+function restoreHistory(version) {
+	if ( version == -1 ) { version = Math.min(parseInt(document.getElementById('history_level').innerText) + 1, 11); }
+	if ( version == 0 ) { version = Math.max(parseInt(document.getElementById('history_level').innerText) - 1, 1); }
+	if ( ! document.getElementById('history'+version) ) { return; }
+	document.getElementById('sidebar').innerHTML = document.getElementById('history'+version).innerText;
+	document.getElementById('history_level').innerText = version;
+	callFunction(document.getElementById('formFilters'),'applyFiltersOnlyChangeConfig');
+	showHistoryLevel(version);
+}
+
+function showHistoryLevel(level) {
+	level = parseInt(level);
+	var hist = document.getElementById('history');
+	var show = document.getElementById('showHistory');
+	var currentlevel = hist.querySelector('#history_level').innerText;
+	for ( var i = 1; i < 12; i++ ) {
+		if ( hist.querySelector('#history'+i) ) { show.querySelector('#showHistory'+i).classList.remove('hidden'); show.querySelector('#showHistory'+i).classList.add('inline'); } else { show.querySelector('#showHistory'+i).classList.remove('inline'); show.querySelector('#showHistory'+i).classList.add('hidden'); }
+		if ( i == level ) { show.querySelector('#showHistory'+i).classList.add('marked'); } else { show.querySelector('#showHistory'+i).classList.remove('marked'); }
+	}
+	if ( hist.querySelector('#history'+(level+1)) ) { document.getElementById('showHistoryBack').classList.remove('disabled'); } else { document.getElementById('showHistoryBack').classList.add('disabled'); };
+	if ( hist.querySelector('#history'+(level-1)) ) { document.getElementById('showHistoryForward').classList.remove('disabled'); } else { document.getElementById('showHistoryForward').classList.add('disabled'); };
+}

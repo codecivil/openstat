@@ -1,3 +1,18 @@
+v1.3.0
+======
+02.06.2020
+
+* history button (at least 5 steps back and forward when available)
+* recreate-views button in openStatAdmin
+
+28.5.2020
+
+* implementation if {DATE|DATETIME}; MULTIPLE (including correct OR/AND and negation in filter selection)
+* range search for DECIMAL and INTEGER
+* implementation of new restriction 'fileroot' in userconfig; for restricting access of certain roles ('defaultconfig')/users to subfolders of general fileroot on fileserver
+* correct stat labels for range names
+* better stat labels 
+  
 v1.2.6
 ======
 19.05.2020

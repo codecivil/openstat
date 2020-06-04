@@ -8,6 +8,8 @@ label[for^="logout"]:hover { cursor: pointer; }
 label[for^="stat"]:hover { cursor: pointer; }
 label[for^="config"]:hover { cursor: pointer; }
 label.not:hover { cursor: pointer; }
+div[id^="showHistory"]:hover { cursor: pointer; }
+
 /*label[class^="submit"]:active { cursor: wait; }
 label[for^="toggle"]:active { cursor: wait; } */
 body { margin: 0; display: initial; /* block inhibits sticky when sidebar is floating simultaneously */ background: var(--background-body); }
@@ -92,9 +94,11 @@ textarea.FREELONGER { min-height: 10rem; }
 #sidebar .unsaved { color: var(--color-sidebar-changed); }
 
 /* config */
-#config {  
+#config,#showHistory {  
 	padding: 0.5rem; border: 1px solid black; border-radius: 5px; background-color: var(--background-config); margin: 0.5rem; font-size: 1rem;
 }
+
+#showHistory { display: table; box-shadow: 0 2px 5px #444; }
 
 /* tables */
 #tables {  

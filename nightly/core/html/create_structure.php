@@ -112,6 +112,15 @@ $_ROLES_NAME = $_roles_array['rolename'];
 $_ROLES_ARRAY = array_combine($_ROLES,$_ROLES_NAME);
 $_PARENTS_ARRAY = array_combine($_ROLES,$_PARENTS);
 
+//recreate views button
+if ( isset($PARAMETER['recreateViews']) ) {
+	//recreate views
+	unset($_table);
+	foreach ( $_TABLES as $_table ) {
+		recreateView($_table,$conn);
+	}					
+}
+
 function readable(string $_string) {
 	$_translate = array(
 		"parentid" => "Eltern-ID",
@@ -1265,6 +1274,13 @@ $tableel .= "</table>";
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_tables"><i class="fas fa-table" title="Nutzertabellen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_functions"><i class="fas fa-briefcase" title="Funktionen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_sql"><i class="fas fa-database" title="SQL Import"></i></a></li>
+			<li>
+				<form id="recreateViewsForm" method="POST" class="recreateViews">
+					<input type="checkbox" name="recreateViews" checked hidden>
+					<label for="submitRecreateViews"><i class="fas fa-binoculars" title="Views aktualisieren"></i></label>
+					<input id="submitRecreateViews" type="submit" hidden>
+				</form>
+			</li>
 		</ul>
 	</div>
 	<?php

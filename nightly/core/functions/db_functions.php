@@ -293,7 +293,21 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 						}
 						unset($tmpvalue);
 						break;
+					case 5001:  
+						if ( json_encode($value) == '[""]' ) { $value = array('0'); };
+//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
+						$tmpvalue = $value;
+						break;
+					case 5002:  
+						if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
+						$value_combined = array_combine($tmpvalue,$value);
+						foreach ( $value_combined as $von=>$bis ) {
+							$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>';
+						}
+						unset($tmpvalue);
+						break;
 					case 1003:
+					case 5003:
 					case 2001:
 					case 3001:
 						break;
@@ -508,13 +522,28 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 					case 'DATETIME':
 						if ( ! isset($config['filters'][$key][1001]) ) { $value = $row[$key]; break; }
 						for ( $ii = 0; $ii < sizeof($config['filters'][$key][1001]); $ii++ ) {
-							if ( strtotime($row[$key]) > strtotime($config['filters'][$key][1001][$ii]) AND  strtotime($row[$key]) < strtotime($config['filters'][$key][1002][$ii]) )
+							if ( strtotime($row[$key]) >= strtotime($config['filters'][$key][1001][$ii]) AND  ( strtotime($row[$key]) <= strtotime($config['filters'][$key][1002][$ii]) OR $config['filters'][$key][1002][$ii] == '' ) )
 							{
 								if ( isset($config['filters'][$key][1003][$ii]) AND $config['filters'][$key][1003][$ii] != '' ) {
 									$value = $config['filters'][$key][1003][$ii];
 								} else {
 									$number = $ii+1;
 									$value = 'Zeitraum '.$number;
+								}
+							}		 
+						}
+						break;
+					case 'INTEGER':
+					case 'DECIMAL':
+						if ( ! isset($config['filters'][$key][5001]) ) { $value = $row[$key]; break; }
+						for ( $ii = 0; $ii < sizeof($config['filters'][$key][5001]); $ii++ ) {
+							if ( $row[$key] >= $config['filters'][$key][5001][$ii] AND  ( $row[$key] <= $config['filters'][$key][5002][$ii] OR $config['filters'][$key][5002][$ii] == '' ) )
+							{
+								if ( isset($config['filters'][$key][5003][$ii]) AND $config['filters'][$key][5003][$ii] != '' ) {
+									$value = $config['filters'][$key][5003][$ii];
+								} else {
+									$number = $ii+1;
+									$value = 'Bereich '.$number;
 								}
 							}		 
 						}
@@ -528,7 +557,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 				switch($edittype[$key]) {
 					case 'INTEGER':
 					case 'DECIMAL':
-						$rrcount[$key] += $value;
+						$rrcount[$key] += $row[$key];
 						break;
 					default:
 						$rrcount[$key]++;
@@ -1311,7 +1340,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			</form>
 		</div>
 		<hr>
-		<form id="formFilters" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ return false; }); return false; ">
+		<form id="formFilters" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); return false; }); return false; ">
 			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>
@@ -1449,12 +1478,16 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 				$_negation = " NOT ";
 				$_ge = "<";
 				$_le = ">";
+				$_komma_date_multiple = " AND ";
+				$_komma_date_multiple_inner = " OR ";
 			}
 			else
 			{
 				$_negation = "";
 				$_ge = ">=";
 				$_le = "<=";
+				$_komma_date_multiple = " OR ";
+				$_komma_date_multiple_inner = " AND ";
 			}			
 			unset($values[3001]);
 			switch($_orand) {
@@ -1468,22 +1501,57 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 					break;
 			}
 			if ( array_key_exists(1001,$values) )
+			//20200525: how to adapt for multiple dates?
+			// would need a JSON_TABLE construct for comparison, but this does not (yet) exist in MariaDB, seems to come in 10.6
+			// sth like this: select JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') from os_userconfig; have to test for date intervals for all array entries (not just 0)....
+			// or better: select config from os_userconfig where JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') IS NOT NULL;
 			{
+				unset($_stmt_tmp); $_stmt_tmp = array();
+				$_stmt_tmp['stmt'] = "SELECT MAX(JSON_LENGTH(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`)) AS jsonlength FROM `view__" . $table . "__" . $_SESSION['os_role']."`";
+				unset($_jsonlength);
+				$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0]; 				
 				for ( $i = 0; $i < sizeof($values[1001]); $i++ )
 	//			foreach ($values[1001] as $index=>$value)
 				{
 		//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
-					if ( ! isset($values[1001][$i]) OR $values[1001][$i] == '' ) { $values[1001][$i] = '1970-01-01'; }
-					$_WHERE .= $komma2.'(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."` ".$_ge." '".$values[1001][$i]."'";
+					$_WHERE .= $komma2.' (';
+					$komma3 = '';
+					for ( $j = 0; $j < $_jsonlength; $j++ ) {
+						if ( ! isset($values[1001][$i]) OR $values[1001][$i] == '' ) { $values[1001][$i] = '1970-01-01'; }
+						$_WHERE .= $komma3."(((`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` NOT LIKE '[%' AND `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` ".$_ge." '".$values[1001][$i]."')";
+						$_WHERE .= " OR (`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') ".$_ge." \"".$values[1001][$i]."\")";
+						$_WHERE .= ')';
+						$komma2 = $_komma_date_multiple_inner;
+//						$komma2 = $_komma_date_inner;
+						$bracket = ')';
+						if ( ! isset($values[1002][$i]) OR  $values[1002][$i] == '' ) { $values[1002][$i] = '2070-01-01'; }
+						$_WHERE .= $komma2."((`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` NOT LIKE '[%' AND `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` ".$_le." '".$values[1002][$i]."')";
+						$_WHERE .= " OR (`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') ".$_le." \"".$values[1002][$i]."\")";
+						$_WHERE .= '))';
+						$komma2 = $_komma_outer;
+						$komma3 = $_komma_date_multiple;
+					$bracket = ')';
+					}
+					$_WHERE .= ') ';
+				}
+			} elseif ( array_key_exists(5001,$values) )
+			{
+				for ( $i = 0; $i < sizeof($values[5001]); $i++ )
+	//			foreach ($values[1001] as $index=>$value)
+				{
+		//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
+					if ( ! isset($values[5001][$i]) OR $values[5001][$i] == '' ) { $values[5001][$i] = '0'; }
+					$_WHERE .= $komma2.'(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."` ".$_ge." '".$values[5001][$i]."'";
 					$komma2 = $_komma_date_inner;
 					$bracket = ')';
-					if ( ! isset($values[1002][$i]) OR  $values[1002][$i] == '' ) { $values[1002][$i] = '2070-01-01'; }
-					$_WHERE .= $komma2.'`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."` ".$_le." '".$values[1002][$i]."')";
+					if ( ! isset($values[5002][$i]) OR  $values[5002][$i] == '' ) { $values[5002][$i] = '1000000000'; }
+					$_WHERE .= $komma2.'`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."` ".$_le." '".$values[5002][$i]."')";
 					$komma2 = $_komma_outer;
 					$bracket = ')';
 				}
 			}
-			if ( ! array_key_exists(1001,$values) )
+
+			if ( ! array_key_exists(1001,$values) AND ! array_key_exists(5001,$values) )
 			{
 				//no: just search json entry for searchterm, so no index 4001...
 				//FILESPATH searchable by filedescription field (4001)
@@ -1497,7 +1565,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 					$bracket = ')';
 				}
 			}
-			$komma2 = ') AND (';
+			//do not change $komma2 if no condition was set
+			if ( $komma2 != ' WHERE (' ) { $komma2 = ') AND ('; }
 		}
 	}
 	$_WHERE .= $bracket;
@@ -1528,6 +1597,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		$_main_stmt_array['stmt'] = $_SELECT.$_FROM.$_WHERE.$_main_stmt_array['stmt'].$bracket.$_ORDER_BY;
 	}
 	if ( isset($display) AND !$display ) { return $_main_stmt_array; }
+	//print_r($_main_stmt_array); //for debug only
 	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement);
 	$table_results = generateResultTable($_main_stmt_array,$conn);
 	$stat_results = generateStatTable($_main_stmt_array,$conn);
@@ -1570,6 +1640,11 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		</div>
 	</div>
 <?php
+}
+
+function applyFiltersOnlyChangeConfig(array $parameter, mysqli $conn)
+{
+	applyFilters($parameter,$conn,false,false,true);
 }
 
 function getDetails($PARAMETER,$conn) 
@@ -1943,6 +2018,15 @@ function _cleanup($value)
 	if ( DateTime::createFromFormat('Y-m-d', $value) !== FALSE) { 
 		$value = DateTime::createFromFormat('Y-m-d', $value)->format('d.m.Y');
 	}
+	//format numbers (number_format, negative red...)
+	if ( is_numeric($value) ) {
+		$_class = '';
+		if ( $value < 0 ) { $_class="error"; }
+		if ( floor($value) != $value ) {
+			$value = number_format($value,2,',','.');
+		}
+		if ( $_class == 'error' ) { $value = "<span class=\"error\">".$value."</span>"; }
+	}
 	//write json arrays nicer
 	if ( strpos($value,'["') > -1 ) {
 		$value = str_replace('[','',$value);
@@ -1992,10 +2076,14 @@ function openFile($PARAMETER)
 	$rnd = rand(0,32767);
 	$filename = basename($PARAMETER['trash']);
 	$fullname = $PARAMETER['trash'];
-	symlink($fullname,'../../public/'.$filename);
+	$_error = '';
+	if ( ! symlink($fullname,'../../public/'.$filename) ) { $_error = "Fehlende Berechtigungen in Webroot; bitte Administrator kontaktieren."; }
 	?>
 	<div class="filepreview">
 	<?php updateTime(); ?>
+	<?php if ( $_error != '' ) { ?>
+		<div class="error"><?php echo($_error); ?></div>
+	<?php return; } ?>
 	<div class="db_headline_wrapper"><h2>Vorschau von <a href="<?php echo($filename); ?>?v=<?php echo($rnd); ?>" target="_blank"><?php echo($filename); ?></a></h2></div>
 	<iframe
 		src='<?php echo($filename); ?>?v=<?php echo($rnd); ?>' 

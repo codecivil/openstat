@@ -5,7 +5,27 @@ session_start();
 if ( ! isset($_SESSION['os_user']) ) { header('Location:/login.php'); } //redirect to login page if not logged in
 
 require_once('../../core/data/filedata.php');
+require_once('../../core/data/serverdata.php');
 
+//include system functions
+$core = glob('../../core/functions/*.php');
+
+foreach ( $core as $component )
+{
+	require_once($component);
+}
+
+$username = $_SESSION['os_rolename'];
+$password = $_SESSION['os_dbpwd'];
+
+$conn = new mysqli($servername, $username, $password, $dbname) or die ("Connection failed.");
+mysqli_set_charset($conn,"utf8");
+
+//get user's fileroot
+$_fileroot = getConfig($conn)['fileroot'];
+$conn->close();
+
+if ( isset($_fileroot) AND $_fileroot != '' ) { $fileroot .= '/'.$_fileroot; }
 //scan fileserverdir, go one level deeper with every clicked dir, select file at last
 //save current path in div?
 ?>

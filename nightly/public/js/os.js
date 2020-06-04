@@ -494,9 +494,25 @@ function showPieGraph(y_total,type,statObj,element) {
 function addStatGraphicsLabels(statArray,statNumber) {
 	console.log('statNumber: '+statNumber);
 	statArray.forEach(function(_obj){
+		// test since 20200528
+		var obj_el = document.querySelector('label[for^="stat'+_obj.row+'x'+_obj.column+'"]');
+		if ( ! obj_el ) {
+			console.log("last"+_obj.row+"x"+_obj.column);
+			var obj_el = document.getElementById("last"+_obj.row+"x"+_obj.column);
+		}
+		var cont_el = new Array(obj_el);
+		// \test
 		var el_title = '';
 		for (var i = 0; i <= statNumber; i++) {
-			el_title += document.getElementsByClassName('resultTable')[0].querySelectorAll('tr')[_obj.row].querySelectorAll('td')[2*i].innerText + ' ';
+//			el_title += document.getElementsByClassName('resultTable')[0].querySelectorAll('tr')[_obj.row].querySelectorAll('td')[2*i].innerText + ' ';
+		// test since 20200528
+			try { 
+				cont_el[i+1] = cont_el[i].closest('div.nextlevel').closest('li').querySelector('.value');
+				el_title = cont_el[i+1].innerText + ' ' +  el_title; 
+			} catch(err) {
+				console.log();
+			}
+		// \test
 		}
 /*		var el_title = encodeURI(document.getElementsByClassName('resultTable')[0].querySelectorAll('tr')[_obj.row].innerText);
 		el_title = el_title.replace(/%09|%A0|%C2/g,' '); //remove characters separating td's in innerText
@@ -508,14 +524,30 @@ function addStatGraphicsLabels(statArray,statNumber) {
 			el_title = el_title.replace(/  /g,' ');
 		}
 		var el_oldlabel = '';
-		var el_label = document.getElementsByClassName('resultTable')[0].querySelectorAll('tr')[_obj.row].querySelectorAll('td')[2*statNumber].innerText;
-		console.log(el_label);
+		// test since 20200528
+		var el_label = obj_el.closest('div.nextlevel').closest('li').querySelector('.value').innerText;
+		// \test
+//		var el_label = document.getElementsByClassName('resultTable')[0].querySelectorAll('tr')[_obj.row].querySelectorAll('td')[2*statNumber].innerText;
 		while ( el_oldlabel != el_label ) {
 			el_oldlabel = el_label;
 			el_label = el_label.replace(/  /g,' ');
 		}
 		_obj.title = el_title;
-		_obj.label = el_label.substr(0,2);
+		// look for most identifying parts of el_label
+		var el_label_array = el_label.split(" ");
+		if ( el_label_array.length > 1 ) {
+			_obj.label = '';
+			el_label_array.forEach (function(labelpart) {
+				_obj.label += labelpart.substr(0,1);
+			});
+		} else {
+			if ( el_label.match(/[0-9]*$/)[0] != '' ) {
+				_obj.label = el_label.substr(0,1)+ el_label.match(/[0-9]*$/)[0];
+			} else {
+				_obj.label = el_label.substr(0,2);
+			}
+		}
+//		_obj.label = el_label.substr(0,2);
 	});
 	return statArray;
 }

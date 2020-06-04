@@ -176,7 +176,15 @@ function importCSV(array $PARAM,$conn) {
 			while ( $old_add != $key_array_add['keyreadable'] ) 
 			{
 				$old_add = $key_array_add['keyreadable'];
-				if (($index = array_search('_none_', $key_array_add['keyreadable'])) !== false) {
+				// disable unselectable and uneditable entries (keyreadable = _none or edittype = ID)
+				if (($index = array_search('_none_', $key_array_add['keyreadable'])) !== false ) {
+					unset($key_array_add['keyreadable'][$index]);
+					unset($key_array_add['keymachine'][$index]);
+					unset($key_array_add['edittype'][$index]);
+					unset($key_array_add['referencetag'][$index]);
+					unset($key_array_add['table'][$index]);
+				}
+				if (($index = array_search('ID', $key_array_add['edittype'])) !== false ) {
 					unset($key_array_add['keyreadable'][$index]);
 					unset($key_array_add['keymachine'][$index]);
 					unset($key_array_add['edittype'][$index]);
@@ -271,8 +279,10 @@ function importCSV(array $PARAM,$conn) {
 					<optgroup label="<?php echo($_tablereadable[$key_array['table'][0]]); ?>">
 					<?php foreach ( $headers as $index=>$header )
 						//do not offer ID type: they have uneditable default values!
+						//alas they are considered in js-part and lead to buggy behaviour: indices are not found (import.js l. 133 querySelector...)
+						//this is too late: included already in test above (l. 187)
 						{ 
-						if ( $key_array['edittype'][$index] == 'ID' ) { continue; }
+						//if ( $key_array['edittype'][$index] == 'ID' ) { continue; }
 						?>
 							<option value="<?php echo($index); ?>"><?php echo($header); ?></option>
 						<?php 

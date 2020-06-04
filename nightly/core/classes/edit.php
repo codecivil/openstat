@@ -386,14 +386,14 @@ class OpenStatEdit {
 				<?php break;
 			case 'DATE':
 				?>
-				<label class="date" for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
+				<label class="date onlyone" for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 				<input <?php echo($_disabled); ?> name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" id="db_<?php echo($key.$rnd); ?>" type="date" value="<?php echo($default); ?>" class="db_<?php echo($key); ?>" />
 				<div class="clear"></div>
 				<?php break;
 			case 'DATETIME':
 				$default_array = explode(' ',$default,2);
 				?>
-				<label class="date" for="db_<?php echo($key.$rnd.'date'); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
+				<label class="date onlyone" for="db_<?php echo($key.$rnd.'date'); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 				<input <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd.'date'); ?>" type="date" value="<?php echo($default_array[0]); ?>" class="db_<?php echo($key); ?>" onchange="_updateDateTime(this.id);"/>
 				<input <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd.'time'); ?>" type="time" value="<?php echo($default_array[1]); ?>" class="db_<?php echo($key); ?>" onchange="_updateDateTime(this.id);"/>
 				<input <?php echo($_disabled); ?> hidden name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" id="db_<?php echo($key.$rnd); ?>" type="text" value="<?php echo($default); ?>" class="db_<?php echo($key); ?>" />
@@ -463,7 +463,11 @@ class OpenStatEdit {
 			case 'FILESPATH':
 				// 'filedescription': index 4001
 				// 'filepath': index 4002;
+				// determine fileroot
 				require('../../core/data/filedata.php');
+				$_fileroot = getConfig($this->connection)['fileroot'];
+//				if ( isset($_fileroot) AND $_fileroot != '' ) { $fileroot .= $_fileroot; }				
+				//
 				$default_array = json_decode($default,true);
 				?>		
 				<div>	
@@ -523,7 +527,7 @@ class OpenStatEdit {
 							<input <?php echo($_disabled); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>[4002][]" id="db_<?php echo($key.$rnd); ?>_filepath" type="text" class="db_<?php echo($key); ?>" />
 							<div class="frame left filelink">
 								<iframe name='Index' id="Index" src="/php/browseFileserver.php"
-									onload="reloadCSS(this); document.getElementById('db_<?php echo($key.$rnd); ?>_filepath').value = this.contentWindow.document.getElementById('label').innerText.slice(1); "
+									onload="reloadCSS(this); if ( this.contentWindow.document.getElementById('label').innerText.slice(1) != '' ) { document.getElementById('db_<?php echo($key.$rnd); ?>_filepath').value = '<?php echo($_fileroot.'/'); ?>'+this.contentWindow.document.getElementById('label').innerText.slice(1); } else { document.getElementById('db_<?php echo($key.$rnd); ?>_filepath').value = ''; }"
 									frameborder="0" border="0" cellspacing="0"
 									style="border-style: none;width: 100%; height: 5rem; padding-left: 0.5rem;">
 								</iframe>
@@ -664,7 +668,9 @@ class OpenStatEdit {
 					<label onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 
 					<?php 
-						if ( ! is_array($checked) OR sizeof($checked) <= 1) {
+// before 20200525:						if ( ! is_array($checked) OR sizeof($checked) <= 1) {
+//before 20200527:						if ( ! is_array($checked) OR sizeof($checked[1001]) <= 1) {
+						if ( ! is_array($checked) OR sizeof($checked[1001]) == 0) {
 						?>
 						<div class="searchfield">
 							<label>Kürzel</label>
@@ -723,41 +729,149 @@ class OpenStatEdit {
 						} 
 					break;
 			case 'INTEGER':
+				//use index 5001,5002,5003 for decimal range values
 				?>
 					<label onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
-					<?php foreach ( $checked as $searchterm ) {
+
+					<?php 
+						if ( ! is_array($checked) OR sizeof($checked) <= 1) {
 						?>
 						<div class="searchfield">
+							<label>Kürzel</label>
 							<input 
-								name="<?php html_echo($this->table.'__'.$this->key); ?>[]" 
+								name="<?php html_echo($this->table.'__'.$this->key); ?>[5003][]" 
+								type="text" 
+								value="Bereich 1"
+								required
+							/>
+							<br />
+							<label>von</label>
+							<input 
+								name="<?php html_echo($this->table.'__'.$this->key); ?>[5001][]" 
 								type="number"
 								step="1"
 								placeholder="0" 
-								value="<?php if ( $searchterm != "_all" ) { html_echo($searchterm); } ?>"
+								value="<?php html_echo($checked[5001][$i]); ?>"
 							/>
+							<label>bis</label>
+							<input 
+								name="<?php html_echo($this->table.'__'.$this->key); ?>[5002][]" 
+								type="number"
+								step="1"
+								placeholder="0" 
+								value="<?php html_echo($checked[5002][$i]); ?>"
+								/>
 							<label onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
-						</div>
-						<br />
-					<?php }
+							<br />
+							<br />
+						</div>					
+					<?php } else {
+						for ( $i = 0; $i < sizeof($checked[5001]); $i++ ) {
+						?>
+							<div class="searchfield">
+								<label>Kürzel</label>
+								<input 
+									name="<?php html_echo($this->table.'__'.$this->key); ?>[5003][]" 
+									type="text" 
+									value="<?php html_echo($checked[5003][$i]); ?>"
+									required
+								/>
+								<br />
+								<label>von</label>
+								<input 
+									name="<?php html_echo($this->table.'__'.$this->key); ?>[5001][]" 
+									type="number"
+									step="1"
+									placeholder="0" 
+									value="<?php html_echo($checked[5001][$i]); ?>"
+								/>
+								<label>bis</label>
+								<input 
+									name="<?php html_echo($this->table.'__'.$this->key); ?>[5002][]" 
+									type="number"
+									step="1"
+									placeholder="0" 
+									value="<?php html_echo($checked[5002][$i]); ?>"
+								/>
+								<label onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+								<br />
+								<br />
+							</div>					
+						<?php } 
+						} 
 					break;
 			case 'DECIMAL':
+				//use index 5001,5002,5003 for decimal range values
 				?>
 					<label onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
-					<?php foreach ( $checked as $searchterm ) {
+
+					<?php 
+						if ( ! is_array($checked) OR sizeof($checked) <= 1) {
 						?>
 						<div class="searchfield">
+							<label>Kürzel</label>
 							<input 
-								name="<?php html_echo($this->table.'__'.$this->key); ?>[]" 
+								name="<?php html_echo($this->table.'__'.$this->key); ?>[5003][]" 
+								type="text" 
+								value="Bereich 1"
+								required
+							/>
+							<br />
+							<label>von</label>
+							<input 
+								name="<?php html_echo($this->table.'__'.$this->key); ?>[5001][]" 
 								type="number"
 								step="0.01"
 								placeholder="0.00" 
-								value="<?php if ( $searchterm != "_all" ) { html_echo($searchterm); } ?>"
+								value="<?php html_echo($checked[5001][$i]); ?>"
 							/>
+							<label>bis</label>
+							<input 
+								name="<?php html_echo($this->table.'__'.$this->key); ?>[5002][]" 
+								type="number"
+								step="0.01"
+								placeholder="0.00" 
+								value="<?php html_echo($checked[5002][$i]); ?>"
+								/>
 							<label onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
-						</div>
-						<br />
-					<?php }
-				    break;
+							<br />
+							<br />
+						</div>					
+					<?php } else {
+						for ( $i = 0; $i < sizeof($checked[5001]); $i++ ) {
+						?>
+							<div class="searchfield">
+								<label>Kürzel</label>
+								<input 
+									name="<?php html_echo($this->table.'__'.$this->key); ?>[5003][]" 
+									type="text" 
+									value="<?php html_echo($checked[5003][$i]); ?>"
+									required
+								/>
+								<br />
+								<label>von</label>
+								<input 
+									name="<?php html_echo($this->table.'__'.$this->key); ?>[5001][]" 
+									type="number"
+									step="0.01"
+									placeholder="0.00" 
+									value="<?php html_echo($checked[5001][$i]); ?>"
+								/>
+								<label>bis</label>
+								<input 
+									name="<?php html_echo($this->table.'__'.$this->key); ?>[5002][]" 
+									type="number"
+									step="0.01"
+									placeholder="0.00" 
+									value="<?php html_echo($checked[5002][$i]); ?>"
+								/>
+								<label onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+								<br />
+								<br />
+							</div>					
+						<?php } 
+						} 
+					break;
 			case 'CHECKBOX':
 			case 'EXTENSIBLE CHECKBOX':
 			case 'TABLE':				
