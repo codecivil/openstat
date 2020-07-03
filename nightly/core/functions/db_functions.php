@@ -1722,7 +1722,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		$_main_stmt_array['stmt'] = $_SELECT.$_FROM.$_WHERE.$_main_stmt_array['stmt'].$bracket.$_ORDER_BY;
 	}
 	if ( isset($display) AND !$display ) { return $_main_stmt_array; }
-	print_r($_main_stmt_array); //for debug only
+	//print_r($_main_stmt_array); //for debug only
 	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement);
 	$table_results = generateResultTable($_main_stmt_array,$conn);
 	$stat_results = generateStatTable($_main_stmt_array,$conn);
