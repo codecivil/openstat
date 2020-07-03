@@ -1297,7 +1297,8 @@ $tableel .= "</table>";
 					<input id="submitSQL" type="submit" class="db_formbox" hidden>
 					<br><br>
 					<div class="warning"><?php echo($_warning); ?></div>
-					<select class="db_formbox" name="sqlfile">
+					<select class="db_formbox" name="sqlfile" onchange="_displayFile(this.value)">
+						<option value="_none_">[Bitte Datei wählen]</option>
 						<?php
 						foreach ( $_sql as $_sqlfile ){
 						?>
@@ -1309,6 +1310,13 @@ $tableel .= "</table>";
 				</fieldset>
 			</form>
 			<?php
+			foreach ( $_sql as $_sqlfile ){
+				//$_content = file_get_contents('../../sql/'.$_sqlfile);
+				$_content = preg_replace('/\n/','<br />',file_get_contents('../../sql/'.$_sqlfile));
+				?>
+				<div class="sqlfile hidden" id="<?php html_echo(preg_replace('/\./','',$_sqlfile)); ?>"><?php echo($_content); ?></div>
+				<?php
+			}
 			break;
 		default:
 			?>

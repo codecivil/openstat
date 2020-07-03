@@ -243,7 +243,7 @@ $_config = getConfig($conn);
 							type="checkbox" 
 							value="add"
 						/>
-						<label for="add_<?php html_echo($key['keymachine']); ?>"><?php html_echo($key['keyreadable']); ?></label><br>
+						<label for="add_<?php html_echo($key['keymachine']); ?>"><?php html_echo(explode(': ',$key['keyreadable'])[0]); ?></label><br>
 						<?php }
 					}
 					unset($key);

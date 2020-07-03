@@ -122,6 +122,11 @@ textarea.FREELONGER { min-height: 10rem; }
 #addfilters .form { display: none; border: 1px solid black; border-radius: 5px; padding: 0.2rem; margin: 0.4rem; }
 #addfilters label.submitAddFilters { position: sticky; top: 5.5rem; z-index: 500; }
 #addfilters label.submitAddFilters h2 { background: var(--background-addfilters); }
+.choose_headline { font-weight: bold; }
+
+/* filterlist */
+
+#filterlist .compound { padding: 0.2rem; border: 1px dotted black; border-radius: 5px; margin: 0.2rem; }
 
 /* functions */
 .functions { background-color: var(--background-functions); border-radius: 5px; color: var(--color-functions); }

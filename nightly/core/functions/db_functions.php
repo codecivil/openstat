@@ -247,6 +247,76 @@ function removeOpenId(array $entry, mysqli $conn)
 
 function generateFilterStatement(array $parameters, mysqli $conn, string $_table = 'os_all', bool $complement = false)
 {
+	function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$keyreadable,$index,$value,$tmpvalue = '',$separator = '',$emptyisall = false) {
+		switch($index) {
+			case 1001:  
+				if ( json_encode($value) == '[""]' ) { $value = array('1970-01-01'); };
+//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
+				$tmpvalue = $value;
+				break;
+			case 1002:  
+				if ( json_encode($value) == '[""]' ) { $value = array('2070-01-01'); };
+				if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
+				$value_combined = array_combine($tmpvalue,$value);
+				foreach ( $value_combined as $von=>$bis ) {
+					$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
+				}
+				unset($tmpvalue);
+				break;
+			case 5001:  
+				if ( json_encode($value) == '[""]' ) { $value = array('0'); };
+//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
+				$tmpvalue = $value;
+				break;
+			case 5002:  
+				if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
+				if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
+				$value_combined = array_combine($tmpvalue,$value);
+				foreach ( $value_combined as $von=>$bis ) {
+					$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
+				}
+				unset($tmpvalue);
+				break;
+			case 6001:
+				$cmp_index = 0;
+				$cmp_values = array();
+				while ( array_key_exists(6001+$cmp_index,$values) ) {
+					array_push($cmp_values,$values[6001+$cmp_index]);
+					$cmp_index++;					
+				}
+				$filter_length = _len($cmp_values);
+				$separator = ' + ';
+				for ( $j = 0; $j < $filter_length; $j++ ) { // $j is item nunmber
+					$item_values = array();
+					for ( $i = 0; $i < $cmp_index; $i++ ) { // $i is compound number
+						array_push($item_values,_extract($cmp_values,$i,$j));
+					}
+					foreach ( $item_values as $compound ) {
+						foreach ( $compound as $cmpindex=>$cmpvalue ) 
+						{
+							$_tmpresult = _addToFilterStatement($compound,$filter_results,$komma,$_newkomma,$keyreadable,$cmpindex,$cmpvalue,$tmpvalue,$separator,true); // 'true': empty is 'all'
+							$separator = ' + ';
+							$filter_results = $_tmpresult[0]; $tmpvalue = $_tmpresult[1]; $komma = $_tmpresult[2];
+						}
+					}
+					$komma = $_newkomma.' <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>';
+				}
+				break;
+			case 1003:
+			case 5003:
+			case 2001:
+			case 3001:
+				break;
+			default: 
+				if ( $emptyisall AND $value == '' ) { $value = '[ungefiltert]'; }
+				if ( $value != '_all' AND $index < 6001 ) { 
+					$filter_results .= $komma . _cleanup($value); 
+					if ( $separator == '' ) { $komma = $_newkomma; } else { $komma = $separator; }
+				}; 
+				break;
+		}
+		return array($filter_results,$tmpvalue,$komma);
+	}
 	$_config = getConfig($conn);
 	$_TABLES = $_config['table'];
 	$filter_results = '';
@@ -267,7 +337,7 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 		$_stmt_array['arr_values'] = array();
 		$_stmt_array['arr_values'][] = $key;
 		$_tmp_result = array();
-		$keyreadable = execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0];
+		$keyreadable = explode(': ',execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0])[0];
 
 		$tmpvalues = $values; unset($tmpvalues[2001]);
 		if ( sizeof($tmpvalues) > 1 ) 
@@ -277,42 +347,11 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 			unset($index); unset($value);
 			if ( isset($values[2001]) AND $values[2001] == "-499" ) { $_newkomma = '+'; } else { $_newkomma = ', '; }
 			if ( isset($values[3001]) ) { $komma = " &#8800; "; }
+			$tmpvalue = '';
 			foreach ( $values as $index=>$value ) 
 			{
-				switch($index) {
-					case 1001:  
-						if ( json_encode($value) == '[""]' ) { $value = array('1970-01-01'); };
-//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
-						$tmpvalue = $value;
-						break;
-					case 1002:  
-						if ( json_encode($value) == '[""]' ) { $value = array('2070-01-01'); };
-						$value_combined = array_combine($tmpvalue,$value);
-						foreach ( $value_combined as $von=>$bis ) {
-							$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>';
-						}
-						unset($tmpvalue);
-						break;
-					case 5001:  
-						if ( json_encode($value) == '[""]' ) { $value = array('0'); };
-//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
-						$tmpvalue = $value;
-						break;
-					case 5002:  
-						if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
-						$value_combined = array_combine($tmpvalue,$value);
-						foreach ( $value_combined as $von=>$bis ) {
-							$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>';
-						}
-						unset($tmpvalue);
-						break;
-					case 1003:
-					case 5003:
-					case 2001:
-					case 3001:
-						break;
-					default: if ( $value != '_all' ) { $filter_results .= $komma . _cleanup($value); $komma = $_newkomma;}; break;
-				}
+				$_tmpresult = _addToFilterStatement($values,$filter_results,$komma,$_newkomma,$keyreadable,$index,$value,$tmpvalue);
+				$filter_results = $_tmpresult[0]; $tmpvalue = $_tmpresult[1]; $komma = $_tmpresult[2];
 			}
 		$filter_results .= '<br />';
 		}
@@ -373,7 +412,7 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 						$_stmt_array['arr_values'] = array();
 						$_stmt_array['arr_values'][] = $key;
 						$_tmp_result = array();
-						$keyreadable = execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0];
+						$keyreadable = explode(': ',execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0])[0];
 						if ( in_array($tablekey,$HIDDEN) ) { $_hidden = 'hidecolumn'; } else { $_hidden = ''; }
 						$table_results .= "<th class=\"disabled\" title=\"".$keyreadable."\" onclick=\"_toggleColumn(this,'". $tablekey ."');\"><i class=\"fas fa-angle-down\"></i></th><th class=\"tableheader " . $tablekey . " " . $_hidden . "\" onclick=\"_toggleColumn(this,'". $tablekey ."');\">" . $keyreadable . "</th>";
 					}
@@ -493,7 +532,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 					$_stmt_array['arr_values'] = array();
 					$_stmt_array['arr_values'][] = $key;
 					$_tmp_result = execute_stmt($_stmt_array,$conn)['result'];
-					$keyreadable[$key] = $_tmp_result['keyreadable'][0];
+					$keyreadable[$key] = explode(': ',$_tmp_result['keyreadable'][0])[0];
 					$edittype[$tablekey] = $_tmp_result['edittype'][0];
 					$table_results .= '<div class="nextlevel"><div class="unique value header" onclick="_toggleStatColumn('.$ccount0.','.sizeof($result).')">'.$keyreadable[$key].'</div>'; $row_right .= '</div>';
 					$ccount0++;
@@ -1330,7 +1369,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 								type="checkbox" 
 								value="add"
 							/>
-							<label for="add_<?php html_echo($table.'__'.$key['keymachine']); ?>"><?php html_echo($key['keyreadable']); ?></label><br>
+							<label for="add_<?php html_echo($table.'__'.$key['keymachine']); ?>"><?php html_echo(explode(': ',$key['keyreadable'])[0]); ?></label><br>
 							<?php }
 						}
 						unset($key);
@@ -1368,7 +1407,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					$_stmt_array['arr_values'][] = $keymachine;
 					unset($_result_array);
 					$_result_array = execute_stmt($_stmt_array,$conn); 
-					if ($_result_array['dbMessageGood']) { $keyreadable = $_result_array['result']['keyreadable'][0]; }; //serializes as associative array			
+					if ($_result_array['dbMessageGood']) { $keyreadable = explode(': ',$_result_array['result']['keyreadable'][0])[0]; }; //serializes as associative array			
 				?>
 					<div 
 						id="<?php html_echo($keymachine); ?>" 
@@ -1446,6 +1485,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 	$komma2 = ' WHERE (';
 	$bracket = '';
 	$_ORDER_BY = ' ORDER BY ';
+	$_komma_cmp = ' AND '; //conditions for different compounds in one key filter have all to be satisfied
+	$_komma_cmp_entry = ' OR '; //a certain index has to match every compound
 	foreach ($PARAMETER as $key=>$values) 
 	{
 		if ( in_array($key,array('table')) ) { continue; };
@@ -1480,6 +1521,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 				$_le = ">";
 				$_komma_date_multiple = " AND ";
 				$_komma_date_multiple_inner = " OR ";
+				$_komma_cmp = " OR ";
+				$_komma_cmp_entry = " AND ";
 			}
 			else
 			{
@@ -1549,9 +1592,91 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 					$komma2 = $_komma_outer;
 					$bracket = ')';
 				}
-			}
-
-			if ( ! array_key_exists(1001,$values) AND ! array_key_exists(5001,$values) )
+			} elseif ( array_key_exists(6001,$values) )
+			{
+			// sorry, no better idea: construct compound filters: repeat everything else with apt JSON_QUERY and JSON_VALUE queries...
+				//redefine $values: $cmp_values is normally a JSON of an array, but may also contain JSONS of arrays in keys 1001-1003,4001,4002
+				$cmp_index = 0;
+				$cmp_values = array();
+				while ( array_key_exists(6001+$cmp_index,$values) ) {
+					array_push($cmp_values,$values[6001+$cmp_index]);
+					$cmp_index++;					
+				}
+				//get maximal multiplicity of entries
+				unset($_stmt_tmp); $_stmt_tmp = array();
+				$_stmt_tmp['stmt'] = "SELECT MAX(JSON_LENGTH(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[0]'))) AS jsonlength FROM `view__" . $table . "__" . $_SESSION['os_role']."`";
+				unset($_jsonlength);
+				$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0];
+				//compound means: outer iteration: index of $cmp_values[0]; middle iteration: index of multiple entries (0...$jsonlength-1); inner iteration: compounds
+				for ( $i = 0; $i < _len($cmp_values); $i++ ) { // $i is conditionnumber
+					$_WHERE .= $komma2.' ('; $komma2 = '';
+					for ( $j = 0; $j < $_jsonlength; $j++ ) { // $j is entrynumber
+						$_WHERE .= $komma2.' ('; $komma2 = '';
+						for ( $compoundnumber = 0; $compoundnumber < $cmp_index; $compoundnumber++ ) {
+							$_WHERE .= $komma2.' ('; // was: $_komma_cmp
+							//to be continued here...; todo: check AND/OR logic; probably need another inner AND/komma4
+							if ( array_key_exists(1001,$cmp_values[$compoundnumber]) )
+							//20200525: how to adapt for multiple dates?
+							// would need a JSON_TABLE construct for comparison, but this does not (yet) exist in MariaDB, seems to come in 10.6
+							// sth like this: select JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') from os_userconfig; have to test for date intervals for all array entries (not just 0)....
+							// or better: select config from os_userconfig where JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') IS NOT NULL;
+							{
+					//			foreach ($cmp_values[$compoundnumber][1001] as $index=>$value)
+					//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
+					//			$komma3 = '';
+								if ( ! isset($cmp_values[$compoundnumber][1001][$i]) OR $cmp_values[$compoundnumber][1001][$i] == '' ) { $cmp_values[$compoundnumber][1001][$i] = '1970-01-01'; }
+					//			$_WHERE .= $komma3."((";
+					//			$_WHERE .= "((";
+								$_WHERE .= "(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." \"".$cmp_values[$compoundnumber][1001][$i]."\")";
+					//			$_WHERE .= ')';
+								$komma2 = $_komma_date_multiple_inner;
+		//						$komma2 = $_komma_date_inner;
+								$bracket = ')';
+								if ( ! isset($cmp_values[$compoundnumber][1002][$i]) OR  $cmp_values[$compoundnumber][1002][$i] == '' ) { $cmp_values[$compoundnumber][1002][$i] = '2070-01-01'; }
+					//			$_WHERE .= $komma2."(";
+								$_WHERE .= $komma2;
+								$_WHERE .= "(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." \"".$cmp_values[$compoundnumber][1002][$i]."\")";
+					//			$_WHERE .= '))';
+								$komma2 = $_komma_cmp;
+								$bracket = ')';
+					//			$_WHERE .= ') ';
+							} elseif ( array_key_exists(5001,$cmp_values[$compoundnumber]) )
+							{
+					//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";	
+								if ( ! isset($cmp_values[$compoundnumber][5001][$i]) OR $cmp_values[$compoundnumber][5001][$i] == '' ) { $cmp_values[$compoundnumber][5001][$i] = '0'; }
+								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." '".$cmp_values[$compoundnumber][5001][$i]."'";
+								$komma2 = $_komma_date_inner;
+								$bracket = ')';
+								if ( ! isset($cmp_values[$compoundnumber][5002][$i]) OR  $cmp_values[$compoundnumber][5002][$i] == '' ) { $cmp_values[$compoundnumber][5002][$i] = '1000000000'; }
+								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." '".$cmp_values[$compoundnumber][5002][$i]."')";
+								$komma2 = $_komma_cmp;
+								$bracket = ')';
+							}			
+							if ( ! array_key_exists(1001,$cmp_values[$compoundnumber]) AND ! array_key_exists(5001,$cmp_values[$compoundnumber]) )
+							{
+								//no: just search json entry for searchterm, so no index 4001...
+								//FILESPATH searchable by filedescription field (4001)
+								//if ( array_key_exists(4001,$cmp_values[$compoundnumber]) ) { $cmp_values[$compoundnumber] = $cmp_values[$compoundnumber][4001]; }
+					//			$_WHERE .= $komma2.'`'.$key."` = '".$value."'";
+								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_negation."LIKE CONCAT('%','".$cmp_values[$compoundnumber][$i]."','%')) ";
+			//					$komma2 = " OR ";
+								$komma2 = $_komma_cmp;
+								$bracket = ')';
+							}
+							//do not change $komma2 if no condition was set
+							if ( $komma2 != ' WHERE (' ) { $komma2 = ') '.$_komma_cmp.' ('; }
+							$_WHERE .= ')';
+						}
+						//do not change $komma2 if no condition was set
+						if ( $komma2 != ' WHERE (' ) { $komma2 = ') '.$_komma_cmp_entry.' ('; }
+						$_WHERE .= ')';			
+					} 				
+					//do not change $komma2 if no condition was set
+					if ( $komma2 != ' WHERE (' ) { $komma2 = ') '.$_komma_outer.' ('; }
+					$_WHERE .= ')';
+				} 				
+			} // end of compound extra tests
+			if ( ! array_key_exists(1001,$values) AND ! array_key_exists(5001,$values) AND ! array_key_exists(6001,$values) )
 			{
 				//no: just search json entry for searchterm, so no index 4001...
 				//FILESPATH searchable by filedescription field (4001)
@@ -1597,7 +1722,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		$_main_stmt_array['stmt'] = $_SELECT.$_FROM.$_WHERE.$_main_stmt_array['stmt'].$bracket.$_ORDER_BY;
 	}
 	if ( isset($display) AND !$display ) { return $_main_stmt_array; }
-	//print_r($_main_stmt_array); //for debug only
+	print_r($_main_stmt_array); //for debug only
 	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement);
 	$table_results = generateResultTable($_main_stmt_array,$conn);
 	$stat_results = generateStatTable($_main_stmt_array,$conn);
@@ -1861,7 +1986,7 @@ function getDetails($PARAMETER,$conn)
 										$_stmt_array['stmt'] = 'SELECT keyreadable from '.$ctable . '_permissions WHERE keymachine = ?';
 										$_stmt_array['str_types'] = 's';
 										$_stmt_array['arr_values'] = array($fkey);
-										$fkeyreadable = execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0];
+										$fkeyreadable = explode(': ',execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0])[0];
 										?>
 										<tr>
 											<td class="unlimitedWidth"><i class="fas fa-<?php echo($icon[$ctable]); ?>"></i> <?php html_echo($fkeyreadable); ?></td>
@@ -2005,7 +2130,19 @@ function _cleanup($value)
 		$values = json_decode($value,true);
 		//forget filepaths, take only filedescriptions
 		if ( isset($values[4001]) ) { $values = $values[4001]; }
-		//
+		//format compound fields
+		if ( is_array($values[0]) ) {
+			$komma = '';
+			for ( $i = 0; $i < sizeof($values[0]); $i++ ) {
+				for ( $j = 0; $j < sizeof($values); $j++ ) {
+					$newvalue .= $komma._cleanup($values[$j][$i]);
+					$komma = ', ';
+				}
+				$komma = '<br />';
+			}
+			$values = array($newvalue);
+		}
+		//clean up every component of the array
 		foreach ( $values as $index=>$entry ) {
 			$values[$index] = _cleanup($entry);
 		}
@@ -2109,6 +2246,32 @@ function _openFile($PARAMETER)
 	<?php header('Content-Type: '.mime_content_type($PARAMETER['trash'])); header('Content-Disposition: attachment; filename="'.basename($PARAMETER['trash']).'"'); readfile($PARAMETER['trash']); ?>
 	<?php
 }
+
+function _len(array $checked, int $offset = 0) {
+	$_checked_length = 1;
+	if ( isset($checked[$offset][0]) ) {
+		$_checked_length = sizeof($checked[$offset]);
+	} else {
+		foreach ( $checked[$offset] as $index=>$value ) {
+			$_checked_length = sizeof($value);
+			break;
+		}
+	}
+	return $_checked_length;
+}
+
+function _extract(array $checked, int $compound, int $item, int $offset = 0) {
+	if ( isset($checked[$offset+$compound][0]) ) {
+		$_extracted = array($checked[$offset+$compound][$item]);
+	} else {
+		$_extracted = array();
+		foreach ( $checked[$offset+$compound] as $index=>$value ) {
+			if ( ! is_array($value) ) { $value = array($value); }
+			$_extracted[$index] = array($value[$item]);
+		}
+	}
+	return $_extracted;
+}
+
+
 ?>
-
-

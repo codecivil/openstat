@@ -299,7 +299,7 @@ function validate(el,json)
 */
 			//case 'EMAIL': email is validated by the browser
 			case 'PHONE':
-				var regex = /^[0-9+\-() ]*$/;
+				var regex = /^[0-9+\-() \/,]*$/;
 				if ( ! regex.test(value) ) { _return.push(editfieldnames[i]); };
 				break;
 			default:

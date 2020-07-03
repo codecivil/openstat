@@ -8,3 +8,10 @@ function _onActionCreate(val,el) {
 		}
 //	}
 }
+
+function _displayFile(filename) {
+	regex = /\./g;
+	console.log(filename.replace(regex,''));
+	document.querySelectorAll('.sqlfile').forEach(function(sqlfilediv){sqlfilediv.classList.add('hidden');});
+	document.querySelector('#'+filename.replace(regex,'')).classList.remove('hidden');	
+}

@@ -284,7 +284,7 @@ function importCSV(array $PARAM,$conn) {
 						{ 
 						//if ( $key_array['edittype'][$index] == 'ID' ) { continue; }
 						?>
-							<option value="<?php echo($index); ?>"><?php echo($header); ?></option>
+							<option value="<?php echo($index); ?>"><?php echo(explode(': ',$header)[0]); ?></option>
 						<?php 
 						if ( $key_array['keyreadable'][$index + 1] AND $key_array['table'][$index] != $key_array['table'][$index + 1] ) { ?>
 							</optgroup>
@@ -392,7 +392,7 @@ function exportCSV (array $PARAM, $conn) {
 					$_stmt_array['arr_values'][] = $keymachine;
 					unset($_result_array);
 					$_result_array = execute_stmt($_stmt_array,$conn); 
-					if ($_result_array['dbMessageGood']) { $keyreadable = $_result_array['result']['keyreadable'][0]; }; //serializes as associative array			
+					if ($_result_array['dbMessageGood']) { $keyreadable = explode(': ',$_result_array['result']['keyreadable'][0])[0]; }; //serializes as associative array			
 					if ( $_result_array['result']['edittype'][0] != 'ID' ) {
 						$keymachine2readble[$tablekey] = $keyreadable;
 						if ( $keyreadable != '' ) {
