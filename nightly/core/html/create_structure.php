@@ -1128,6 +1128,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 						$CREATEVIEW_ID .= 'id_'.$_TABLES_ARRAY[$_tableid].$CREATEVIEW_KOMMA;
 					}	
 				}
+				//echo("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
 				$conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
 				$conn->query("PREPARE stmt FROM @qry2;");
 				$conn->query("EXECUTE stmt;");
@@ -1186,7 +1187,7 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 			$_tmpline .= $_sqlline;
 		}
 		if (substr(trim($_tmpline), -1, 1) == ';') {
-			if ( !$conn -> query($_tmpline) ) { $_return['dbMessage'] .= "Importfehler in Zeile ".$_lineno." von ".$PARAMETER['sqlfile'].": ". $conn -> error; $_return['dbMessageGood'] = "false"; };
+			if ( !$conn -> query($_tmpline) ) { $_return['dbMessage'] .= $_tmpline."<br />Importfehler in Zeile ".$_lineno." von ".$PARAMETER['sqlfile'].": ". $conn -> error . "<br /><br />"; $_return['dbMessageGood'] = "false"; };
 			$_tmpline = '';
 		}
 	}

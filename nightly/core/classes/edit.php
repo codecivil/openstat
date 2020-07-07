@@ -88,10 +88,12 @@ class OpenStatEdit {
 				unset($_stmt_array); 
 				if ( $compound == -1 ) {
 					$_stmt_array['stmt'] = 'SELECT `'.$this->key.'` FROM `view__' . $this->table . '__' . $_SESSION['os_role'].'`';
+					$_here_key = $this->key;
 				} else {
 					$_stmt_array['stmt'] = "SELECT JSON_QUERY(`".$this->key."`,'$[" .$compound."]') FROM `view__" . $this->table . "__" . $_SESSION['os_role']."`";
-				}					
-				$options = execute_stmt($_stmt_array,$this->connection)['result'][$this->key];
+					$_here_key = "JSON_QUERY(`".$this->key."`,'$[" .$compound."]')";
+				}		
+				$options = execute_stmt($_stmt_array,$this->connection)['result'][$_here_key];
 				$_splice = array();
 				foreach ( $options as $_index=>$option ) {
 					if ( is_array(json_decode($option,true)) ) {
