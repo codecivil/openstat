@@ -93,7 +93,7 @@ function updateSelection(el) {
 	var id = el.id;
 	var option = el.getElementsByTagName('option'); 
 	for (j=0; j<option.length; j++) {
-		option[j].disabled = false; 
+		option[j].disabled = false;
 	}
 	var conditions = JSON.parse(document.getElementById(id+'_conditions').innerText);
 	var conditions_met = 0;

@@ -119,6 +119,9 @@ class OpenStatEdit {
 					$conditions = execute_stmt($_stmt_array,$connection,true)['result']; //first rows, then keynames
 					if ( ! isset($options) ) { $options = array(); };
 					foreach ( $_options as $values ) {
+						//remove "***" signalling that all extended values of EXTENSIBLE LISTs are also allowed
+						$values = preg_replace('/\"\*\*\*\"\,/','',$values);
+						$values = preg_replace('/\,\"\*\*\*\"/','',$values);
 						if ( is_array(json_decode($values)) ) {
 							$options = array_merge($options,json_decode($values));
 						}
