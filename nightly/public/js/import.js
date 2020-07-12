@@ -33,8 +33,9 @@ function similarity(string1,string2) { return Math.max(similarity_asym(string1,s
 
 //asymmetric! every item of array1 has to be matche, maximal one match for array2
 function match_old(array1,array2,threshold) {
-	console.log("("+array1+")\n MATCHING TO\n("+array2+")\n");
-	if ( array1.length > array2.length ) { console.log("first argument is too long"); return -1; }
+	//console.log("("+array1+")\n MATCHING TO\n("+array2+")\n");
+	if ( array1.length > array2.length ) { //console.log("first argument is too long"); return -1; 
+		}
 	for ( var i = 0; i < array1.length; i++ ) {
 		sim = 0; sim2 = 0;
 		_splice = -1;
@@ -44,16 +45,16 @@ function match_old(array1,array2,threshold) {
 			sim = sim2;
 		}
 		array2.splice(_splice,1);
-		console.log(array1[i]+" => "+match[i]);
+		//console.log(array1[i]+" => "+match[i]);
 	}
 }
 
 function match(array1,array2,threshold) {
 	if ( threshold  == undefined ) { threshold = 0; }
-	console.log("("+array1+")\n MATCHING TO\n("+array2+")\n");
+	//console.log("("+array1+")\n MATCHING TO\n("+array2+")\n");
 	options = new Array;
 	_count = 0;
-	//if ( array1.length > array2.length ) { console.log("first argument is too long"); return -1; }
+	//if ( array1.length > array2.length ) { //console.log("first argument is too long"); return -1; }
 	for ( var i = 0; i < array1.length; i++ ) {
 		for ( var j = 0; j < array2.length; j++ ) {
 			options[_count] = new Object;
@@ -72,10 +73,10 @@ function match(array1,array2,threshold) {
 		}
 	}
 	//for debug only
-	//console.log(options);
+	////console.log(options);
 	for ( var i = 0; i < array1.length; i++ ) {
 		if ( _match[i] != undefined ) {
-			console.log(array1[i]+" => "+array2[_match[i]]);
+			//console.log(array1[i]+" => "+array2[_match[i]]);
 		}
 	}
 	//
@@ -108,7 +109,7 @@ function matchHeaders(_importel,_files,_targetdiv) {
 				_nowmatch(_importel,_files,_fileheaders,i,_oldmatch);
 			}
 			r.readAsText(_file);
-			console.log("Fileheaders:");			
+			//console.log("Fileheaders:");			
 		} (i);
 	}
 	el.querySelector('.headermatch').removeAttribute('hidden');
@@ -118,11 +119,11 @@ function _nowmatch(_importel,_files,_fileheaders,i,_oldmatch) {
 	//this script is callback for every onload of an import file; only react for last import!
 	if ( _files.length != i+1 ) { return; }
 	var el = _importel.closest('.popup');
-	console.log(_fileheaders);
+	//console.log(_fileheaders);
 	//get the table headers
 	_tableheaders = JSON.parse(el.querySelector('.headers').innerText)['keyreadable'];
 	_match = match(_fileheaders,_tableheaders);
-	console.log(_match);
+	//console.log(_match);
 	for ( var j = 0; j < _match.length; j++ ) {
 		if ( _fileheaders[j] == "" ) { continue; }
 		var clone_el = el.getElementsByClassName('singlematch')[0];
@@ -156,7 +157,7 @@ function checkHeaders(_importel,_form,_targetdiv) {
 	//~ var _tables = _tableheadersfull['table'];
 	//~ _tables = _tables.filter(function(el,ii,a){if (a[ii] !== a[ii+1]) { return true; } else { return false; }; });
 	//~ try { var _gotID = JSON.parse(el.closest('.popup').querySelector('.gotID').textContent); } catch(err) { var _gotID = new Object(); }
-	//~ console.log(Object.keys(_gotID).length+' '+_files.length+' * '+_tables.length );
+	//~ //console.log(Object.keys(_gotID).length+' '+_files.length+' * '+_tables.length );
 	//~ if ( Object.keys(_gotID).length == _files.length * _tables.length && el.closest('.popup').querySelector('.importFinished').textContent == '') {
 		//~ importJS(el,true);
 		//~ el.closest('.popup').querySelector('.importFinished').textContent = 'yes,maam';
@@ -194,6 +195,7 @@ function importJS(el,subtables) {
 		_fileheaders.push(_singlematches[i].querySelector('label').textContent);
 		_matchedIndexAll.push(_singlematches[i].querySelector('select').value);
 	}
+	console.log(_matchedIndexAll);
 	//determine number of insert lines
 	_inserts = 0;
 	for ( var i = 0; i < _files.length; i++ ) {
@@ -201,9 +203,9 @@ function importJS(el,subtables) {
 			var r = new FileReader();
 			r.onload = function () { 
 				contents = r.result.split(/\r?\n/g).filter(Boolean); //removes empty lines in this case
-				console.log(contents.length);
+				//console.log(contents.length);
 				_inserts += contents.length - 1;
-				console.log('inserts:'+_inserts);
+				//console.log('inserts:'+_inserts);
 			}
 			r.readAsText(_files[i]);
 		}(i);
@@ -215,26 +217,28 @@ function importJS(el,subtables) {
 			var _mainIDel = el.closest('.popup').querySelector('.gotID');
 			var _file = _files[i];
 			var r = new FileReader();
+			var oldrow = new Array();
 			r.onload = function () { 
 				contents = r.result.split(/\r?\n/g);
 				headers = contents.shift().split('","'); //separates headers and contents
 //				_parameter = new Object();
 				for ( var jj = 0; jj < headers.length; jj++ ) {
 					headers[jj] = headers[jj].replace(/\"/g,'');
+					oldrow[jj] = ''; //initializes oldrow properly
 					if ( _fileheaders.indexOf(headers[jj]) != -1 ) {
 						_matchedIndex[jj] = _matchedIndexAll[_fileheaders.indexOf(headers[jj])];
 					}
 				}
-				for ( var j = 0; j < contents.length; j++ ) {
+				for ( var j = 0; j < contents.length; j++ ) { //loop through lines of file
 					if ( contents[j] == '' ) { continue; }
 					if ( contents.length > 2 ) { zeile = ' Z. '+(j+1)	; } else { zeile = ''; }
 					var row = contents[j].split('","');
-					for ( var l = l_min; l < Math.min(l_max,_tables.length); l++ ) {
+					for ( var l = l_min; l < Math.min(l_max,_tables.length); l++ ) { //loop through tables
 						var _table = _tables[l];
 						_parameter = new Object();
 						_parameter['table'] = _table;
 						//define attribution to main table
-						console.log('main: '+_mainIDel.textContent);
+						//console.log('main: '+_mainIDel.textContent);
 						if ( _mainIDel.textContent != '' ) {
 							if ( _mainIDel.textContent == '-1' ) {
 								var _problems = _importel.querySelector('.importProblems');
@@ -248,14 +252,38 @@ function importJS(el,subtables) {
 								}
 							}
 						}
-						for ( var k = 0; k < row.length; k++ ) {
+						//copy old main table data if empty
+						if ( l == 0 ) {
+							//determine if main table data are all empty
+							var _maintablehasdata = false;
+							for ( var kk = 0; kk < row.length; kk++ ) { //loop through columns matching the table
+								row[kk] = row[kk].replace(/^\"/g,'').replace(/\"$/g,''); //do not twice the single/double quote replacement!
+								if ( _tableheadersfull['table'][_matchedIndex[kk]] == _table &&  row[kk] != '' ) {
+									//note if row[k] is not empty, so you use it; otherwise you take the old row for that table
+									_maintablehasdata = true;
+								}
+							}
+							//copy old data when no data
+							if ( ! _maintablehasdata && j > 0 ) {
+								for ( var kk = 0; kk < row.length; kk++ ) { //loop through columns matching the table
+								//not necessary:	oldrow[kk] = oldrow[kk].replace(/^\"/g,'').replace(/\"$/g,'').replace(/\'/g,'"');
+									if ( _tableheadersfull['table'][_matchedIndex[kk]] == _table ) {
+										row[kk] = oldrow[kk]; 
+									}
+								}
+							} else {
+								oldrow = JSON.parse(JSON.stringify(row)); //works also for multiple empty lines
+							}
+						}
+						for ( var k = 0; k < row.length; k++ ) { //loop through columns matching the table
 							//handle inner quotation marks (export makes inner double to inner single, so reverse here)
+							//doing it twice: does it hurt?
 							row[k] = row[k].replace(/^\"/g,'').replace(/\"$/g,'').replace(/\'/g,'"');
-							console.log(k+': '+headers[k]+'_'+_tableheadersfull['keyreadable'][_matchedIndex[k]]);
+							//console.log(k+': '+headers[k]+'_'+_tableheadersfull['keyreadable'][_matchedIndex[k]]);
 							if ( _tableheadersfull['table'][_matchedIndex[k]] == _table ) {
 								//select closest value match of LISTs				
 								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST" ) {
-									console.log(headers[k]+'_'+_tableheadersfull['keyreadable'][_matchedIndex[k]]);
+									//console.log(headers[k]+'_'+_tableheadersfull['keyreadable'][_matchedIndex[k]]);
 									row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][match([row[k]],_tableheadersfull['allowed_values'][_matchedIndex[k]])];
 								}
 								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
@@ -271,7 +299,7 @@ function importJS(el,subtables) {
 										}
 									};
 									if ( _date[2] ) { row[k] = _date[2]+_date[1]+_date[0]+_date[3]; }
-									console.log(row[k]); //debug only
+									//console.log(row[k]); //debug only
 								}
 								_parameter[_tableheadersfull['table'][_matchedIndex[k]]+'__'+_tableheadersfull['keymachine'][_matchedIndex[k]]] = row[k];
 							}
@@ -319,19 +347,19 @@ function displayImportSuccess(_form,_arg,_result) {
 	var _importedDetails = el.querySelector('.importImportedDetails');
 	var _existsDetails = el.querySelector('.importExistsDetails');
 	var _problemsDetails = el.querySelector('.importProblemsDetails');
-	if ( _result.indexOf('Eintrag wurde neu hinzugefügt') > -1 ) { 
+	if ( _result.indexOf('Eintrag wurde neu hinzugefügt') > -1 && _importedDetails.textContent.indexOf(_arg.log) == -1 ) { 
 		_imported.innerText = parseInt(_imported.innerText) + 1;
 		var _newlog = document.createElement('li'); 
 		_newlog.textContent = _arg.log;
 		_importedDetails.appendChild(_newlog);
 	}
-	else if ( _result.indexOf('{"id') > -1 ) { 
+	else if ( _result.indexOf('{"id') > -1 && _existsDetails.textContent.indexOf(_arg.log) == -1 ) { 
 		_exists.innerText = parseInt(_exists.innerText) + 1;
 		var _newlog = document.createElement('li'); 
 		_newlog.textContent = _arg.log;
 		_existsDetails.appendChild(_newlog);
 	}
-	else { 
+	else if ( _result.indexOf('Eintrag wurde neu hinzugefügt') == -1 &&  _result.indexOf('{"id') == -1 && _problemsDetails.textContent.indexOf(_arg.log) == -1 ) { 
 		_problems.innerText = parseInt(_problems.innerText) + 1;
 		var _newlog = document.createElement('li'); 
 		_newlog.textContent = _arg.log;
@@ -349,10 +377,10 @@ function getIDOfInsert(_form,_arg,_result) {
 	var _IDel = _arg.el.closest('.popup').querySelector('.gotID');
 	//give it back to the import of secondary tables...
 	try { var _tmp = JSON.parse(_IDel.textContent); } catch(err) { var _tmp = new Object(); }
-	console.log(_result);
+	//console.log(_result);
 	_tmp[_arg.file+'_'+_arg.line+'_'+_arg.table] = JSON.parse(_result);
 	_IDel.textContent = JSON.stringify(_tmp);
-	console.log(Object.keys(_tmp).length+' '+_arg.filescount+' '+ _arg.linescount);
+	//console.log(Object.keys(_tmp).length+' '+_arg.filescount+' '+ _arg.linescount);
 	//start import of subtables if _IDel is complete
 //	if ( Object.keys(_tmp).length == _arg.filescount * _arg.linescount && _arg.el.closest('.popup').querySelector('.importFinished').textContent == '') {
 //	import into the other tables when main table imports are complete

@@ -609,13 +609,13 @@ class OpenStatEdit {
 						<div class="clear"></div>
 						<?php break;
 				}
-				if ( ! $_single AND $_result['edittype'] != 'NONE') {
-		//was:		if ( ! $_single ) {
-					?>
-					</div> <!-- end of class enablable -->
-				<?php
-					}
 			}	
+			if ( ! $_single AND $_result['edittype'] != 'NONE') {
+	//was:		if ( ! $_single ) {
+				?>
+				</div> <!-- end of class enablable -->
+			<?php
+				}
 			if ( $_result['multiple'] ) {
 					?>
 					</div>
