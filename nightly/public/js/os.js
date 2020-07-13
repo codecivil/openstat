@@ -61,6 +61,7 @@ function _addOption(keyname) {
 
 function _toggleOption(keyname) {
 	//was == false in next line
+	if ( ! document.getElementById("db_"+keyname+"_list") ) { return; }
 	if ( document.getElementById("db_"+keyname+"_list").disabled != true ) {
 		document.getElementById("db_"+keyname+"_list").disabled = true;
 		document.getElementById("db_"+keyname+"_list").setAttribute("hidden", true);
@@ -193,8 +194,16 @@ function _toggleEditAll(form,master) {
 function _toggleEnabled(number) {
 	div = document.getElementById('enablable'+number);
 	if ( div.classList.contains('disabled') ) { div.classList.remove('disabled'); } else { div.classList.add('disabled'); };
-	div.querySelectorAll('input').forEach(function(el){ el.disabled = ! el.disabled; });
-	div.querySelectorAll('select').forEach(function(el){ el.disabled = ! el.disabled; });
+	div.querySelectorAll('input').forEach(function(el){ 
+		el.disabled = ! el.disabled;
+		//generate the correct initial disabled setting for EXTENSIBLE LIST, LIST THEN SUGGEST...
+		if ( el.id.split('_')[1] ) { _toggleOption(el.id.split('_')[1]); _toggleOption(el.id.split('_')[1]); }
+	});
+	div.querySelectorAll('select').forEach(function(el){ 
+		el.disabled = ! el.disabled;
+		//generate the correct initial disabled setting for EXTENSIBLE LIST, LIST THEN SUGGEST...
+		if ( el.id.split('_')[1] ) { _toggleOption(el.id.split('_')[1]); _toggleOption(el.id.split('_')[1]); }
+	});
 	div.querySelectorAll('textarea').forEach(function(el){ el.disabled = ! el.disabled; });
 }
 

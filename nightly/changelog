@@ -1,3 +1,16 @@
+#v1.4.4
+=======
+13.07.2020
+
+* bugfix in mass editing
+* bugfix in importCSV: tables with empty data are not creating empty entries any more, but no entry at all
+
+#v1.4.3
+=======
+12.07.2020
+
+* bugfix in mass editing
+
 #v1.4.2
 ======
 08.07.2020

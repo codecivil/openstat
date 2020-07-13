@@ -64,7 +64,7 @@ function match(array1,array2,threshold) {
 		}
 	}
 	options.sort((x,y) => (y.rank-x.rank));
-	matched1 = new Array; matched2 = new Array; _match = new Array;
+	matched1 = new Array; matched2 = new Array; _match = JSON.parse(JSON.stringify(array1)); // was: new Array;
 	for (var k = 0; k < options.length; k++ ) {
 		if ( matched1[options[k].compare[0]] != "TRUE" && matched2[options[k].compare[1]] != "TRUE" && options[k].rank > threshold ) {
 			_match[options[k].compare[0]] = options[k].compare[1];
@@ -275,6 +275,17 @@ function importJS(el,subtables) {
 								oldrow = JSON.parse(JSON.stringify(row)); //works also for multiple empty lines
 							}
 						}
+						//continue if table has no data
+						var _tablehasdata = false;
+						for ( var kk = 0; kk < row.length; kk++ ) { //loop through columns matching the table
+							row[kk] = row[kk].replace(/^\"/g,'').replace(/\"$/g,''); //do not twice the single/double quote replacement!
+							if ( _tableheadersfull['table'][_matchedIndex[kk]] == _table &&  row[kk] != '' ) {
+								//note if row[k] is not empty, so you use it; otherwise you take the old row for that table
+								_tablehasdata = true;
+							}
+						}
+						if ( ! _tablehasdata ) { continue; }
+						//
 						for ( var k = 0; k < row.length; k++ ) { //loop through columns matching the table
 							//handle inner quotation marks (export makes inner double to inner single, so reverse here)
 							//doing it twice: does it hurt?
@@ -283,8 +294,10 @@ function importJS(el,subtables) {
 							if ( _tableheadersfull['table'][_matchedIndex[k]] == _table ) {
 								//select closest value match of LISTs				
 								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST" ) {
-									//console.log(headers[k]+'_'+_tableheadersfull['keyreadable'][_matchedIndex[k]]);
-									row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][match([row[k]],_tableheadersfull['allowed_values'][_matchedIndex[k]])];
+									var _matchthis = ( row[k] != '' ) ? row[k] : '*';
+									console.log(_matchthis);
+									row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]])];
+									console.log(k+': '+row[k]);
 								}
 								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
 									var _date = row[k].split('.');
