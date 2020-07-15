@@ -213,6 +213,7 @@ class OpenStatEdit {
 		*/
 		}
 		if ( ! is_array($_default_array) ) { $_default_array = array(array($default)); };
+		if ( is_array($_default_array) AND ! is_array($_default_array[0]) ) { $_default_array = array($_default_array); };
 		$tmpkey = $key;
 		$_defaultsize = sizeof($_default_array[0]);
 		$_editsize = sizeof($_result['edittype_array']);

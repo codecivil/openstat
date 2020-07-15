@@ -201,6 +201,8 @@ function importCSV(array $PARAM,$conn) {
 		$edittypes = $key_array['edittype'];
 		//get allowd values of all LISTs
 		$indexes = array_keys($edittypes,'LIST');
+		$indexes = array_merge($indexes,array_keys($edittypes,'LIST; MULTIPLE'));
+		$indexes = array_merge($indexes,array_keys($edittypes,'CHECKBOX'));
 		unset($index);
 		foreach ( $indexes as $index ) {
 			unset($_stmt_array); $_stmt_array = array(); unset($_result_array);

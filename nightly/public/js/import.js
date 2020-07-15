@@ -291,15 +291,34 @@ function importJS(el,subtables) {
 							//doing it twice: does it hurt?
 							row[k] = row[k].replace(/^\"/g,'').replace(/\"$/g,'').replace(/\'/g,'"');
 							//console.log(k+': '+headers[k]+'_'+_tableheadersfull['keyreadable'][_matchedIndex[k]]);
+							/*
+							 * to do: import compound fields
+							 * until now: import only in the data model format possible
+							 */
 							if ( _tableheadersfull['table'][_matchedIndex[k]] == _table ) {
-								//select closest value match of LISTs				
+								//format multiple entries (separated by '|')
+								//removed temporarily condition '&& _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") == -1 ' for special import job...								
+								if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("MULTIPLE") > -1 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
+									var _choices;
+									try { _choices = JSON.parse(row[k]); } catch(err) { _choices = row[k].split('|'); };
+									if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST; MULTIPLE"  || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
+										for ( var c = 0; c < _choices.length; c++ ) {
+											var _matchthis = ( _choices[c] != '' ) ? _choices[c] : '*';
+											console.log(_matchthis);
+											_choices[c] = _tableheadersfull['allowed_values'][_matchedIndex[k]][match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]])];
+										}
+									}
+									row[k] = JSON.stringify(_choices);
+									console.log(k+': '+row[k]);									
+								}
+								//select closest value match of (non-multple) LISTs				
 								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST" ) {
 									var _matchthis = ( row[k] != '' ) ? row[k] : '*';
 									console.log(_matchthis);
 									row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]])];
 									console.log(k+': '+row[k]);
 								}
-								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
+								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") == -1 && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
 									var _date = row[k].split('.');
 									if ( _date[0].length < 2 ) { _date[0] = "0"+_date[0]; };
 									if ( _date[1] && _date[1].length < 2 ) { _date[1] = "0"+_date[1]; };

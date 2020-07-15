@@ -62,6 +62,12 @@ function _addOption(keyname) {
 function _toggleOption(keyname) {
 	//was == false in next line
 	if ( ! document.getElementById("db_"+keyname+"_list") ) { return; }
+	var minus = document.getElementById("db_"+keyname+"_list").parentElement.querySelector('.minus');
+	if ( minus.disabled ) {
+		document.getElementById("db_"+keyname+"_list").disabled = true;
+		document.getElementById("db_"+keyname+"_text").disabled = true;
+		return;	
+	}
 	if ( document.getElementById("db_"+keyname+"_list").disabled != true ) {
 		document.getElementById("db_"+keyname+"_list").disabled = true;
 		document.getElementById("db_"+keyname+"_list").setAttribute("hidden", true);
