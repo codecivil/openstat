@@ -64,7 +64,8 @@ function match(array1,array2,threshold) {
 		}
 	}
 	options.sort((x,y) => (y.rank-x.rank));
-	matched1 = new Array; matched2 = new Array; _match = JSON.parse(JSON.stringify(array1)); // was: new Array;
+	matched1 = new Array; matched2 = new Array; //_match = JSON.parse(JSON.stringify(array1)); 
+	_match = new Array;
 	for (var k = 0; k < options.length; k++ ) {
 		if ( matched1[options[k].compare[0]] != "TRUE" && matched2[options[k].compare[1]] != "TRUE" && options[k].rank > threshold ) {
 			_match[options[k].compare[0]] = options[k].compare[1];
@@ -75,7 +76,9 @@ function match(array1,array2,threshold) {
 	//for debug only
 	////console.log(options);
 	for ( var i = 0; i < array1.length; i++ ) {
-		if ( _match[i] != undefined ) {
+		if ( _match[i] == undefined ) {
+			_match[i] = -1; //feed back that there is no proper match
+//			_match[i] = 0; //take first (default) option as given if there is no match for the threshold
 			//console.log(array1[i]+" => "+array2[_match[i]]);
 		}
 	}
@@ -195,7 +198,7 @@ function importJS(el,subtables) {
 		_fileheaders.push(_singlematches[i].querySelector('label').textContent);
 		_matchedIndexAll.push(_singlematches[i].querySelector('select').value);
 	}
-	console.log(_matchedIndexAll);
+	//console.log(_matchedIndexAll);
 	//determine number of insert lines
 	_inserts = 0;
 	for ( var i = 0; i < _files.length; i++ ) {
@@ -277,6 +280,7 @@ function importJS(el,subtables) {
 						}
 						//continue if table has no data
 						var _tablehasdata = false;
+						console.log(j+' '+l+' '+JSON.stringify(row));
 						for ( var kk = 0; kk < row.length; kk++ ) { //loop through columns matching the table
 							row[kk] = row[kk].replace(/^\"/g,'').replace(/\"$/g,''); //do not twice the single/double quote replacement!
 							if ( _tableheadersfull['table'][_matchedIndex[kk]] == _table &&  row[kk] != '' ) {
@@ -301,22 +305,35 @@ function importJS(el,subtables) {
 								if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("MULTIPLE") > -1 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
 									var _choices;
 									try { _choices = JSON.parse(row[k]); } catch(err) { _choices = row[k].split('|'); };
-									if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST; MULTIPLE"  || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
+									//was: 																		 == "LIST; MULTIPLE"
+									//console.log('edittype: '+k+' '+_tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST"));
+									if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST") == 0 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
 										for ( var c = 0; c < _choices.length; c++ ) {
 											var _matchthis = ( _choices[c] != '' ) ? _choices[c] : '*';
-											console.log(_matchthis);
-											_choices[c] = _tableheadersfull['allowed_values'][_matchedIndex[k]][match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]])];
+											//console.log(_matchthis);
+											var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
+											if ( _bestindex == -1 ) {
+												_choices[c] = '';
+											} else {
+												_choices[c] = _tableheadersfull['allowed_values'][_matchedIndex[k]][_bestindex];
+											}
 										}
 									}
 									row[k] = JSON.stringify(_choices);
-									console.log(k+': '+row[k]);									
+									//console.log(k+': '+row[k]);									
 								}
 								//select closest value match of (non-multple) LISTs				
 								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST" ) {
 									var _matchthis = ( row[k] != '' ) ? row[k] : '*';
-									console.log(_matchthis);
-									row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]])];
-									console.log(k+': '+row[k]);
+									//console.log(_matchthis);
+									//console.log(k+': '+row[k]);
+									var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
+									if ( _bestindex == -1 ) {
+										row[k] = '';
+									} else {
+										row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][_bestindex];
+									}
+									//console.log(k+': '+row[k]);
 								}
 								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") == -1 && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
 									var _date = row[k].split('.');

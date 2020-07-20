@@ -199,9 +199,10 @@ function importCSV(array $PARAM,$conn) {
 			$key_array['referencetag'] = array_merge($key_array['referencetag'], $key_array_add['referencetag']);
 		}
 		$edittypes = $key_array['edittype'];
-		//get allowd values of all LISTs
-		$indexes = array_keys($edittypes,'LIST');
-		$indexes = array_merge($indexes,array_keys($edittypes,'LIST; MULTIPLE'));
+		//get allowd values of all LISTs and derivatives (multiple, compound)
+		$indexes = array_keys(preg_grep('/^LIST/',$edittypes));
+//		$indexes = array_keys($edittypes,'LIST');
+//		$indexes = array_merge($indexes,array_keys($edittypes,'LIST; MULTIPLE'));
 		$indexes = array_merge($indexes,array_keys($edittypes,'CHECKBOX'));
 		unset($index);
 		foreach ( $indexes as $index ) {
@@ -209,7 +210,8 @@ function importCSV(array $PARAM,$conn) {
 			$key_array['allowed_values'][$index] = array();
 			$_stmt_array['stmt'] = "SELECT allowed_values FROM ".$key_array['table'][$index]."_references WHERE referencetag = ?";
 			$_stmt_array['str_types'] = 's';
-			$_stmt_array['arr_values'] = array($key_array['referencetag'][$index]);
+			//preliminary: take first field reference when compound:
+			$_stmt_array['arr_values'] = array(explode(' + ',$key_array['referencetag'][$index])[0]);
 			$_result_array = execute_stmt($_stmt_array,$conn); 
 			if ($_result_array['dbMessageGood']) { 
 				foreach ( $_result_array['result']['allowed_values'] as $allowed_value_json )

@@ -282,7 +282,7 @@ class OpenStatEdit {
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 						<select <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value)">
 						<!--	<option value="none"></option> -->
-							<?php foreach ( $options as $value ) { 
+							<?php print_r($default); foreach ( $options as $value ) { 
 								$_sel = '';
 								if ( _cleanup($default) == _cleanup($value) ) { $_sel = 'selected'; };
 								?>				

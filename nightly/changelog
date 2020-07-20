@@ -1,3 +1,20 @@
+#v1.4.6
+=======
+20.7.2020
+
+* importCSV: preliminary fix for importing at least first component of compound structures if not in JSON
+* importCSV: fix for importing unmatched (LIST) entries: will now be sent as '' and saved as NULL
+
+#v1.4.5
+=======
+15.07.2020
+
+* bugfix: saved multiple lists were not loaded correctly
+
+14.07.2020
+
+* feature: importCSV adapted for mutiple fields separated by '|' 
+
 #v1.4.4
 =======
 13.07.2020
