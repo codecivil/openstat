@@ -280,7 +280,6 @@ function importJS(el,subtables) {
 						}
 						//continue if table has no data
 						var _tablehasdata = false;
-						console.log(j+' '+l+' '+JSON.stringify(row));
 						for ( var kk = 0; kk < row.length; kk++ ) { //loop through columns matching the table
 							row[kk] = row[kk].replace(/^\"/g,'').replace(/\"$/g,''); //do not twice the single/double quote replacement!
 							if ( _tableheadersfull['table'][_matchedIndex[kk]] == _table &&  row[kk] != '' ) {
@@ -289,6 +288,22 @@ function importJS(el,subtables) {
 							}
 						}
 						if ( ! _tablehasdata ) { continue; }
+						//
+						function _processDate(_string) {
+							var _date = _string.split('.');
+							if ( _date[0].length < 2 ) { _date[0] = "0"+_date[0]; };
+							if ( _date[1] && _date[1].length < 2 ) { _date[1] = "0"+_date[1]; };
+							if ( _date[2] ) { _tmpdate = _date[2].split(' '); _date[2] = _tmpdate[0]; if ( _tmpdate[1] ) { _date[3] = ' '+_tmpdate[1]; } else { _date[3] = ''; }; }
+							if ( _date[2] && _date[2].length < 3 ) { 
+								if ( (new Date()).getFullYear() - _date[2] < 2000 ) {
+									_date[2] = "19"+_date[2]; //was [0] on rhs; just a mistake?
+								} else {
+									_date[2] = "20"+_date[2]; //was [0] on rhs; just a mistake?
+								}
+							};
+							if ( _date[2] ) { _string = _date[2]+'-'+_date[1]+'-'+_date[0]+_date[3]; }
+							return _string;
+						}
 						//
 						for ( var k = 0; k < row.length; k++ ) { //loop through columns matching the table
 							//handle inner quotation marks (export makes inner double to inner single, so reverse here)
@@ -299,57 +314,83 @@ function importJS(el,subtables) {
 							 * to do: import compound fields
 							 * until now: import only in the data model format possible
 							 */
+							var _cmp_lgth = 1;
 							if ( _tableheadersfull['table'][_matchedIndex[k]] == _table ) {
-								//format multiple entries (separated by '|')
-								//removed temporarily condition '&& _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") == -1 ' for special import job...								
-								if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("MULTIPLE") > -1 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
-									var _choices;
-									try { _choices = JSON.parse(row[k]); } catch(err) { _choices = row[k].split('|'); };
-									//was: 																		 == "LIST; MULTIPLE"
-									//console.log('edittype: '+k+' '+_tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST"));
-									if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST") == 0 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
-										for ( var c = 0; c < _choices.length; c++ ) {
-											var _matchthis = ( _choices[c] != '' ) ? _choices[c] : '*';
-											//console.log(_matchthis);
-											var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
-											if ( _bestindex == -1 ) {
-												_choices[c] = '';
-											} else {
-												_choices[c] = _tableheadersfull['allowed_values'][_matchedIndex[k]][_bestindex];
+								//format compound entries separated by '_+_'
+								if ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") > -1 ) {
+									_cmp_lgth = _tableheadersfull['edittype'][_matchedIndex[k]].split(' + ').length;
+									var _choices = new Array();
+									try { _choices = JSON.parse(row[k]); } catch(err) { 
+										_choices_cmp1 = row[k].split('|');
+										_choices_cmp2 = new Array();
+										_choices_cmp1.forEach(function(_choice){
+											var _choices_add = _choice.split('_+_');
+											for ( var ci = 0; ci < _cmp_lgth; ci++ ) {
+												if ( ! _choices[ci] ) { _choices[ci] = new Array(); }
+												if ( ! _choices_add[ci] ) { _choices_add[ci] = ''; }
+												_choices[ci].push(_choices_add[ci]); 
+											}
+										});
+									};
+									row[k] = JSON.stringify(_choices);
+									console.log('precompile comppund: '+row[k]);
+								}
+								//save full row before looking at components
+								var currentrow = row[k];
+								var currentedittype = _tableheadersfull['edittype'][_matchedIndex[k]];
+								var newrow_array = new Array();
+								for ( var ci = 0; ci < _cmp_lgth; ci++ ) {
+									if ( _cmp_lgth > 1 ) { 
+										row[k] = JSON.stringify(JSON.parse(currentrow)[ci]);
+										_tableheadersfull['edittype'][_matchedIndex[k]] = currentedittype.split('; ')[0].split(' + ')[ci]+'; MULTIPLE';
+									}
+									//format multiple entries (separated by '|')
+									//removed temporarily condition '&& _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") == -1 ' for special import job...								
+									if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("MULTIPLE") > -1 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
+										var _choices;
+										try { _choices = JSON.parse(row[k]); } catch(err) { _choices = row[k].split('|'); };
+										//was: 																		 == "LIST; MULTIPLE"
+										//console.log('edittype: '+k+' '+_tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST"));
+										if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST") == 0 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
+											for ( var c = 0; c < _choices.length; c++ ) {
+												var _matchthis = ( _choices[c] != '' ) ? _choices[c] : '*';
+												//console.log(_matchthis);
+												var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
+												if ( _bestindex == -1 ) {
+													_choices[c] = '';
+												} else {
+													_choices[c] = _tableheadersfull['allowed_values'][_matchedIndex[k]][_bestindex];
+												}
 											}
 										}
+										row[k] = JSON.stringify(_choices);
+										//console.log(k+': '+row[k]);									
 									}
-									row[k] = JSON.stringify(_choices);
-									//console.log(k+': '+row[k]);									
-								}
-								//select closest value match of (non-multple) LISTs				
-								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST" ) {
-									var _matchthis = ( row[k] != '' ) ? row[k] : '*';
-									//console.log(_matchthis);
-									//console.log(k+': '+row[k]);
-									var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
-									if ( _bestindex == -1 ) {
-										row[k] = '';
-									} else {
-										row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][_bestindex];
-									}
-									//console.log(k+': '+row[k]);
-								}
-								if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") == -1 && _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
-									var _date = row[k].split('.');
-									if ( _date[0].length < 2 ) { _date[0] = "0"+_date[0]; };
-									if ( _date[1] && _date[1].length < 2 ) { _date[1] = "0"+_date[1]; };
-									if ( _date[2] ) { _tmpdate = _date[2].split(' '); _date[2] = _tmpdate[0]; if ( _tmpdate[1] ) { _date[3] = ' '+_tmpdate[1]; } else { _date[3] = ''; }; }
-									if ( _date[2] && _date[2].length < 3 ) { 
-										if ( (new Date()).getFullYear() - _date[2] < 2000 ) {
-											_date[2] = "19"+_date[2]; //was [0] on rhs; just a mistake?
+									//select closest value match of (non-multple) LISTs; does not yet work for compund fields with list not on first component		
+									if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST" ) {
+										var _matchthis = ( row[k] != '' ) ? row[k] : '*';
+										//console.log(_matchthis);
+										//console.log(k+': '+row[k]);
+										var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
+										if ( _bestindex == -1 ) {
+											row[k] = '';
 										} else {
-											_date[2] = "20"+_date[2]; //was [0] on rhs; just a mistake?
+											row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][_bestindex];
 										}
-									};
-									if ( _date[2] ) { row[k] = _date[2]+_date[1]+_date[0]+_date[3]; }
-									//console.log(row[k]); //debug only
+										//console.log(k+': '+row[k]);
+									}
+									if ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
+										var _choices;
+										try { _choices = JSON.parse(row[k]); } catch(err) { _choices = row[k].split('|'); };
+										for ( var c = 0; c < _choices.length; c++ ) {
+											_choices[c] = _processDate(_choices[c]);
+										}
+										row[k] = JSON.stringify(_choices);
+										//console.log(row[k]); //debug only
+									}
+									if ( _cmp_lgth > 1 ) { newrow_array[ci] = JSON.parse(row[k]); }
 								}
+								if ( _cmp_lgth > 1 ) { row[k]= JSON.stringify(newrow_array); _tableheadersfull['edittype'][_matchedIndex[k]] = currentedittype; }
 								_parameter[_tableheadersfull['table'][_matchedIndex[k]]+'__'+_tableheadersfull['keymachine'][_matchedIndex[k]]] = row[k];
 							}
 						}
