@@ -200,25 +200,36 @@ function importCSV(array $PARAM,$conn) {
 		}
 		$edittypes = $key_array['edittype'];
 		//get allowd values of all LISTs and derivatives (multiple, compound)
-		$indexes = array_keys(preg_grep('/^LIST/',$edittypes));
+		$indexes = array_keys(preg_grep('/LIST/',$edittypes));
 //		$indexes = array_keys($edittypes,'LIST');
 //		$indexes = array_merge($indexes,array_keys($edittypes,'LIST; MULTIPLE'));
 		$indexes = array_merge($indexes,array_keys($edittypes,'CHECKBOX'));
 		unset($index);
 		foreach ( $indexes as $index ) {
-			unset($_stmt_array); $_stmt_array = array(); unset($_result_array);
+			//setup for compound fields
+			$_referencetag_array = explode(' + ',$key_array['referencetag'][$index]);
+			$_edittype_array = explode(' + ',explode('; ',$key_array['edittype'][$index])[0]);
+			$_cmp_lgth = sizeof($_edittype_array);
 			$key_array['allowed_values'][$index] = array();
-			$_stmt_array['stmt'] = "SELECT allowed_values FROM ".$key_array['table'][$index]."_references WHERE referencetag = ?";
-			$_stmt_array['str_types'] = 's';
-			//preliminary: take first field reference when compound:
-			$_stmt_array['arr_values'] = array(explode(' + ',$key_array['referencetag'][$index])[0]);
-			$_result_array = execute_stmt($_stmt_array,$conn); 
-			if ($_result_array['dbMessageGood']) { 
-				foreach ( $_result_array['result']['allowed_values'] as $allowed_value_json )
-				{
-					$key_array['allowed_values'][$index] = array_merge($key_array['allowed_values'][$index],json_decode($allowed_value_json,true));
-				}
-				unset($edittypes[$index]);
+			for ( $i = 0; $i < $_cmp_lgth; $i++ ) {
+				if ( $_cmp_lgth > 1 ) { $key_array['allowed_values'][$index][$i] = array(); }
+				if ( $_edittype_array[$i] != 'LIST' AND $_edittype_array[$i] != 'CHECKBOX') { continue; }
+				unset($_stmt_array); $_stmt_array = array(); unset($_result_array);
+				$_stmt_array['stmt'] = "SELECT allowed_values FROM ".$key_array['table'][$index]."_references WHERE referencetag = ?";
+				$_stmt_array['str_types'] = 's';
+				$_stmt_array['arr_values'] = array($_referencetag_array[$i]);
+				$_result_array = execute_stmt($_stmt_array,$conn); 
+				if ($_result_array['dbMessageGood']) { 
+					foreach ( $_result_array['result']['allowed_values'] as $allowed_value_json )
+					{
+						if ( $_cmp_lgth > 1 ) {
+							$key_array['allowed_values'][$index][$i] = array_merge($key_array['allowed_values'][$index][$i],json_decode($allowed_value_json,true));
+						} else {
+							$key_array['allowed_values'][$index] = array_merge($key_array['allowed_values'][$index],json_decode($allowed_value_json,true));
+						}
+					}
+					unset($edittypes[$index]);
+				}					
 			}
 		}
 		$headers = $key_array['keyreadable'];

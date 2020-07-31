@@ -1,6 +1,12 @@
+#v1.4.7
+=======
+23.07.2020
+
+* completion of importing compound fields properly
+
 #v1.4.6
 =======
-20.7.2020
+20.07.2020
 
 * importCSV: preliminary fix for importing at least first component of compound structures if not in JSON
 * importCSV: fix for importing unmatched (LIST) entries: will now be sent as '' and saved as NULL

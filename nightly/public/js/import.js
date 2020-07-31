@@ -333,16 +333,18 @@ function importJS(el,subtables) {
 										});
 									};
 									row[k] = JSON.stringify(_choices);
-									console.log('precompile comppund: '+row[k]);
 								}
 								//save full row before looking at components
 								var currentrow = row[k];
 								var currentedittype = _tableheadersfull['edittype'][_matchedIndex[k]];
+								var currentallowedvalues = new Array();
+								if ( _tableheadersfull['allowed_values'][_matchedIndex[k]] ) { currentallowedvalues = _tableheadersfull['allowed_values'][_matchedIndex[k]]; }
 								var newrow_array = new Array();
 								for ( var ci = 0; ci < _cmp_lgth; ci++ ) {
 									if ( _cmp_lgth > 1 ) { 
 										row[k] = JSON.stringify(JSON.parse(currentrow)[ci]);
 										_tableheadersfull['edittype'][_matchedIndex[k]] = currentedittype.split('; ')[0].split(' + ')[ci]+'; MULTIPLE';
+										if ( currentallowedvalues[ci] ) { _tableheadersfull['allowed_values'][_matchedIndex[k]] = currentallowedvalues[ci]; }
 									}
 									//format multiple entries (separated by '|')
 									//removed temporarily condition '&& _tableheadersfull['edittype'][_matchedIndex[k]].indexOf(" + ") == -1 ' for special import job...								
@@ -354,7 +356,6 @@ function importJS(el,subtables) {
 										if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST") == 0 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
 											for ( var c = 0; c < _choices.length; c++ ) {
 												var _matchthis = ( _choices[c] != '' ) ? _choices[c] : '*';
-												//console.log(_matchthis);
 												var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
 												if ( _bestindex == -1 ) {
 													_choices[c] = '';
