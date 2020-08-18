@@ -1531,6 +1531,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 				$_le = "<=";
 				$_komma_date_multiple = " OR ";
 				$_komma_date_multiple_inner = " AND ";
+				$_komma_cmp = " AND ";
+				$_komma_cmp_entry = " OR ";
 			}			
 			unset($values[3001]);
 			switch($_orand) {
@@ -1608,7 +1610,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 				unset($_jsonlength);
 				$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0];
 				//compound means: outer iteration: index of $cmp_values[0]; middle iteration: index of multiple entries (0...$jsonlength-1); inner iteration: compounds
-				for ( $i = 0; $i < _len($cmp_values); $i++ ) { // $i is conditionnumber
+				$_WHERE .= $komma2.' ('; $komma2 = '';
+				for ( $i = 0; $i < _len($cmp_values); $i++ ) { // $i is conditionnumber;	
 					$_WHERE .= $komma2.' ('; $komma2 = '';
 					for ( $j = 0; $j < $_jsonlength; $j++ ) { // $j is entrynumber
 						$_WHERE .= $komma2.' ('; $komma2 = '';
@@ -1658,8 +1661,9 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 								//FILESPATH searchable by filedescription field (4001)
 								//if ( array_key_exists(4001,$cmp_values[$compoundnumber]) ) { $cmp_values[$compoundnumber] = $cmp_values[$compoundnumber][4001]; }
 					//			$_WHERE .= $komma2.'`'.$key."` = '".$value."'";
-								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_negation."LIKE CONCAT('%','".$cmp_values[$compoundnumber][$i]."','%')) ";
-			//					$komma2 = " OR ";
+//								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_negation."LIKE CONCAT('%','".$cmp_values[$compoundnumber][$i]."','%')) ";
+								$_WHERE .= '(IFNULL(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]'),'') ".$_negation."LIKE CONCAT('%','".$cmp_values[$compoundnumber][$i]."','%')) ";
+			//					$komma2 = " OR ";	
 								$komma2 = $_komma_cmp;
 								$bracket = ')';
 							}
@@ -1675,6 +1679,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 					if ( $komma2 != ' WHERE (' ) { $komma2 = ') '.$_komma_outer.' ('; }
 					$_WHERE .= ')';
 				} 				
+				$_WHERE .= ') ';
 			} // end of compound extra tests
 			if ( ! array_key_exists(1001,$values) AND ! array_key_exists(5001,$values) AND ! array_key_exists(6001,$values) )
 			{
