@@ -151,7 +151,9 @@ function readable(string $_string) {
 		"depends_on_key" => "Feldbedingung",
 		"depends_on_value" => "Wertbedingung",
 		"allowed_values" => "mögliche Werte",
-		"tietotables" => "Binde an Tabellen"
+		"tietotables" => "Binde an Tabellen",
+		"subtablemachine" => "Untertabelle",
+		"parentmachine" => "Elterntabelle"
 	);
 	if ( isset($_translate[$_string]) ) { return $_translate[$_string]; } else { return $_string; }
 }
@@ -370,62 +372,97 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 			}
 			break;
 		case 'os_tables':
-			$_warning = "Bitte erzeugen Sie in 'Binde an Tabellen' keine geschlossenen Abhängigkeitsketten!";
+		//subtable structure todo: case 'edit' and 'delete' here, check what to do in adminActionAfter...  
+ 			$_warning = "Bitte erzeugen Sie in 'Binde an Tabellen' keine geschlossenen Abhängigkeitsketten!";
 			switch($PARAMETER['dbAction']) {
 				case 'insert':
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "CREATE TABLE `".$PARAMETER['tablemachine']."` (id_".$PARAMETER['tablemachine']." INT NOT NULL AUTO_INCREMENT, changedat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, changedby INT, code VARCHAR(8) DEFAULT (REPLACE(REPLACE(REPLACE(upper(LEFT(to_base64(UNHEX(sha1(CONCAT(NOW(),RAND())))),8)),'/','1'),'+','2'),'=','3')), PRIMARY KEY (id_".$PARAMETER['tablemachine']."))".$ENCRYPTED.";";
-					_execute_stmt($_stmt_array,$conn);
-					unset($_table);
-					foreach ( $_TABLES as $_table )
-					{
-						if ( $_table == $PARAMETER['tablemachine'] ) { continue; }
+					//create proper tables if this is a root table, views if this is a subtable
+					if ( ! isset($PARAMETER['parentmachine']) ) {
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "ALTER TABLE `".$PARAMETER['tablemachine']."` ADD COLUMN `id_".$_table."` INT DEFAULT NULL;";
-						_execute_stmt($_stmt_array,$conn);						
+						$_stmt_array['stmt'] = "CREATE TABLE `".$PARAMETER['tablemachine']."` (id_".$PARAMETER['tablemachine']." INT NOT NULL AUTO_INCREMENT, changedat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, changedby INT, code VARCHAR(8) DEFAULT (REPLACE(REPLACE(REPLACE(upper(LEFT(to_base64(UNHEX(sha1(CONCAT(NOW(),RAND())))),8)),'/','1'),'+','2'),'=','3')), PRIMARY KEY (id_".$PARAMETER['tablemachine']."))".$ENCRYPTED.";";
+						_execute_stmt($_stmt_array,$conn);
+						unset($_table);
+						foreach ( $_TABLES as $_table )
+						{
+							if ( $_table == $PARAMETER['tablemachine'] ) { continue; }
+							unset($_stmt_array); $_stmt_array = array();
+							$_stmt_array['stmt'] = "ALTER TABLE `".$PARAMETER['tablemachine']."` ADD COLUMN `id_".$_table."` INT DEFAULT NULL;";
+							_execute_stmt($_stmt_array,$conn);						
+							unset($_stmt_array); $_stmt_array = array();
+							$_stmt_array['stmt'] = "ALTER TABLE `".$_table."` ADD COLUMN `id_".$PARAMETER['tablemachine']."` INT DEFAULT NULL;";
+							_execute_stmt($_stmt_array,$conn);						
+						}
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "ALTER TABLE `".$_table."` ADD COLUMN `id_".$PARAMETER['tablemachine']."` INT DEFAULT NULL;";
+						$_stmt_array['stmt'] = "CREATE TABLE ".$PARAMETER['tablemachine']."_permissions(id INT NOT NULL AUTO_INCREMENT, keymachine VARCHAR(40), keyreadable VARCHAR(255), subtablemachine VARCHAR(40), realid DECIMAL(6,3), typelist VARCHAR(40), edittype VARCHAR(60), defaultvalue TEXT, referencetag VARCHAR(40), role_0 INT DEFAULT 0, restrictrole_0 TEXT DEFAULT NULL, PRIMARY KEY (id))".$ENCRYPTED.";";
+						_execute_stmt($_stmt_array,$conn);
+						unset($_role);
+						foreach ( $_ROLES as $_role )
+						{
+							$_stmt_array['stmt'] = "ALTER TABLE ".$PARAMETER['tablemachine']."_permissions ADD COLUMN role_".$_role." INT DEFAULT 0;";
+							_execute_stmt($_stmt_array,$conn);						
+							$_stmt_array['stmt'] = "ALTER TABLE ".$PARAMETER['tablemachine']."_permissions ADD COLUMN restrictrole_".$_role." TEXT DEFAULT NULL;";
+							_execute_stmt($_stmt_array,$conn);						
+						}
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_permissions(keymachine,keyreadable,typelist,edittype,referencetag) values ('changedat','_none_','TIMESTAMP','NONE','_none_')";
+						_execute_stmt($_stmt_array,$conn);
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_permissions(keymachine,keyreadable,typelist,edittype,referencetag) values ('changedby','_none_','VARCHAR(40)','NONE','_none_')";
+						_execute_stmt($_stmt_array,$conn);
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_permissions(keymachine,keyreadable,typelist,edittype,defaultvalue) values ('code','Code','VARCHAR(8)','ID','(REPLACE(REPLACE(REPLACE(upper(LEFT(to_base64(UNHEX(sha1(CONCAT(NOW(),RAND())))),8)),\'/\',\'1\'),\'+\',\'2\'),\'=\',\'3\'))')";
+						_execute_stmt($_stmt_array,$conn);
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "UPDATE ".$PARAMETER['tablemachine']."_permissions SET role_0 = 6 WHERE keymachine = 'code';";
+						_execute_stmt($_stmt_array,$conn);						
+						unset($_role);
+						foreach ( $_ROLES as $_role )
+						{
+							$_stmt_array['stmt'] = "UPDATE ".$PARAMETER['tablemachine']."_permissions SET role_".$_role." = 6 - role_".$_PARENTS_ARRAY[$role]." MOD 8 WHERE keymachine = 'code';";
+							_execute_stmt($_stmt_array,$conn);						
+						}
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "CREATE TABLE ".$PARAMETER['tablemachine']."_references(id INT NOT NULL AUTO_INCREMENT, referencetag VARCHAR(40), depends_on_key VARCHAR(80), depends_on_value VARCHAR(80), allowed_values TEXT, PRIMARY KEY (id))".$ENCRYPTED.";";
+						_execute_stmt($_stmt_array,$conn);
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_references(referencetag) VALUES ('_none_');";
+						_execute_stmt($_stmt_array,$conn);
+					} else {
+						//add subtable in parent table_permissions
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "ALTER TABLE `".$PARAMETER['parentmachine']."` ADD COLUMN IF NOT EXISTS `subtablemachine` VARCHAR(40);";
+						_execute_stmt($_stmt_array,$conn);						
+						//create views for subtables
+						// // create view for table
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."` AS SELECT id_".$PARAMETER['tablemachine'].", changedat, changedby, code";
+						foreach ( $_TABLES as $_table )
+							{
+								if ( $_table == $PARAMETER['tablemachine'] ) { continue; }
+								$_stmt_array['stmt'] .= ", `id_".$_table."`";
+							}
+						$_stmt_array['stmt'] .= "', @qry, ' FROM ".$PARAMETER['parentmachine']." WITH CHECK OPTION') INTO @qry2;";
+						$conn->begin_transaction();
+						$conn->query("START TRANSACTION;");
+						$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$PARAMETER['tablemachine']."';");
+						$conn->query($_stmt_array['stmt']);
+						$conn->query("PREPARE stmt FROM @qry2;");
+						$conn->query("EXECUTE stmt;");
+						$conn->query("COMMIT;");
+						$conn->commit();
+						// // create view for _permissions
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."_permissions` AS SELECT * FROM ".$PARAMETER['parentmachine']." WHERE subtablemachine = '".$PARAMETER['tablemachine']."'";
+						_execute_stmt($_stmt_array,$conn);						
+						// // create view for _references
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."_permissions` AS SELECT * FROM ".$PARAMETER['parentmachine'];
 						_execute_stmt($_stmt_array,$conn);						
 					}
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "CREATE TABLE ".$PARAMETER['tablemachine']."_permissions(id INT NOT NULL AUTO_INCREMENT, keymachine VARCHAR(40), keyreadable VARCHAR(255), realid DECIMAL(6,3), typelist VARCHAR(40), edittype VARCHAR(60), defaultvalue TEXT, referencetag VARCHAR(40), role_0 INT DEFAULT 0, restrictrole_0 TEXT DEFAULT NULL, PRIMARY KEY (id))".$ENCRYPTED.";";
-					_execute_stmt($_stmt_array,$conn);
-					unset($_role);
-					foreach ( $_ROLES as $_role )
-					{
-						$_stmt_array['stmt'] = "ALTER TABLE ".$PARAMETER['tablemachine']."_permissions ADD COLUMN role_".$_role." INT DEFAULT 0;";
-						_execute_stmt($_stmt_array,$conn);						
-						$_stmt_array['stmt'] = "ALTER TABLE ".$PARAMETER['tablemachine']."_permissions ADD COLUMN restrictrole_".$_role." TEXT DEFAULT NULL;";
-						_execute_stmt($_stmt_array,$conn);						
-					}
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_permissions(keymachine,keyreadable,typelist,edittype,referencetag) values ('changedat','_none_','TIMESTAMP','NONE','_none_')";
-					_execute_stmt($_stmt_array,$conn);
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_permissions(keymachine,keyreadable,typelist,edittype,referencetag) values ('changedby','_none_','VARCHAR(40)','NONE','_none_')";
-					_execute_stmt($_stmt_array,$conn);
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_permissions(keymachine,keyreadable,typelist,edittype,defaultvalue) values ('code','Code','VARCHAR(8)','ID','(REPLACE(REPLACE(REPLACE(upper(LEFT(to_base64(UNHEX(sha1(CONCAT(NOW(),RAND())))),8)),\'/\',\'1\'),\'+\',\'2\'),\'=\',\'3\'))')";
-					_execute_stmt($_stmt_array,$conn);
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "UPDATE ".$PARAMETER['tablemachine']."_permissions SET role_0 = 6 WHERE keymachine = 'code';";
-					_execute_stmt($_stmt_array,$conn);						
-					unset($_role);
-					foreach ( $_ROLES as $_role )
-					{
-						$_stmt_array['stmt'] = "UPDATE ".$PARAMETER['tablemachine']."_permissions SET role_".$_role." = 6 - role_".$_PARENTS_ARRAY[$role]." MOD 8 WHERE keymachine = 'code';";
-						_execute_stmt($_stmt_array,$conn);						
-					}
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "CREATE TABLE ".$PARAMETER['tablemachine']."_references(id INT NOT NULL AUTO_INCREMENT, referencetag VARCHAR(40), depends_on_key VARCHAR(80), depends_on_value VARCHAR(80), allowed_values TEXT, PRIMARY KEY (id))".$ENCRYPTED.";";
-					_execute_stmt($_stmt_array,$conn);
-					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "INSERT INTO ".$PARAMETER['tablemachine']."_references(referencetag) VALUES ('_none_');";
-					_execute_stmt($_stmt_array,$conn);
 					foreach ( json_decode($PARAMETER['allowed_roles'],true) as $_role )
 					{
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,typelist,edittype,realid,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
+						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,realid,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
 						_execute_stmt($_stmt_array,$conn); 
 						unset($_stmt_array); $_stmt_array = array();
 						$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_role].";";
@@ -440,7 +477,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 						foreach ( $_children as $_child )
 						{
 							unset($_stmt_array); $_stmt_array = array();
-							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
+							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
 							_execute_stmt($_stmt_array,$conn); 
 							unset($_stmt_array); $_stmt_array = array();
 							$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_child].";";
@@ -1178,6 +1215,48 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 	if ( ! isset($PARAMETER['sqlfile']) ) { return; }
 	$_return = array('dbMessage' => '', 'dbMessageGood' => 'true');
 	$_sqllines = file('../../sql/'.$PARAMETER['sqlfile']);
+	//preprocess OS-extensions:
+	$_oldsqllines = array ();
+	while ( $_oldsqllines != $_sqllines ) {
+		$_oldsqllines = $_sqllines;
+		foreach( $_sqllines  as $_index => $_sqlline ) {
+			// 'OS_TABLES LIKE'
+			preg_match('/OS_TABLES LIKE \'([_%a-z0-9]*)\'/',$_sqlline,$matches);
+			if ( $matches[1] != '' ) {
+				unset($_stmt_array); $_stmt_array = array();
+				$_stmt_array['stmt'] = "SHOW TABLES LIKE '".$matches[1]."';";
+				$_loop_tables = execute_stmt($_stmt_array,$conn,true)['result'];
+				$_replacement = array ();
+				foreach ($_loop_tables as $_loop_table ) {
+					// $_loop_table has exactly one key, but of unknown name (unless we look up the database name...)
+					foreach ( $_loop_table as $_tablename ) {
+						array_push($_replacement,str_replace($matches[0],$_tablename,$_sqlline));
+					}
+				}
+				array_splice($_sqllines,$_index,1,$_replacement);
+				break;
+				//splice $_sqllines to fit in the loop instead of the placeholder
+			}
+			// 'OS_ROLES LIKE'
+			preg_match('/OS_ROLES LIKE \'([_%A-Za-z0-9]*)\'/',$_sqlline,$matches);
+			if ( $matches[1] != '' ) {
+				unset($_stmt_array); $_stmt_array = array();
+				$_stmt_array['stmt'] = "SELECT rolename from os_roles WHERE rolename != '_none_' AND rolename LIKE '".$matches[1]."';";
+				$_loop_roles = execute_stmt($_stmt_array,$conn,true)['result'];
+				$_replacement = array ();
+				foreach ($_loop_roles as $_loop_role ) {
+					// $_loop_table has exactly one key, but of unknown name (unless we look up the database name...)
+					foreach ( $_loop_role as $_role ) {
+						array_push($_replacement,str_replace($matches[0],$_role,$_sqlline));
+					}
+				}
+				array_splice($_sqllines,$_index,1,$_replacement);
+				break;
+				//splice $_sqllines to fit in the loop instead of the placeholder
+			}
+		}
+	}
+	//
 	$_tmpline = '';
 	$conn->begin_transaction();
 	$conn->query("START TRANSACTION;");

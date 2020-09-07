@@ -500,3 +500,211 @@ function changeUserName(array $PARAM, $conn) {
 //	return $_result_array['dbMessageGood'];			
 	return $_SESSION['os_username'];			
 }
+
+function trafficLight_new(array $PARAM, mysqli $conn)
+{
+	$tables = $PARAM['table'];
+	
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "SELECT functionconfig from os_functions where functionmachine = 'trafficLight'";
+	$_config = json_decode(execute_stmt($_stmt_array,$conn,true)['result'][0]['functionconfig'],true);
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine from os_tables';
+	/*$_stmt_array['str_types'] = 's';
+	$_stmt_array['arr_values'] = array($table);*/
+	$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
+	$icon = array();
+	for ( $i = 0; $i < sizeof($_table_result); $i++ ) {
+		$icon[$_table_result[$i]['tablemachine']] = $_table_result[$i]['iconname'];
+	}
+	
+	if (sizeof($tables) == 0) { return; }
+	?>
+	<div class="imp_wrapper">
+		<div class="imp_close"><i class="fas fa-times-circle" onclick="_close(this,true);"></i></div>
+	<?php
+	foreach ( $tables as $table ) {
+		$ids = array(); $resultin = array(); $_param = array();
+		foreach ( $_config['criteria'] as $criterion ){
+			if ($criterion['table'] == $table ) { 
+				$resultout_array = _parseCriterion($resultin,$_param,$criterion,$conn);
+				$resultout = $resultout_array[0];
+				$_param = $resultout_array[1];
+				foreach ( $resultout as $id ) {
+					$_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
+					if ( ! array_key_exists($id,$ids) ) { $ids[$id] = array(); $ids[$id]['urgency'] = 0; $ids[$id]['criteria'] = array(); }
+					if ( $criterion['urgency'] == "+" ) { $ids[$id]['urgency'] += 1; }
+					if ( $criterion['urgency'] == "-" ) { $ids[$id]['urgency'] -= 1; }
+					if ( is_int($criterion['urgency']) ) { $ids[$id]['urgency'] = max($ids[$id]['urgency'],$criterion['urgency']); }
+					if (! substr_in_array($criterion['name'],$ids[$id]['criteria']) ) { array_push($ids[$id]['criteria'],$criterion['name'].$_criteriondetail); } 
+				}
+			}
+		}
+		$identifiers = implode(',',$_config['identifiers'][$table]);
+		$identifiers_esc = "'".str_replace(",","','",$identifiers)."'";
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = 'SELECT keymachine,keyreadable from '.$table.'_permissions WHERE keymachine IN ('.$identifiers_esc.')';
+		$_identifiers_result = execute_stmt($_stmt_array,$conn)['result'];
+		$_identifiers_readable = array_combine($_identifiers_result['keymachine'],$_identifiers_result['keyreadable']);						
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = 'SELECT id_'.$table.','.$identifiers.' from view__'.$table.'__'.$_SESSION['os_role'].' WHERE id_'.$table.' IN ('.implode(',',array_keys($ids)).')';						
+		$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
+		if ( ! $_table_result OR sizeof($_table_result) == 0 ) { continue; }
+		?>
+		<div class="tableicon"><i class="fas fa-<?php html_echo($icon[$table]); ?>"></i></div>
+		<div>
+			<table>
+				<tr>
+					<?php
+					foreach ( $_config['identifiers'][$table] as $identifier ) {
+					?>
+						<th><?php echo($_identifiers_readable[$identifier]); ?></th>
+					<?php
+					}
+					?>
+					<th>Kriterien</th>
+				</tr>
+		<?php
+		foreach ( $_table_result as $_item ) {
+			$_rnd = rand(0,32767);
+			if ( $ids[$_item['id_'.$table]]['urgency'] == 1 ) { $_class = "yellow"; }
+			if ( $ids[$_item['id_'.$table]]['urgency'] == 2 ) { $_class = "orange"; }
+			if ( $ids[$_item['id_'.$table]]['urgency'] > 2 ) { $_class = "red"; }
+			?>
+			<tr class="<?php html_echo($_class); ?>">
+				<?php
+				foreach ( $_config['identifiers'][$table] as $identifier ) {
+				?>
+					<td><?php html_echo($_item[$identifier]); ?></td>
+				<?php } ?>
+				<td><?php html_echo(implode(' | ',$ids[$_item['id_'.$table]]['criteria'])); ?></td>
+				<td>
+					<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details'); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_item['id_'.$table]); ?>" name="id_opsz_aufnahme" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
+					<label for="ampelSubmit__<?php echo($_rnd); ?>"><i class="fas fa-address-card"></i></label>
+				</td>							
+			</tr>
+			<?php
+		}
+		?>
+			</table>
+			<br />
+		</div>
+		<?php 
+	}
+}
+
+function _parseCriterion(array $resultin, array $_param, array $criterion, mysqli $conn) {
+	//included 'not': use notimplies whenever possible, since otherwise we have to define an _all array, what costs a lot if time!
+	$_logical = array("and","or","not","notimplies","implies");
+	$_logical = array_values(array_intersect($_logical,array_keys($criterion)));
+	if ( isset($_logical[0]) ) { 
+		//rewrite for some keywords before parsing subcriteria:
+		switch ($_logical[0]) {
+			case 'implies':
+				//binary relation
+				//rewrite implies(a,b) to ( !a or b )
+				$criterion['or'] = array();
+				$criterion['or'][0]=array("not"=>$criterion['implies'][0]);
+				$criterion['or'][1]=$criterion['implies'][1];
+				unset($criterion['implies']);
+				$_logcial[0] = 'or';
+				break;
+		}
+		$subcriteria = $criterion[$_logical[0]] ;
+		if ( ! $subcriteria[0] ) { $subcriteria = array($subcriteria); } // this is for "not": applies only to one criterion, so is no array of criteria by design
+		foreach ($subcriteria as $index => $subcriterion ) {
+			$subcriterion['table'] = $criterion['table'];
+			$subresultout_array = _parseCriterion($resultin,$_param,$subcriterion,$conn);
+			$subresultout = $subresultout_array[0];
+			$_subparam = $subresultout_array[1];
+			$_param = array_merge($_param,$_subparam);
+			switch($_logical[0]) {
+				case 'and':
+					if ( $index == 0 ) { $resultin = $subresultout; }
+					else { $resultin = array_values(array_intersect($resultin,$subresultout)); }
+					break;
+				case 'or': 
+					$resultin = array_unique(array_merge($resultin,$subresultout));
+					break;
+				case 'not':
+					if (! isset($_all) ) {
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "SELECT id_".$criterion['table']." AS id FROM view__".$criterion['table']."__".$_SESSION['os_role'];
+						$_all = execute_stmt($_stmt_array,$conn)['result']['id'];
+					}
+					$resultin = array_diff($_all,$subresultout);
+					break;
+				case 'notimplies':
+					// binary relation
+					// this is special: notimplies(a,b) is equivalent to (a AND !b), so we dont need $_all but can array_diff to result of a; this is much faster!
+					if ( $index == 0 ) { $resultin = $subresultout; }
+					if ( $index == 1 ) { $resultin = array_diff($resultin,$subresultout); }
+					break;
+			}
+		}
+		return array($resultin,$_param);
+	} else {
+	//proper parsing
+	//the following only works for simple queries: fix it for multiple select, from, where and 'distinct'... keywords
+		$_where_array = preg_split('/ WHERE /i',$criterion['sql'],2);
+		$_where = $_where_array[1];
+		$_from_array = preg_split('/ FROM /i',$_where_array[0],2);
+		$_from = $_from_array[1];
+		$_select_array = preg_split('/SELECT /i',$_from_array[0],2);
+		$_select = $_select_array[1];
+		unset($_stmt_array); $_stmt_array = array();
+		$_resultout = array (); $_param = array ();
+		$_stmt_array['stmt'] = "SELECT id_".$criterion['table'].",".$_select." AS PARAM FROM view__".$_from."__".$_SESSION['os_role']." WHERE ".$_where." GROUP BY id_".$criterion['table']." ORDER BY PARAM DESC";
+		foreach ( execute_stmt($_stmt_array,$conn,true)['result'] as $_maybe ) {
+			$value = $_maybe['PARAM'];
+			if ( $key == 'id_'.$criterion['table'] ) { continue; }
+			$_push = false;
+			switch($criterion['relation']) {
+				case '>':
+					if ( $value > $criterion['benchmark'] ) { $_push = true; }
+					break;
+				case '>=':
+					if ( $value >= $criterion['benchmark'] ) { $_push = true; }
+					break;
+				case '<':
+					if ( $value < $criterion['benchmark'] ) { $_push = true; }
+					break;
+				case '<=':
+					if ( $value <= $criterion['benchmark'] ) { $_push = true; }
+					break;
+				case '=':
+					if ( $value == $criterion['benchmark'] ) { $_push = true; }
+					break;
+				case '!=':
+					if ( $value != $criterion['benchmark'] ) { $_push = true; }
+					break;
+				case 'contains':
+					if ( strpos($value,$criterion['benchmark']) ) { $_push = true; }
+					break;
+				case 'beginswith':
+					if ( strpos($value,$criterion['benchmark']) == 0 ) { $_push = true; }
+					break;
+				case 'endswith':
+					if ( strpos($value,$criterion['benchmark']) == strlen($value) - strlen($criterion['benchmark']) ) { $_push = true; }
+					break;
+				case 'notcontains':
+					if ( ! strpos($value,$criterion['benchmark']) ) { $_push = true; }
+					break;
+				case 'notbeginswith':
+					if ( strpos($value,$criterion['benchmark']) !== 0 ) { $_push = true; }
+					break;
+				case 'notendswith':
+					if ( strpos($value,$criterion['benchmark']) !== strlen($value) - strlen($criterion['benchmark']) ) { $_push = true; }
+					break;
+			}
+			if ( $_push ) { 
+				array_push($_resultout,$_maybe['id_'.$criterion['table']]);
+				if ( isset($criterion['display']) ) {
+					//need non-numeric keys for array_merge to do what we want
+					$_param['id'.$_maybe['id_'.$criterion['table']]] = $value.' '.$criterion['display'];
+				}
+			}
+		}
+		return array($_resultout,$_param);
+	}
+}

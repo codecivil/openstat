@@ -132,7 +132,7 @@ textarea.FREELONGER { min-height: 10rem; }
 .functions { background-color: var(--background-functions); border-radius: 5px; color: var(--color-functions); }
 .functions ul { padding: 0.5rem; margin: 0.5rem; border-radius: 5px; list-style-type: none; }
 #results_wrapper .functions ul { padding: 0.2rem; margin: 0.2rem; border-radius: 5px; list-style-type: none; }
-.functions ul li { font: 1.2rem sans-serif; display: inline; padding: 0.2rem; }
+.functions ul li { font: 1.2rem sans-serif; display: inline !important; padding: 0.2rem !important; }
 
 /* query results */
 #results_wrapper { /* max-width: 50%; */ background: var(--background-resultswrapper); overflow: auto; resize: both; }
