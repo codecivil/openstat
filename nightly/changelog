@@ -1,3 +1,9 @@
+#1.4.14
+=======
+09.9.2010
+
+* log button in openStatAdmin; logs are downloadable and saved to sql folder (so they can be seen with SQL import button)
+
 #1.4.13
 =======
 05.09.2020
