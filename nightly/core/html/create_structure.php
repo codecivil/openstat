@@ -121,6 +121,23 @@ if ( isset($PARAMETER['recreateViews']) ) {
 	}					
 }
 
+//logButton
+$_save = false;
+if ( isset($PARAMETER['logActivity']) ) {
+	if ( isset($_SESSION['log']) AND $_SESSION['log'] ) {
+		$_SESSION['log'] = false;
+		$_save = true;
+		$_SESSION['logfinishedtimereadable'] = date('m.d.Y H:i:s');
+		$_SESSION['logfinishedtime'] = date('Y-m-d_His');
+		$_SESSION['logsaved'] = $_SESSION['logstring']."-- openStatAdmin-log finished ".$_SESSION['logfinishedtimereadable'].PHP_EOL;
+		$_SESSION['logstring'] = "";
+	} else { 
+		$_SESSION['log'] = true;
+		$_SESSION['logstring'] = "-- openStatAdmin-log started ".date('m.d.Y H:i:s').PHP_EOL;
+	}
+	unset($PARAMETER['logActivity']);
+}
+
 function readable(string $_string) {
 	$_translate = array(
 		"parentid" => "Eltern-ID",
@@ -1349,17 +1366,40 @@ $tableel .= "</table>";
 	<div id="tables">
 		<ul>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST']); ?>/html/admin.php"><i class="fas fa-power-off" title="Abmelden"></i></a></li>
+			<li class="separate"></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_roles"><i class="fas fa-theater-masks" title="Rollen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_users"><i class="fas fa-users" title="Benutzer"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_tables"><i class="fas fa-table" title="Nutzertabellen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_functions"><i class="fas fa-briefcase" title="Funktionen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_sql"><i class="fas fa-database" title="SQL Import"></i></a></li>
+			<li class="separate"></li>
 			<li>
+				<a>
 				<form id="recreateViewsForm" method="POST" class="recreateViews">
 					<input type="checkbox" name="recreateViews" checked hidden>
 					<label for="submitRecreateViews"><i class="fas fa-binoculars" title="Views aktualisieren"></i></label>
 					<input id="submitRecreateViews" type="submit" hidden>
 				</form>
+				</a>
+			</li>
+			<li>
+				<a>
+				<form id="logForm" method="POST" class="logActivity log<?php echo($_SESSION['log']); ?>">
+					<input type="checkbox" name="logActivity" checked hidden>
+					<label for="submitLog"><i class="fas fa-microphone" title="Logbuch starten/beenden"></i></label>
+					<input id="submitLog" type="submit" hidden>
+				</form>
+				</a>
+			</li>
+				<?php if ( isset($_SESSION['log']) AND ! $_SESSION['log'] ) { ?>
+			<li>
+				<a href="data:text/plain;charset=utf-8;base64,<?php echo(base64_encode($_SESSION['logsaved'])); ?>" target="_blank" download="openStatAdmin-Log-<?php echo($_SESSION['logfinishedtime']); ?>.sql" title="openStatAdmin-Log vom <?php echo($_SESSION['logfinishedtimereadable']); ?>"><i class="fas fa-file-download"></i></a>
+				<?php
+					if ( $_save ) {
+						$_logfile = '../../sql/openStatAdmin-Log-'.$_SESSION['logfinishedtime'].'.sql';
+						file_put_contents($_logfile,$_SESSION['logsaved']);
+					}
+				} ?>
 			</li>
 		</ul>
 	</div>

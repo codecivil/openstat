@@ -2,9 +2,10 @@
 =======
 05.09.2020
 
-* new function exportRefuKey
-* redesign of function trafficLight
+* new function exportRefuKey (depends on php7.3-zip)
+* redesign of function trafficLight (pushed to openStat)
 * preparations for subtable structures
+* openStat-SQL-extensions: "OS_TABLES LIKE" and "OS_ROLES LIKE" in createStructure.php::importSQL
 
 #v1.4.9
 =======

@@ -1,6 +1,7 @@
 <?php
 //returns raw result
-function _execute_stmt(array $stmt_array, mysqli $conn)
+//logs if $_SESSION['log'] is set and true (in order to avoid changing all execute_stmts), or if parameter $log is set and true
+function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 {
 	$stmt = ''; $str_types = ''; $arr_values = ''; $message = '';
 	if (isset($stmt_array['stmt']) ) { $stmt = $stmt_array['stmt']; };
@@ -16,6 +17,20 @@ function _execute_stmt(array $stmt_array, mysqli $conn)
 			else {
 				$dbMessage = $message; $dbMessageGood = "true";
 				$result = $statement->get_result();
+				//log if log is enabled and stmt is not internal (grants, revokes, selects...)
+				if ( strpos($stmt,'view__') === false AND strpos($stmt,'GRANT') === false AND strpos($stmt,'FLUSH') === false AND strpos($stmt,'SELECT') !== 0 AND strpos($stmt,'REVOKE') === false AND ( $_SESSION['log'] OR $log ) ) {
+					//test for unchanging ALTER TABLE statements
+					$_stmt_exploded = explode('`',$stmt); // index 3 aand 5 are the old and new id_-names
+					if ( ! isset($_stmt_exploded[3]) OR ! isset($_stmt_exploded[5]) OR $_stmt_exploded[3] != $_stmt_exploded[5] ) {
+						$logstring = $stmt;
+						foreach ( $arr_values as $value ) {
+							$logstring = preg_replace('/\?/',"'".$value."'",$logstring,1);
+						}
+						$_semicolon = ";";
+						if ( preg_match('/\;$/',trim($logstring)) == 1 ){ $_semicolon = ''; }
+						$_SESSION['logstring'] .= $logstring.$_semicolon.PHP_EOL;
+					}
+				} 
 			}
 		}
 	}
