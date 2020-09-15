@@ -386,7 +386,11 @@ function importJS(el,subtables) {
 										for ( var c = 0; c < _choices.length; c++ ) {
 											_choices[c] = _processDate(_choices[c]);
 										}
-										row[k] = JSON.stringify(_choices);
+										if ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("MULTIPLE") >= 0 ) {
+											row[k] = JSON.stringify(_choices);
+										} else {
+											row[k] = _choices[0];
+										}
 										//console.log(row[k]); //debug only
 									}
 									if ( _cmp_lgth > 1 ) { newrow_array[ci] = JSON.parse(row[k]); }
