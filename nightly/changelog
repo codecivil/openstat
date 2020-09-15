@@ -1,3 +1,9 @@
+#1.4.16
+=======
+15.09.2020
+
+* bugfix: import of single dates failed (import.js)
+
 #1.4.14
 =======
 09.9.2010
