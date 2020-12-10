@@ -61,7 +61,7 @@ mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
 	tar xzf openStat.tgz && {
 		# renew license and readme
 		cp codecivil-*/LICENSE "$WEBDIR/LICENSE.oStat"
-		cp codecivil-*/README "$WEBDIR/README.oStat"
+		cp codecivil-*/README.md "$WEBDIR/README.oStat"
 		# update this script
 		cp codecivil-*/updateOS /usr/local/bin/
 		# get correct files
@@ -104,7 +104,7 @@ cd "$WEBDIR/latest/"
 tar xzf $INSTANCE.tgz && {
 	# renew license and readme
 	cp codecivil-*/LICENSE "$WEBDIR/LICENSE.opsz"
-	cp codecivil-*/README "$WEBDIR/README.opsz"
+	cp codecivil-*/README.md "$WEBDIR/README.opsz"
 	# update this script
 	cp codecivil-*/updateOS /usr/local/bin/
 	#

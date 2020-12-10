@@ -274,7 +274,7 @@ class OpenStatEdit {
 					case 'SUGGEST':
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input <?php echo($_disabled); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(json_encode($options)); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
+						<input <?php echo($_disabled); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
 						<div class="clear"></div>
 						<?php break;
 					case 'LIST':
