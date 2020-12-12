@@ -82,7 +82,32 @@ function _toggleOption(keyname) {
 }
 
 var suggest_length_old = 0; var suggest_length = 0;
+
 function _autoComplete(el,suggest_array,suggest_conditions) {
+	suggest_length_old = suggest_length; suggest_length = el.value.length;
+	var suggestions = el.parentElement.querySelector('.suggestions');
+	for (i=0; i<Object.keys(suggest_array).length; i++) {
+		j = Object.keys(suggest_array)[i];
+		var suggestion = suggest_array[j]; var sugindex = j;
+		if ( suggest_length >= 3 && suggest_array[j] && suggest_array[j].indexOf(el.value) > -1 ) {
+			console.log(el);
+			if ( ! el.nextElementSibling.querySelector('.sug'+sugindex) ) {
+				//create div
+				var sugdiv = document.createElement('div');
+				sugdiv.textContent = suggestion;
+				sugdiv.classList = "sug"+sugindex;
+				sugdiv.onclick = function () { this.parentElement.previousElementSibling.value = this.textContent; suggest_length_old = suggest_length; suggest_length = this.textContent.length; };
+				el.nextElementSibling.appendChild(sugdiv);
+			}
+		} else {
+			if ( el.nextElementSibling.querySelector('.sug'+sugindex) ) {
+				el.nextElementSibling.removeChild(el.nextElementSibling.querySelector('.sug'+sugindex));
+			}
+		}
+	};
+}
+
+function _oldautoComplete(el,suggest_array,suggest_conditions) {
 	var t = 0;
 	suggest_length_old = suggest_length; suggest_length = el.value.length;
 	if (suggest_length_old >= suggest_length) { return; }

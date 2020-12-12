@@ -275,6 +275,7 @@ class OpenStatEdit {
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 						<input <?php echo($_disabled); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
+						<div class="suggestions"></div>
 						<div class="clear"></div>
 						<?php break;
 					case 'LIST':
@@ -371,7 +372,8 @@ class OpenStatEdit {
 							<?php }; ?>
 							<div id="db_<?php echo($key.$rnd); ?>_list"></div>
 							<div class="left">
-								<input <?php echo($_disabled); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(json_encode($options)); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+								<input <?php echo($_disabled); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+								<div class="suggestions"></div>
 								<label class="toggler" for="minus<?php echo($rnd); ?>">&nbsp;<i class="fas fa-plus"></i></label>
 								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 							</div>
@@ -382,7 +384,8 @@ class OpenStatEdit {
 					case 'EXTENSIBLE LIST':
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>_list" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input <?php echo($_disabled); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(json_encode($options)); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+						<input <?php echo($_disabled); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+						<div class="suggestions"></div>
 						<select <?php echo($_disabled); ?>  id="db_<?php echo($key.$rnd); ?>_list" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value)">
 						<!--	<option value="none"></option> -->
 							<?php foreach ( $options as $value ) { 
@@ -409,7 +412,8 @@ class OpenStatEdit {
 						?>
 							<div class="searchfield">
 								<label for="db_<?php echo($key.$rnd); ?>_list" style="opacity: 0"><?php echo($keyreadable); ?></label>
-								<input <?php echo($_disabled); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(json_encode($options)); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+								<input <?php echo($_disabled); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+								<div class="suggestions"></div>
 								<select <?php echo($_disabled); ?>  id="db_<?php echo($key.$rnd); ?>_list" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value)">
 								<!--	<option value="none"></option> -->
 									<?php foreach ( $options as $value ) { 
@@ -433,7 +437,8 @@ class OpenStatEdit {
 					case 'SUGGEST BEFORE LIST':
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>_list" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input <?php echo($_disabled); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(json_encode($options)); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
+						<input <?php echo($_disabled); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
+						<div class="suggestions"></div>
 						<select <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>_list" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value)" disabled hidden>
 						<!--	<option value="none"></option> -->
 							<?php foreach ( $options as $value ) { 

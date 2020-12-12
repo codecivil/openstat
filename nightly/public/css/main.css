@@ -247,6 +247,41 @@ textarea.FREELONGER { min-height: 10rem; }
 .details .export { text-align: center; }
 .details .toggle + div { display: none; }
 .details .toggle:checked + div { display: block; }
+/** SUGGESTion windows **/
+.details .suggestions { 
+	opacity: 0;
+	position: relative;
+	top: 2.3rem;
+	left: 13rem;
+	height: 0;
+	width: 60%;
+	z-index: -2000;
+}
+.details .suggestions:nth-last-child(2) {
+	clear: both;
+	top: 0;
+}
+.details .db_formbox:focus + .suggestions {
+	position: relative;
+	opacity: 1;
+	z-index: 2000;
+}
+
+.details .db_formbox:focus + .suggestions div {
+	background: var(--background-details); 
+	padding: 0.2rem;
+	margin: 0 0 0 0.2rem;
+	border-left: 1px solid black;
+	border-right: 1px solid black;
+}.
+.details .db_formbox:focus + .suggestions div:first-child {
+	border-top: 1px solid black;
+}
+.details .db_formbox:focus + .suggestions div:last-child {
+	border-bottom: 1px solid black;
+	box-shadow: 0 0.1rem 0.1rem -0.1rem #0e0e0e;
+}
+
 .message .true { background: var(--background-goodmessage); }
 .message .false { background: var(--background-badmessage); font-weight: bold; }
 .edit_wrapper { min-height: 3rem; }
