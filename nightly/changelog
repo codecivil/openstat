@@ -1,3 +1,10 @@
+#1.4.17
+=======
+12.12.2020
+
+* bugfix: handling of single quotes in SUGGESTions
+* Auto-Completion in SUGGEST now offers a dropdown menu instead of completing the single hit
+
 #1.4.16
 =======
 15.09.2020
