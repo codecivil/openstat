@@ -96,7 +96,9 @@ function _autoComplete(el,suggest_array,suggest_conditions) {
 				var sugdiv = document.createElement('div');
 				sugdiv.textContent = suggestion;
 				sugdiv.classList = "sug"+sugindex;
-				sugdiv.onclick = function () { this.parentElement.previousElementSibling.value = this.textContent; suggest_length_old = suggest_length; suggest_length = this.textContent.length; };
+				sugdiv.onmousedown = function () { this.parentElement.previousElementSibling.value = this.textContent; suggest_length_old = suggest_length; suggest_length = this.textContent.length; };
+				sugdiv.onmouseover = function () { this.style.background='var(--background-marked)'; }
+				sugdiv.onmouseout = function () { this.style.background='var(--background-details)'; }
 				el.nextElementSibling.appendChild(sugdiv);
 			}
 		} else {

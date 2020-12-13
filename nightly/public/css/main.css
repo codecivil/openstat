@@ -56,6 +56,7 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #usermenu #logout { font-size: 1.2rem; border-right: 1px var(--color-statusbar) dashed; }
 #statusbar #usermenu #loggedin { border-right: 1px var(--color-statusbar) dashed; }
 #statusbar #user { border: 1px var(--color-statusbar) solid; border-radius: 5px; }
+#statusbar #info { overflow: hidden; }
 #statusbar #opszInfo + div { display: none; font-size: 0.7rem; overflow-y: scroll; }
 #statusbar #opszInfo:checked + div { display: block; }
 #statusbar #loggedin input { border: none; background: transparent; font-weight: bold; color: var(--color-statusbar); }
@@ -213,7 +214,7 @@ textarea.FREELONGER { min-height: 10rem; }
 .details .actionwrapper { position: sticky; top: 6.7rem; overflow: hidden; z-index: 500; margin: 0.5rem; background: var(--background-action); border-radius: 5px; border-bottom: 1px solid black; 	box-shadow: 0 2px 5px #444; width: auto; }
 /* sticky for assignments? takes too much space? */
 .details .assignment { position: sticky; top: 9.2rem; overflow: hidden; z-index: 500; margin: 0.5rem; padding: 0.5rem; background: var(--background-details); border-radius: 5px; border-bottom: 1px solid black; box-shadow: 0 2px 5px #444; width: auto; }
-.details .db_headline_wrapper { position: sticky; top: 5rem; overflow: hiiden; z-index: 501; background: var(--background-details); }
+.details .db_headline_wrapper { position: sticky; top: 5rem; overflow: hidden; z-index: 501; background: var(--background-details); }
 .details label {float: left; width: 12rem; text-align: right; padding-right: 1%; margin-top: 0.5rem; }
 .details .checkbox label {float: none; width: auto; text-align: left; padding-right: 0; margin-top: 0; }
 .details .functions label { margin-top: 0; }
@@ -256,6 +257,7 @@ textarea.FREELONGER { min-height: 10rem; }
 	height: 0;
 	width: 60%;
 	z-index: -2000;
+	background: var(--background-details); 
 }
 .details .suggestions:nth-last-child(2) {
 	clear: both;
@@ -273,7 +275,11 @@ textarea.FREELONGER { min-height: 10rem; }
 	margin: 0 0 0 0.2rem;
 	border-left: 1px solid black;
 	border-right: 1px solid black;
-}.
+}
+.details .db_formbox:focus + .suggestions div:hover {
+	cursor: pointer;
+	background: var(--background-marked);
+}
 .details .db_formbox:focus + .suggestions div:first-child {
 	border-top: 1px solid black;
 }

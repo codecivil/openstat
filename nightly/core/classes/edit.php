@@ -87,7 +87,7 @@ class OpenStatEdit {
 			case 'SUGGEST BEFORE LIST':
 				unset($_stmt_array); 
 				if ( $compound == -1 ) {
-					$_stmt_array['stmt'] = 'SELECT `'.$this->key.'` FROM `view__' . $this->table . '__' . $_SESSION['os_role'].'`';
+					$_stmt_array['stmt'] = 'SELECT `'.$this->key.'` FROM `view__' . $this->table . '__' . $_SESSION['os_role'].'` ORDER BY `'.$this->key.'`';
 					$_here_key = $this->key;
 				} else {
 					$_stmt_array['stmt'] = "SELECT JSON_QUERY(`".$this->key."`,'$[" .$compound."]') FROM `view__" . $this->table . "__" . $_SESSION['os_role']."`";
