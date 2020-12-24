@@ -363,7 +363,16 @@ function exportCSV (array $PARAM, $conn) {
 	}
 	?>
 	<h3>CSV-Exporte</h3>
+	<?php
+		if  ( ! isset($_array['massEdit']) OR sizeof($_array['massEdit']) <= 1 ) {
+			?>
+			<p>Sie haben keine Datensätze ausgewählt.</p>
+			<?php
+			return;
+		}
+	?>
 	<p>Fenster bitte nach dem Herunterladen schließen</p>
+	<p>Sie exportieren <?php echo(sizeof($_array['massEdit'])-1); ?> Datensätze.</p>
 	<?php
 	//get config
 	$_config = getConfig($conn);

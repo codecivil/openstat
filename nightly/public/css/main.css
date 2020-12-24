@@ -61,7 +61,11 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #opszInfo:checked + div { display: block; }
 #statusbar #loggedin input { border: none; background: transparent; font-weight: bold; color: var(--color-statusbar); }
 
-#important, #alsoimportant { 
+#wasistneu + div { display: none; padding: 0.5rem; }
+#wasistneu:checked + div { display: block; }
+.whatsnew { color: var(--color-fontsize-selector); }
+
+#important, #alsoimportant, #wasistneu_wrapper { 
 	font: 1rem sans-serif;
 	background: var(--background-important);
 	margin: 0;

@@ -63,6 +63,9 @@ $table = $PARAMETER['table'];
 $username = $_SESSION['os_rolename'];
 $password = $_SESSION['os_dbpwd'];
 
+//get changelog
+$changelog = file_get_contents('../../changelog');
+
 //extension file (with version)
 $_ext = scandir('../xpi',SCANDIR_SORT_DESCENDING)[0];
 
@@ -166,7 +169,7 @@ $_config = getConfig($conn);
 			<label for="opszInfo">&nbsp;<i class="fas fa-info-circle"></i>&nbsp;</label>
 			<input form="opszInfoForm" type="checkbox" hidden id="opszInfo">
 			<div>
-				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?><br />
+				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew">Was ist neu?</labek><br />
 				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
 				<b>Autor:</b> <?php html_echo($author); ?><br />
 				<b>Lizenz:</b> <?php html_echo($license); ?><br />
@@ -177,6 +180,12 @@ $_config = getConfig($conn);
 <div class="clear"></div>
 <div id="important"></div>
 <div id="alsoimportant"></div>
+<div id="wasistneu_wrapper">
+	<form id="whatsNewForm">
+		<input type="checkbox" id="wasistneu" hidden>
+		<div id="wasistneu"><h1>Was ist neu in...</h1><pre><?php html_echo($changelog); ?></pre></div>
+	</form>
+</div>
 <div id="wrapper">
 		<div id="showHistory" title="Chronik">
 		<div class="inline"><i class="fas fa-history"></i></div>
