@@ -57,7 +57,7 @@ mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
 	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O openStat.tgz
 	#get and verify signature
 	curl --silent "https://www2.codecivil.de/signatures/$REPO/$REPO-$VERSION.sig"
-	gpg verify "$REPO-$VERSION.sig" openStat.tgz || { echo "Update cannot be verified."; exit 1; }
+	gpg verify "$REPO-$VERSION.sig" openStat.tgz || { echo "Update cannot be verified."; rm openStat.tgz; exit 1; }
 	# extract and install...
 	mv openStat.tgz "$WEBDIR/$VERSION"
 	cd "$WEBDIR/$VERSION"
@@ -101,7 +101,7 @@ if [[ "$VERSION" != "$OLDVERSION" ]]; then
 	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O $INSTANCE.tgz
 	#get and verify signature
 	curl --silent "https://www2.codecivil.de/signatures/$REPO/$REPO-$VERSION.sig"
-	gpg verify "$REPO-$VERSION.sig" openStat.tgz || { echo "Update for $REPO cannot be verified."; exit 1; }
+	gpg verify "$REPO-$VERSION.sig" $INSTANCE.tgz || { echo "Update for $REPO cannot be verified."; rm $INSTANCE.tgz; exit 1; }
 	##
 	mv $INSTANCE.tgz "$WEBDIR/latest/"
 fi
