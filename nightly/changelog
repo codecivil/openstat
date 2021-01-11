@@ -1,3 +1,9 @@
+#1.4.22
+=======
+11.01.2021
+
+* bugfix: statTable für Bereiche (Datum, Zahl) war fehlerhaft
+
 #1.4.21
 =======
 11.01.2021
