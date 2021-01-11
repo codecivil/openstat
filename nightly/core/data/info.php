@@ -1,6 +1,6 @@
 <?php
 $author = "codecivil Dr. Marco Kühnel ICT Services";
 $license = "GPLv3";
-$versiondate = "24.12.2020";
-$versionnumber = "1.4.19";
+$versiondate = "11.01.2021";
+$versionnumber = "1.4.21";
 ?>
