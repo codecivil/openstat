@@ -23,6 +23,7 @@ hr, .clear { clear: both; }
 .filelink { color: var(--color-filelink); cursor: pointer; }
 .error { color: red !important; }
 .marked { background: var(--background-marked); }
+.myidentity { font-size: 6pt; }
 
 input,select,textarea { font-size: 1rem;}
 input[type='checkbox'] + label, label.orand { position: relative; top: -0.2rem; }

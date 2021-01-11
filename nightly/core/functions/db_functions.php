@@ -521,11 +521,25 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 	$keyreadable = array();
 	$edittype = array();
 	
+	//sortArray by Thomas Heuer
+	function sortArray($data, $field)
+	{
+    if(!is_array($field)) $field = array($field);
+    usort($data, function($a, $b) use($field) {
+      $retval = 0;
+      foreach($field as $fieldname) {
+        if($retval == 0) $retval = strnatcmp($a[$fieldname],$b[$fieldname]);
+      }
+      return $retval;
+    });
+    return $data;
+	}
+	
 	//getConfig
 	$config = getConfig($conn);
 	
 	if ( isset($result) AND sizeof($result) > 0 ) {
-		foreach ( $result as $_row ) {
+		foreach ( $result as $result_index => $_row ) {
 //		for ( $i = 0; $i < sizeof($result); $i++ ) {
 //			$row = $result[$i];
 			$row_left = ''; $row_right = ''; $row_mostright = '';
@@ -579,10 +593,10 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 							if ( strtotime($row[$key]) >= strtotime($config['filters'][$key][1001][$ii]) AND  ( strtotime($row[$key]) <= strtotime($config['filters'][$key][1002][$ii]) OR $config['filters'][$key][1002][$ii] == '' ) )
 							{
 								if ( isset($config['filters'][$key][1003][$ii]) AND $config['filters'][$key][1003][$ii] != '' ) {
-									$value = $config['filters'][$key][1003][$ii];
+									$result[$result_index][$keys[$i]] = $config['filters'][$key][1003][$ii];
 								} else {
 									$number = $ii+1;
-									$value = 'Zeitraum '.$number;
+									$result[$result_index][$keys[$i]] = 'Zeitraum '.$number;
 								}
 							}		 
 						}
@@ -594,16 +608,31 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 							if ( $row[$key] >= $config['filters'][$key][5001][$ii] AND  ( $row[$key] <= $config['filters'][$key][5002][$ii] OR $config['filters'][$key][5002][$ii] == '' ) )
 							{
 								if ( isset($config['filters'][$key][5003][$ii]) AND $config['filters'][$key][5003][$ii] != '' ) {
-									$value = $config['filters'][$key][5003][$ii];
+									$result[$result_index][$keys[$i]] = $config['filters'][$key][5003][$ii];
 								} else {
 									$number = $ii+1;
-									$value = 'Bereich '.$number;
+									$result[$result_index][$keys[$i]] = 'Bereich '.$number;
 								}
 							}		 
 						}
 						break;
 				}
-				
+			}
+		}
+		//now re-sort after value replacements!
+		$result = sortArray($result,$keys);
+		//
+		$rcount = 0;
+		foreach ( $result as $_row ) {
+			unset($row); $row = array(); $row = $_row; $row['_none_'] = ''; $edittype['_none_'] = '';
+			$rcount++;
+			$ccount = 0;
+			$new = false;
+			$row_left = ''; $row_right = ''; $row_mostright = '';
+			for ( $i = 0; $i < sizeof($keys); $i++ ) {			
+				if ( $key == "id" ) { continue; }
+				$key = $keys[$i];
+				$value = _cleanup($row[$keys[$i]]); //need control over the whole key array: first, last...
 //			foreach ($row as $key=>$value) {
 //				$ccount++; $rrcount[$key]++; //echo($key.':'.$rrcount[$key].' ');
 				$ccount++; 

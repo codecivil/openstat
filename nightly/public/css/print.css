@@ -14,6 +14,8 @@ hr, .clear { clear: both; }
 .left { float: left; }
 .toggler { display: none; }
 .fas.fa-minus, .fas.fa-plus { display: none; }
+.myidentity { font-size: 6pt; }
+
 input,select,textarea { font-size: 1rem;}
 input[type='checkbox'] + label { position: relative; top: -0.2rem; }
 textarea { min-height: 6rem; }
