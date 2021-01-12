@@ -581,6 +581,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 			$rcount++;
 			$ccount = 0;
 			$new = false;
+			$mustresort = false;
 			for ( $i = 0; $i < sizeof($keys); $i++ ) {
 				if ( $key == "id" ) { continue; }
 				$key = $keys[$i];
@@ -589,6 +590,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 					case 'DATE':
 					case 'DATETIME':
 						if ( ! isset($config['filters'][$key][1001]) ) { $value = $row[$key]; break; }
+						$mustresort = true;
 						for ( $ii = 0; $ii < sizeof($config['filters'][$key][1001]); $ii++ ) {
 							if ( strtotime($row[$key]) >= strtotime($config['filters'][$key][1001][$ii]) AND  ( strtotime($row[$key]) <= strtotime($config['filters'][$key][1002][$ii]) OR $config['filters'][$key][1002][$ii] == '' ) )
 							{
@@ -604,6 +606,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 					case 'INTEGER':
 					case 'DECIMAL':
 						if ( ! isset($config['filters'][$key][5001]) ) { $value = $row[$key]; break; }
+						$mustresort = true;
 						for ( $ii = 0; $ii < sizeof($config['filters'][$key][5001]); $ii++ ) {
 							if ( $row[$key] >= $config['filters'][$key][5001][$ii] AND  ( $row[$key] <= $config['filters'][$key][5002][$ii] OR $config['filters'][$key][5002][$ii] == '' ) )
 							{
@@ -620,7 +623,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 			}
 		}
 		//now re-sort after value replacements!
-		$result = sortArray($result,$keys);
+		if ( $mustresort ) { $result = sortArray($result,$keys); }
 		//
 		$rcount = 0;
 		foreach ( $result as $_row ) {
