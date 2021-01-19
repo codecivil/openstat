@@ -7,6 +7,10 @@ function similarity_asym(string1,string2) {
 	// e.g abab, baba; mcs: aba, bab, 18>16,  
 	
 	//mcs starting with string1
+	//throw no error if strings are empty: not really needed, is it?
+	//string1 = string1 + ' ';
+	//string2 = string2 + ' ';
+	//
 	string1 = string1.substr(0,1)+string1.substr(1).toLowerCase();
 	string2 = string2.substr(0,1)+string2.substr(1).toLowerCase();
 	var sim = 0;

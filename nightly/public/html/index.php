@@ -279,7 +279,7 @@ $_config = getConfig($conn);
 
 <script>
 	function restrictResultWidth () {
-		setTimeout(function () { document.getElementById('results_wrapper').style.maxWidth = document.body.offsetWidth - document.getElementById('sidebar').offsetWidth - 3*parseFloat(getComputedStyle(document.documentElement).fontSize) + "px"; }, 500);
+		setTimeout(function () { document.getElementById('results_wrapper').style.maxWidth = document.body.offsetWidth - document.getElementById('sidebar').offsetWidth - 5*parseFloat(getComputedStyle(document.documentElement).fontSize) + "px"; }, 500);
 	}
 	setTimeout(function () {
 		switch(document.getElementById('generator').innerText) {

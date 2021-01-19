@@ -151,8 +151,9 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			} else {
 				el.innerHTML = _request.responseText;
 			}
-			el.className += " "+classes; tinyMCEinit();
-			document.body.style.cursor = 'auto';	
+			if (classes) { el.classList.add(classes); };
+			tinyMCEinit();
+			document.body.style.cursor = 'auto';
 			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) ) { el.closest('.popup_wrapper').scrollIntoView(); }
 			if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; };	
 		}
@@ -455,4 +456,13 @@ function showHistoryLevel(level) {
 	}
 	if ( hist.querySelector('#history'+(level+1)) ) { document.getElementById('showHistoryBack').classList.remove('disabled'); } else { document.getElementById('showHistoryBack').classList.add('disabled'); };
 	if ( hist.querySelector('#history'+(level-1)) ) { document.getElementById('showHistoryForward').classList.remove('disabled'); } else { document.getElementById('showHistoryForward').classList.add('disabled'); };
+}
+
+//raise or lower table hierarchies (pm=1 or -1)
+function hierarchy(el,pm) {
+	var max = 1;
+	if ( el.parentElement.previousElementSibling ) { max = parseInt(el.parentElement.previousElementSibling.querySelector('.hierarchy').value) + 1; }
+	var _thisvalue = el.parentElement.querySelector('.hierarchy').value;
+	el.parentElement.querySelector('.hierarchy').value = Math.max(1,Math.min(parseInt(_thisvalue)+parseInt(pm),max));
+	el.parentElement.querySelector('span').style.width = el.parentElement.querySelector('.hierarchy').value+"em";
 }

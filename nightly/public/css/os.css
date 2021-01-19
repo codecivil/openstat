@@ -22,8 +22,6 @@ a:hover { text-decoration: none; color: var(--color-fontsize-selector); }
 #db_results tbody > :nth-child(even) { background-color: var(--background-row-even); }
 #db_results td { max-width: 12rem; overflow: hidden; }
 
-#db_headline { background-image: url('/wp-content/themes/ntfn2/images/DGPPN_Logo.png'); background-repeat: no-repeat; background-size: auto 1.5rem; background-position: center right; }
-
 .db_formbox {float: left; width: 60%;}
 label {float: left; width: 20%; text-align: left; padding-right: 1%;}
 input[type="button"] { margin: 0 auto; float: left; }

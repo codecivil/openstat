@@ -112,6 +112,8 @@ textarea.FREELONGER { min-height: 10rem; }
 }
 #formChooseTables { font-size: 1rem; }
 #formChooseTables > div:nth-child(2) { font-weight: bold; }
+.hier_up:hover::after { content: '\2190'; } /* arrow left */
+.hier_down:hover::before { content: '\2192'; } /*arrow right */
 
 /* filters */
 #filters {  
@@ -121,6 +123,10 @@ textarea.FREELONGER { min-height: 10rem; }
 #filters form.trash { display: inline; }
 #filters .remove { float: right; opacity: 0; }
 #filters h2:hover .remove { opacity: 1; }
+#filters input.shownot ~ label .shownot { display: none; }
+#filters input.shownot:checked ~ label h2 .shownot { display: inline; }
+#filters input.shownot:checked ~ label h2 .show { display: none; }
+#filters input.shownot:checked ~ label { opacity: 0.5; }
 
 #addfilters {
 	padding: 0rem; border: 1px solid black; border-radius: 5px; background-color: var(--background-addfilters); margin: 0.5rem;
@@ -216,7 +222,7 @@ textarea.FREELONGER { min-height: 10rem; }
 .details.new { background: var(--background-details-new); }
 .details .db_formbox {float: left; width: 60%;}
 .details .action { float: left; margin: 0.5rem; background: var(--background-action); border-radius: 5px; width: auto; }
-.details .actionwrapper { position: sticky; top: 6.7rem; overflow: hidden; z-index: 500; margin: 0.5rem; background: var(--background-action); border-radius: 5px; border-bottom: 1px solid black; 	box-shadow: 0 2px 5px #444; width: auto; }
+.details .actionwrapper { position: sticky; top: 9.4rem; overflow: hidden; z-index: 500; margin: 0.5rem; background: var(--background-action); border-radius: 5px; border-bottom: 1px solid black; 	box-shadow: 0 2px 5px #444; width: auto; }
 /* sticky for assignments? takes too much space? */
 .details .assignment { position: sticky; top: 9.2rem; overflow: hidden; z-index: 500; margin: 0.5rem; padding: 0.5rem; background: var(--background-details); border-radius: 5px; border-bottom: 1px solid black; box-shadow: 0 2px 5px #444; width: auto; }
 .details .db_headline_wrapper { position: sticky; top: 5rem; overflow: hidden; z-index: 501; background: var(--background-details); }

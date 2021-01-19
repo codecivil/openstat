@@ -640,11 +640,28 @@ class OpenStatEdit {
 	}
 
 	public function choose(array $checked) {
+		//do not bother if visible or not:
+		unset($checked[-1]);
 		$_stmt_array = array();
 		$_stmt_array['stmt'] = 'SELECT typelist,edittype,referencetag,keyreadable,role_'.$_SESSION['os_role'].' AS role, restrictrole_'.$_SESSION['os_role'].' AS restrictrole, role_'.$_SESSION['os_parent'].' AS parentrole, restrictrole_'.$_SESSION['os_parent'].' AS restrictparentrole FROM '.$this->table.'_permissions WHERE keymachine = ?';
 		$_stmt_array['str_types'] = 's';
 		$_stmt_array['arr_values'] = array($this->key);
 		$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
+		//if it is an attribution, then $_result is not set:
+		if ( ! isset($_result) ) {
+			$_stmt_array = array();
+			$_stmt_array['stmt'] = 'SELECT tablereadable AS keyreadable,allowed_roles,iconname FROM os_tables WHERE tablemachine = ?';
+			$_stmt_array['str_types'] = 's';
+			$_stmt_array['arr_values'] = array($this->key);
+			$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
+			//return if user is not allowed
+			if ( ! in_array($_SESSION['os_role'],json_decode($_result['allowed_roles'])) ) { return; }
+			$_result['edittype'] = 'INTEGER';
+			$_result['role'] = '0';
+			$_result['restrictrole'] = '';
+			$_result['parentrole'] = '0';
+			$_result['restrictparentrole'] = '';
+		}
 		$options_array = $this->_getOptions();
 		$options = $options_array['options'];
 

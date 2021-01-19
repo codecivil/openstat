@@ -1,3 +1,16 @@
+#1.5.0
+======
+19.01.2021
+
+* neues Feature: Bei Filtern zwischen anzeigen und nur filtern wählen
+* neues Feature: nur in Filtern verwendete Tabellen werden angezeigt (keine multiplen Einträge bei Attributionen mehr)
+
+18.01.2021
+
+* neues Feature: erweiterte Attributionshierarchien der Tabellen
+* neues Feature: Filter für Anzahlen von Attributionen; Achtung: Reihenfolge der Filter kann nun das Resultat, nicht nur dessen Sortierung, verändern!
+* neues Feature: schwaches und starkes Matching nach Editierungstyp
+
 #1.4.22
 =======
 11.01.2021
