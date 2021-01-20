@@ -151,7 +151,10 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			} else {
 				el.innerHTML = _request.responseText;
 			}
-			if (classes) { el.classList.add(classes); };
+			if (classes) { 
+				//not compatible with current usage: "details new": el.classList.add(classes); 
+				el.className += " "+classes;
+			};
 			tinyMCEinit();
 			document.body.style.cursor = 'auto';
 			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) ) { el.closest('.popup_wrapper').scrollIntoView(); }
