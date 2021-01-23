@@ -151,6 +151,7 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			} else {
 				el.innerHTML = _request.responseText;
 			}
+			console.log(classes);
 			if (classes) { 
 				//not compatible with current usage: "details new": el.classList.add(classes); 
 				el.className += " "+classes;
@@ -198,7 +199,7 @@ function addFilters(form,add) {
 }
 
 function removeOpenId(form) {
-	callFunction(form,'removeOpenId','filters',true);
+	callFunction(form,'removeOpenId','filters',true).then(()=>{ return false; });
 }
 
 function openIds(form) {
@@ -226,8 +227,10 @@ function callPHPFunction(_arg,_function,_target,_classes) {
 //	var _form = document.getElementById('trashForm');
 //	var _input = document.getElementById('trash');
 //	_input.value = _arg;
-	callFunction(_arg,_function,_target,false,_classes,_function,_arg);
-	if (! _arg.classList.contains('noreset') ) { _arg.reset(); }; //why reset at all? not appropriate for exportCSV function
+	callFunction(_arg,_function,_target,false,_classes,_function,_arg).then(()=>{ 
+		if (! _arg.classList.contains('noreset') ) { _arg.reset(); }; //why reset at all? not appropriate for exportCSV function
+		return false;
+	})
 	return false;
 }
 
@@ -259,8 +262,11 @@ function editTable(form,tablename) {
 	var table = form.getElementsByClassName['inputtable'][0];
 	var old_tablename = table.value;
 	table.value = tablename;
-	callFunction(form,'getDetails','_popup_',false,'details');
-	//processForm(form,'../php/getDetails.php','_popup_',false,'details');
+	callFunction(form,'getDetails','_popup_',false,'details').then(()=>{
+		//processForm(form,'../php/getDetails.php','_popup_',false,'details');
+		table.value = old_tablename;
+		return false;
+	});
 	table.value = old_tablename;
 	return false;
 }
@@ -444,8 +450,9 @@ function restoreHistory(version) {
 	if ( ! document.getElementById('history'+version) ) { return; }
 	document.getElementById('sidebar').innerHTML = document.getElementById('history'+version).innerText;
 	document.getElementById('history_level').innerText = version;
-	callFunction(document.getElementById('formFilters'),'applyFiltersOnlyChangeConfig');
-	showHistoryLevel(version);
+	callFunction(document.getElementById('formFilters'),'applyFiltersOnlyChangeConfig').then(()=>{
+		showHistoryLevel(version);
+	});
 }
 
 function showHistoryLevel(level) {

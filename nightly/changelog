@@ -1,3 +1,15 @@
+#1.5.3
+======
+23.01.2021
+
+* Bugfix: Import von Kombifeldern fehlerhaft wegen falscher LISTenoptionen
+
+21.01.2021
+
+* kleinere Schriftgrößen beim Druck (zu groß seit Firefox 78)
+* (bugfix) no unresolved promises any more
+* neues Feature: neue Einträge aus Einträgen heraus (mit automatischer Zuordnung)
+
 #1.5.2
 ======
 20.01.2021

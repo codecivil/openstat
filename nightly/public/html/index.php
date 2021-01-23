@@ -64,8 +64,9 @@ $username = $_SESSION['os_rolename'];
 $password = $_SESSION['os_dbpwd'];
 
 //get changelog
-$changelog = file_get_contents('../../changelog');
-
+$changelog_array = explode('======',file_get_contents('../../changelog'),3);
+$changelog = $changelog_array[0]."======".$changelog_array[1];
+$olderchangelog = $changelog_array[2];	
 //extension file (with version)
 $_ext = scandir('../xpi',SCANDIR_SORT_DESCENDING)[0];
 
@@ -169,7 +170,7 @@ $_config = getConfig($conn);
 			<label for="opszInfo">&nbsp;<i class="fas fa-info-circle"></i>&nbsp;</label>
 			<input form="opszInfoForm" type="checkbox" hidden id="opszInfo">
 			<div>
-				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew">Was ist neu?</labek><br />
+				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="document.getElementById('wasistneu_wrapper').scrollIntoView()">Was ist neu?</label><br />
 				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
 				<b>Autor:</b> <?php html_echo($author); ?><br />
 				<b>Lizenz:</b> <?php html_echo($license); ?><br />
@@ -183,7 +184,11 @@ $_config = getConfig($conn);
 <div id="wasistneu_wrapper">
 	<form id="whatsNewForm">
 		<input type="checkbox" id="wasistneu" hidden>
-		<div id="wasistneu"><h1>Was ist neu in...</h1><pre><?php html_echo($changelog); ?></pre></div>
+		<div id="wasistneudiv"><h1>Was ist neu in...</h1><pre><?php html_echo($changelog); ?>...</pre></div>
+		<input type="checkbox" id="waswarneu" hidden>
+		<label for="waswarneu" onclick="setTimeout(function(){document.getElementById('wasistneu_wrapper').scrollIntoView();},100)"><i class="fas fa-chevron-right"></i></label>
+		<label for="waswarneu"><i class="fas fa-chevron-down"></i></label>
+		<div id="waswarneudiv"><pre><?php html_echo($olderchangelog); ?></pre></div>
 	</form>
 </div>
 <div id="wrapper">

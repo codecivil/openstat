@@ -5,6 +5,7 @@
 }
 
 body { margin: 0; display: initial; font-family: sans-serif; /* block inhibits sticky when sidebar is floating simultaneously */;}
+html { font-size: 8pt; }
 a { text-decoration: none; }
 hr, .clear { clear: both; }
 .center { text-align: center; }

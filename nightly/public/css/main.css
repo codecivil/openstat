@@ -62,9 +62,17 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #opszInfo:checked + div { display: block; }
 #statusbar #loggedin input { border: none; background: transparent; font-weight: bold; color: var(--color-statusbar); }
 
-#wasistneu + div { display: none; padding: 0.5rem; }
+div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #444; overflow: hidden; }
+#wasistneu ~ div { display: none; padding: 0.5rem; }
 #wasistneu:checked + div { display: block; }
+#wasistneu:checked ~ #waswarneu + label { display: block; } 
+#waswarneu ~ label { display: none; padding: 0.5rem; }
+#waswarneu + label + label { display: none; }
+#wasistneu:checked ~ #waswarneu:checked + label { display: none; }
+#wasistneu:checked ~ #waswarneu:checked + label + label { display: block; }
+#wasistneu:checked ~ #waswarneu:checked ~ #waswarneudiv { display: block; }
 .whatsnew { color: var(--color-fontsize-selector); }
+.whatsnew:hover { cursor: pointer; text-decoration: underline; }
 
 #important, #alsoimportant, #wasistneu_wrapper { 
 	font: 1rem sans-serif;
@@ -229,6 +237,7 @@ textarea.FREELONGER { min-height: 10rem; }
 .details label {float: left; width: 12rem; text-align: right; padding-right: 1%; margin-top: 0.5rem; }
 .details .checkbox label {float: none; width: auto; text-align: left; padding-right: 0; margin-top: 0; }
 .details .functions label { margin-top: 0; }
+.details .newEntryFromEntry { float: right; margin-top: 0.5rem; margin-right: 0.5rem; text-align: right; background: var(--background-details-new); }
 .details label.toggler { width: auto;  }
 .details label.unlimitedWidth { width: auto; text-align: left; }
 .details label.fullWidth { width: calc(100% - 15rem); text-align: left; }

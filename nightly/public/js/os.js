@@ -25,9 +25,10 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 				_disableClass(el,'noupdate');
 				break;
 		}
-		callFunction(el,fct,div,add,classes,callback,arg);
-		if ( val == "delete" ) { _close(el); };
-		el = clone_el.cloneNode(true);
+		callFunction(el,fct,div,add,classes,callback,arg).then(()=>{
+			if ( val == "delete" ) { _close(el); };
+			el = clone_el.cloneNode(true);
+		});
  	}
 //	}
 }
@@ -199,10 +200,19 @@ function _setValue(el,_value,_position) {
 	thecheckbox = _form.closest('tr').querySelector('td').getElementsByTagName('input')[0];
 	if ( thecheckbox.checked ) {
 		document.getElementById('editTableName').value = _value;
-		callFunction(document.getElementById('formMassEdit'),'newEntry','_popup_',false,'details new');
+		callFunction(document.getElementById('formMassEdit'),'newEntry','_popup_',false,'details new').then(()=>{ return false; });
 	} else {
-		setTimeout(function(){callPHPFunction(_form,'newEntry','_popup_','details new');},500);
+		setTimeout(function(){callPHPFunction(_form,'newEntry','_popup_','details new').then(()=>{ return false; });},500);
 	}
+}
+
+function newEntryFromEntry(tablefrom,idfrom,tableto) {
+	var formobj = new Object();
+	formobj['id_'+tablefrom] = idfrom;
+	formobj.table = new Array();
+	formobj.table[0] = tableto;
+	document.getElementById('trash').value = JSON.stringify(formobj);
+	setTimeout(function(){callPHPFunction('_','newEntry','_popup_','details new').then(()=>{ return false; });},500);
 }
 
 function _toggleColumn(el,key) {
@@ -341,9 +351,9 @@ function editEntries(form,tablename) {
 	thecheckbox = form.closest('tr').querySelector('td').getElementsByTagName('input')[0];
 	if ( thecheckbox.checked ) {
 		document.getElementById('editTableName').value = tablename;
-		callFunction(document.getElementById('formMassEdit'),'getDetails','_popup_',false,'details');
+		callFunction(document.getElementById('formMassEdit'),'getDetails','_popup_',false,'details').then(()=>{ return false; });
 	} else {
-		callFunction(form,'getDetails','_popup_',false,'details');
+		callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ return false; });
 	}
 	return false
 }

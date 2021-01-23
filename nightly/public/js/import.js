@@ -374,15 +374,12 @@ function importJS(el,subtables) {
 									//select closest value match of (non-multple) LISTs; does not yet work for compund fields with list not on first component		
 									if ( _matchedIndex[k] && _tableheadersfull['edittype'][_matchedIndex[k]] == "LIST" ) {
 										var _matchthis = ( row[k] != '' ) ? row[k] : '*';
-										//console.log(_matchthis);
-										//console.log(k+': '+row[k]);
 										var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
 										if ( _bestindex == -1 ) {
 											row[k] = '';
 										} else {
 											row[k] = _tableheadersfull['allowed_values'][_matchedIndex[k]][_bestindex];
 										}
-										//console.log(k+': '+row[k]);
 									}
 									if ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("DATE") == 0 ) {
 										var _choices;
@@ -399,6 +396,8 @@ function importJS(el,subtables) {
 									}
 									if ( _cmp_lgth > 1 ) { newrow_array[ci] = JSON.parse(row[k]); }
 								}
+								//reverse the temporary change to a _tableheadersfull field (sorry...)
+								_tableheadersfull['allowed_values'][_matchedIndex[k]] = currentallowedvalues;
 								if ( _cmp_lgth > 1 ) { row[k]= JSON.stringify(newrow_array); _tableheadersfull['edittype'][_matchedIndex[k]] = currentedittype; }
 								_parameter[_tableheadersfull['table'][_matchedIndex[k]]+'__'+_tableheadersfull['keymachine'][_matchedIndex[k]]] = row[k];
 							}
@@ -423,7 +422,7 @@ function importJS(el,subtables) {
 						_arg.parameter = _parameter;
 						document.getElementById('trash').value = JSON.stringify(_parameter);
 						_importSuccessHidden = _importel.querySelector('.importSuccessHidden').id;
-						callFunction('_','dbAction',_importSuccessHidden,true,'import','displayImportSuccess',_arg);
+						callFunction('_','dbAction',_importSuccessHidden,true,'import','displayImportSuccess',_arg).then(()=>{ return false; });
 //						_parameter['dbAction'] = 'getID'; 
 //						document.getElementById('trash').value = JSON.stringify(_parameter);
 //						callFunction('_','dbAction','importSuccess',true,'import','displayImportSuccess',_file.name);
@@ -468,7 +467,7 @@ function displayImportSuccess(_form,_arg,_result) {
 		_arg.parameter['dbAction'] = 'getID'; 
 		document.getElementById('trash').value = JSON.stringify(_arg.parameter);
 		_importSuccessHidden = el.querySelector('.importSuccessHidden').id;
-		callFunction('_','dbAction',_importSuccessHidden,true,'import','getIDOfInsert',_arg); //inserts into div of class "gotID"
+		callFunction('_','dbAction',_importSuccessHidden,true,'import','getIDOfInsert',_arg).then(()=>{ return false; }); //inserts into div of class "gotID"
 	}
 }
 
