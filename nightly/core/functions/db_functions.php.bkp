@@ -1,5 +1,4 @@
 <?php
-$_SESSION['DEBUG'] = "on";
 //returns raw result
 //logs if $_SESSION['log'] is set and true (in order to avoid changing all execute_stmts), or if parameter $log is set and true
 function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
@@ -348,21 +347,14 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 		if ( in_array($key,array('table')) ) { continue; }
 		if ( ! in_array($table,$_TABLES) ) { continue; }
 		unset($_stmt_array); $_stmt_array = array();
-		if ( in_array($key,$_TABLES) ) {
-			$_stmt_array['stmt'] = "SELECT CONCAT('#',tablereadable) AS keyreadable FROM os_tables WHERE tablemachine = ?";
-			$_stmt_array['str_types'] = "s";
-			$_stmt_array['arr_values'] = array();
-			$_stmt_array['arr_values'][] = $key;
-			$_tmp_result = array();
-		} else {
-			$_stmt_array['stmt'] = "SELECT keyreadable FROM ".$table."_permissions WHERE keymachine = ?";
-			$_stmt_array['str_types'] = "s";
-			$_stmt_array['arr_values'] = array();
-			$_stmt_array['arr_values'][] = $key;
-			$_tmp_result = array();
-		}
+		$_stmt_array['stmt'] = "SELECT keyreadable FROM ".$table."_permissions WHERE keymachine = ?";
+		$_stmt_array['str_types'] = "s";
+		$_stmt_array['arr_values'] = array();
+		$_stmt_array['arr_values'][] = $key;
+		$_tmp_result = array();
 		$keyreadable = explode(': ',execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0])[0];
-		unset($values[-1]); $tmpvalues = $values; unset($tmpvalues[2001]);
+
+		$tmpvalues = $values; unset($tmpvalues[2001]);
 		if ( sizeof($tmpvalues) > 1 ) 
 		{
 			$filter_results .= '<b>'.$keyreadable.'</b>';
@@ -389,18 +381,15 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 	$_config = getConfig($conn);
 	if ( isset($_config['hiddenColumns']) ) { $HIDDEN = $_config['hiddenColumns']; } else { $HIDDEN = array(); };
 	$TABLES = $_config['table'];
-	$ICON = array(); $TABLEREADABLE = array();
+	$ICON = array();
 	foreach ( $TABLES as $table )
 	{
 		unset($_stmt_array); $_stmt_array = array();
-		$_stmt_array['stmt'] = "SELECT iconname,tablereadable FROM os_tables WHERE tablemachine = ?";
+		$_stmt_array['stmt'] = "SELECT iconname FROM os_tables WHERE tablemachine = ?";
 		$_stmt_array['str_types'] = "s";
 		$_stmt_array['arr_values'] = array();
 		$_stmt_array['arr_values'][] = $table;
-		$_thisresult = execute_stmt($_stmt_array,$conn)['result'];
-		$ICON[$table] = $_thisresult['iconname'][0];
-		$TABLEREADABLE[$table] = $_thisresult['tablereadable'][0];
-		unset($_thisresult);
+		$ICON[$table] = execute_stmt($_stmt_array,$conn)['result']['iconname'][0];
 	}
 	unset($table);
 	unset($oldvalue);
@@ -432,17 +421,13 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 						$tablekey_array = explode('__',$tablekey,2);
 						$table = $tablekey_array[0];
 						$key = $tablekey_array[1];
-						if ( in_array($key,$TABLES) ) {
-							$keyreadable = "#".$TABLEREADABLE[$key];
-						} else {						
-							unset($_stmt_array); $_stmt_array = array();
-							$_stmt_array['stmt'] = "SELECT keyreadable FROM ".$table."_permissions WHERE keymachine = ?";
-							$_stmt_array['str_types'] = "s";
-							$_stmt_array['arr_values'] = array();
-							$_stmt_array['arr_values'][] = $key;
-							$_tmp_result = array();
-							$keyreadable = explode(': ',execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0])[0];
-						}
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "SELECT keyreadable FROM ".$table."_permissions WHERE keymachine = ?";
+						$_stmt_array['str_types'] = "s";
+						$_stmt_array['arr_values'] = array();
+						$_stmt_array['arr_values'][] = $key;
+						$_tmp_result = array();
+						$keyreadable = explode(': ',execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0])[0];
 						if ( in_array($tablekey,$HIDDEN) ) { $_hidden = 'hidecolumn'; } else { $_hidden = ''; }
 						$table_results .= "<th class=\"disabled\" title=\"".$keyreadable."\" onclick=\"_toggleColumn(this,'". $tablekey ."');\"><i class=\"fas fa-angle-down\"></i></th><th class=\"tableheader " . $tablekey . " " . $_hidden . "\" onclick=\"_toggleColumn(this,'". $tablekey ."');\">" . $keyreadable . "</th>";
 					}
@@ -570,25 +555,14 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 					$rrcount[$tablekey] = 0;
 					$oldrow[$tablekey] = "x678dscjncxydsv&%/&"; //something that surely is no entry in the table (NULL etc my occur...)
 					if ( $key == "id" ) { continue; }
-					if ( in_array($key,$config['table']) ) {
-						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "SELECT CONCAT('#',tablereadable) AS keyreadable FROM os_tables WHERE tablemachine = ?";
-						$_stmt_array['str_types'] = "s";
-						$_stmt_array['arr_values'] = array();
-						$_stmt_array['arr_values'][] = $key;
-						$_tmp_result = execute_stmt($_stmt_array,$conn)['result'];
-						$keyreadable[$key] = explode(': ',$_tmp_result['keyreadable'][0])[0];
-						$edittype[$tablekey] = 'INTEGER';
-					} else {					
-						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "SELECT keyreadable,edittype FROM ".$table."_permissions WHERE keymachine = ?";
-						$_stmt_array['str_types'] = "s";
-						$_stmt_array['arr_values'] = array();
-						$_stmt_array['arr_values'][] = $key;
-						$_tmp_result = execute_stmt($_stmt_array,$conn)['result'];
-						$keyreadable[$key] = explode(': ',$_tmp_result['keyreadable'][0])[0];
-						$edittype[$tablekey] = $_tmp_result['edittype'][0];
-					}
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "SELECT keyreadable,edittype FROM ".$table."_permissions WHERE keymachine = ?";
+					$_stmt_array['str_types'] = "s";
+					$_stmt_array['arr_values'] = array();
+					$_stmt_array['arr_values'][] = $key;
+					$_tmp_result = execute_stmt($_stmt_array,$conn)['result'];
+					$keyreadable[$key] = explode(': ',$_tmp_result['keyreadable'][0])[0];
+					$edittype[$tablekey] = $_tmp_result['edittype'][0];
 					$table_results .= '<div class="nextlevel"><div class="unique value header" onclick="_toggleStatColumn('.$ccount0.','.sizeof($result).')">'.$keyreadable[$key].'</div>'; $row_right .= '</div>';
 					$ccount0++;
 				}
@@ -636,7 +610,6 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 						for ( $ii = 0; $ii < sizeof($config['filters'][$key][5001]); $ii++ ) {
 							if ( $row[$key] >= $config['filters'][$key][5001][$ii] AND  ( $row[$key] <= $config['filters'][$key][5002][$ii] OR $config['filters'][$key][5002][$ii] == '' ) )
 							{
-								$result[$result_index][$keys[$i].'_value'] = $result[$result_index][$keys[$i]];
 								if ( isset($config['filters'][$key][5003][$ii]) AND $config['filters'][$key][5003][$ii] != '' ) {
 									$result[$result_index][$keys[$i]] = $config['filters'][$key][5003][$ii];
 								} else {
@@ -670,7 +643,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 				switch($edittype[$key]) {
 					case 'INTEGER':
 					case 'DECIMAL':
-						$rrcount[$key] += $row[$key.'_value'];
+						$rrcount[$key] += $row[$key];
 						break;
 					default:
 						$rrcount[$key]++;
@@ -756,7 +729,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 
 function dbAction(array $_PARAMETER,mysqli $conn) {
 	$message = '';
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt','PARAM: '.json_encode($_PARAMETER).PHP_EOL,FILE_APPEND); }
+	
 	//allow json encoded parameters in 'trash' variable
 	if ( isset($_PARAMETER['trash']) ) { 
 	$PARAMETER = json_decode($_PARAMETER['trash'],true);
@@ -924,12 +897,9 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 	}
 	unset($_stmt_array);
 	$_stmt_array = array(); $_stmt_array['stmt'] = $stmt; $_stmt_array['str_types'] = $str_types; $_stmt_array['arr_values'] = $arr_values; $_stmt_array['message'] = $message;  
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt','STATEMENT: '.json_encode($_stmt_array).PHP_EOL,FILE_APPEND); }
 	$_return=_execute_stmt($_stmt_array,$conn);
 	$_SESSION['insert_id'] = $_return['insert_id'];
 	$return = '<div class="dbMessage '.$_return['dbMessageGood'].'">'.$_return['dbMessage'].'</div>';
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt',json_encode($_return).PHP_EOL,FILE_APPEND); }
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt',PHP_EOL,FILE_APPEND); }
 	//return the results for searches and the error statement in all other cases
 //	if ( isset($PARAMETER['dbAction']) AND $PARAMETER['dbAction'] != '' ) { return $return; } else { return $_return; }
 	if ( isset($PARAMETER['dbAction']) ) { 
@@ -1305,10 +1275,8 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		$_config_custom = getConfig($conn,$_config_array['configname']);
 		if ( $custom != '' ) { $_config_array = $_config_custom; }
 		$_compare1 = array(); $_compare2 = array();
-		//compare filters, tables and hierarchy
 		$_compare1['filters'] = $_config_array['filters']; $_compare2['filters'] = $_config_custom['filters'];
 		$_compare1['table'] = $_config_array['table']; $_compare2['table'] = $_config_custom['table'];
-		$_compare1['table_hierarchy'] = $_config_array['table_hierarchy']; $_compare2['table_hierarchy'] = $_config_custom['table_hierarchy'];
 //		unset($_compare1['configname']); unset($_compare2['configname']);
 		if ( $_compare1 == $_compare2 ) { $config_save_class = "disabled"; } else { $config_save_class = "unsaved"; }
 		unset($_compare1); unset($_compare2);
@@ -1319,38 +1287,6 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	$_config_hierarchy = $_config_array['table_hierarchy'];
 	$_stmt_array['stmt'] = "SELECT configname FROM os_userconfig_".$_SESSION['os_user'];
 	$options = execute_stmt($_stmt_array,$conn)['result']['configname'];
-//determine table hierarchy structure and table data
-	unset($_stmt_array); $_stmt_array = array(); $table_array = array();
-	$_stmt_array['stmt'] = "SELECT iconname,tablemachine,tablereadable,allowed_roles FROM os_tables WHERE tablemachine IN ('".implode("','",$_config_tables)."') ORDER BY FIELD (tablemachine,'".implode("','",$_config_tables)."') ";
-	$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field 
-	if ($_result_array['dbMessageGood']) { $tables_array = $_result_array['result']; } else {
-	?>
-		<div class="section">Fehler bei Zugriff auf Tabellen. Bitte wiederholen Sie die Aktion. <?php print_r($_stmt_array); ?></div>
-	<?php
-		return;
-	};
-	//array of children of a table
-	$_children_table = array(); unset($tindex);
-	$_oldhier = -1;
-	foreach ( $_config_tables as $tindex => $table )
-	{
-		if ( ! isset($_config_hierarchy[$tindex]) ) { $_config_hierarchy[$tindex] = min($tindex,1); }
-		$_config_hierarchy[$tindex] = min($_config_hierarchy[$tindex],$_oldhier+1);
-		$_oldhier = $_config_hierarchy[$tindex];
-	}
-	$_parent_table = array(); unset($tindex);
-	
-	foreach ( $_config_tables as $tindex => $table )
-	{
-		$_parent_table[$_config_hierarchy[$tindex]] = $table;
-		if ( $_config_hierarchy[$tindex] >= 1 ) { 
-			if ( is_array($_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]]) ) {
-				array_push($_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]],$table); 
-			} else {
-				$_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]] = array($table);
-			}
-		}
-	}
 	?>
 	<div id="config" class="section">
 		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;" >
@@ -1460,10 +1396,16 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					<label class="submitAddFilters" for="submitAddFilters"><h2 class="center"><i class="fas fa-exchange-alt"></i></h2></label>
 					<input hidden id="submitAddFilters" type="submit" value="Auswählen" ><br />
 				<?php
-					unset($table); unset($tindex); //added 2019-09-03
-					foreach ( $_config_tables as $tindex => $table )
+					unset($table); //added 2019-09-03
+					foreach ( $_config_tables as $table )
 					{
-						$table_array = $tables_array[$tindex];
+						unset($_stmt_array); $_stmt_array = array(); $table_array = array();
+						$_stmt_array['stmt'] = "SELECT iconname,tablereadable,allowed_roles FROM os_tables WHERE tablemachine = ?";
+						$_stmt_array['str_types'] = "s";
+						$_stmt_array['arr_values'] = array();
+						$_stmt_array['arr_values'][] = $table;
+						$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field 
+						if ($_result_array['dbMessageGood']) { $table_array = $_result_array['result'][0]; };
 						?>
 						<h2><i class="fas fa-<?php html_echo($table_array['iconname']); ?>"></i><?php html_echo($table_array['tablereadable']); ?></h2>
 						<?php 
@@ -1471,20 +1413,6 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype FROM ".$table."_permissions ORDER BY realid";
 						$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field
 						if ($_result_array['dbMessageGood']) { $key_array = $_result_array['result']; };
-						foreach ( $_children_table[$table] as $_child ) {
-							if ( ! array_key_exists($table.'__'.$_child,$_config) ) 
-							{ ?> 
-							<input 
-								name="<?php html_echo($table.'__'.$_child); ?>" 
-								id="add_<?php html_echo($table.'__'.$_child); ?>" 
-								type="checkbox" 
-								value="add"
-							/>
-							<label for="add_<?php html_echo($table.'__'.$_child); ?>"># <i class="fas fa-<?php html_echo($tables_array[array_search($_child,$_config_tables)]['iconname']); ?>"></i> <strong><?php html_echo($tables_array[array_search($_child,$_config_tables)]['tablereadable']); ?></strong></label><br>
-							<?php }							
-						}
-						?>
-						<?php
 						foreach ( $key_array as $key ) 
 						{ 
 							if ( $key['edittype'] == 'NONE' ) { continue; }
@@ -1501,7 +1429,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						}
 						unset($key);
 					}
-					unset ($table); unset($_child);
+					unset ($table);
 				?>
 			</form>
 		</div>
@@ -1527,35 +1455,21 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					$_result_array = execute_stmt($_stmt_array,$conn); 
 					if ($_result_array['dbMessageGood']) { $table_icon = $_result_array['result']['iconname'][0]; };
 
-					//first look for attributions, then for normal keys
-					if ( in_array($keymachine,$_children_table[$table]) ) {
-						$keyreadable = '#'.$tables_array[array_search($keymachine,$_config_tables)]['tablereadable'];
-					} else {
-						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "SELECT keyreadable FROM ".$table."_permissions WHERE keymachine = ?";
-						$_stmt_array['str_types'] = "s";
-						$_stmt_array['arr_values'] = array();
-						$_stmt_array['arr_values'][] = $keymachine;
-						unset($_result_array);
-						$_result_array = execute_stmt($_stmt_array,$conn); 
-						if ($_result_array['dbMessageGood']) { $keyreadable = explode(': ',$_result_array['result']['keyreadable'][0])[0]; } else { continue; }; //serializes as associative array			
-					}
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "SELECT keyreadable FROM ".$table."_permissions WHERE keymachine = ?";
+					$_stmt_array['str_types'] = "s";
+					$_stmt_array['arr_values'] = array();
+					$_stmt_array['arr_values'][] = $keymachine;
+					unset($_result_array);
+					$_result_array = execute_stmt($_stmt_array,$conn); 
+					if ($_result_array['dbMessageGood']) { $keyreadable = explode(': ',$_result_array['result']['keyreadable'][0])[0]; }; //serializes as associative array			
 				?>
 					<div 
 						id="<?php html_echo($keymachine); ?>" 
 						class="section" 
 						draggable="true" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragstart="drag(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)"
-						<?php if ( ! in_array($table,$_config_tables ) ) { ?> hidden<?php } ?>
+						<?php if ( ! in_array($table,$_config_tables ) ) { ?> hidden <?php } ?>
 					>
-						<input 
-							class="shownot"
-							hidden
-							name="<?php html_echo($table.'__'.$keymachine); ?>[-1]"
-							id="<?php html_echo($table.'__'.$keymachine); ?>shownot"
-							type="checkbox"
-							value="_shownot"
-							<?php if ( isset($checked[-1]) ) { ?> checked <?php } ?>
-						/>
 						<input type="checkbox" hidden id="toggle<?php html_echo($tabledotkeymachine); ?>" class="toggle">
 						<label for="toggle<?php html_echo($tabledotkeymachine); ?>">
 							<h2>
@@ -1565,12 +1479,6 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 								<?php html_echo($keyreadable); ?>
 								<label for="trash" onclick="return trash('<?php html_echo($tabledotkeymachine); ?>')">
 									<i class="remove fas fa-trash-alt"></i>
-								</label>
-								<label class="show" for="<?php html_echo($table.'__'.$keymachine); ?>shownot">
-									<i class="remove fas fa-eye">&nbsp;</i>
-								</label>
-								<label class="shownot" for="<?php html_echo($table.'__'.$keymachine); ?>shownot">
-									<i class="remove fas fa-eye-slash">&nbsp;</i>
 								</label>
 							</h2>
 						</label>
@@ -1625,7 +1533,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 //	if ( ! isset($PARAMETER['table']) ) { $PARAMETER['table'] = array('os_all'); };
 //	$table = $PARAMETER['table'][0];
 	//construct query from parameters
-	unset($value); unset($tindex);
+	unset($value);
 	$_SELECT = '';
 	$komma = '';
 	$_FROM = ' FROM '; $_JOIN = ''; $_USING = ''; // table will be viewROLE in live version
@@ -1636,7 +1544,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 	$HIERARCHY[-1] = 0;
 	$HIERARCHY[sizeof($TABLES)] = 1;
 	$JOINSRC = array();
-	unset($tindex);
+	
 	foreach ( $TABLES as $tindex => $table )
 	{
 		$JOINSRC[$HIERARCHY[$tindex]] = $table;
@@ -1669,9 +1577,6 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 	$_ORDER_BY = ' ORDER BY ';
 	$_komma_cmp = ' AND '; //conditions for different compounds in one key filter have all to be satisfied
 	$_komma_cmp_entry = ' OR '; //a certain index has to match every compound
-	$SHOWME = array(); //array of fields to be displayed in results
-	$SHOWNOTALL = false;
-	$EXT_ORDER_BY = array(); //order in case not all fields are going to be displayed
 	foreach ($PARAMETER as $key=>$values) 
 	{
 		if ( in_array($key,array('table')) ) { continue; };
@@ -1679,50 +1584,10 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		$table = explode('__',$key,2)[0];
 		$key = explode('__',$key,2)[1];
 		if ( ! in_array($table,$TABLES) ) { continue; };
-		//only filter/also select selection
-		if ( array_key_exists(-1,$values) )
-		{
-			$SHOWNOTALL = true;
-		} else {
-			if ( ! in_array($table.'__id_'.$table,$SHOWME) ) { array_push($SHOWME,$table.'__id_'.$table); };
-			array_push($EXT_ORDER_BY,$table.'__'.$key);
-			array_push($SHOWME,$table.'__'.$key);
-		}
-		unset($values[-1]);
-		//attribution counts are given by key: <tablemachine attributed,lower hierarchy value>__<tablemachine holding attribution,higher hierarchy value>, values: 5001:[min],5002:[max]
-		//implement here
-		$ATTR_WHERE = ''; $ATTR_OR = '';
-		if ( in_array($key,$TABLES) ) {
-			$ATTR_SELECT = $komma . 'tmp__' . $table . '__' . $key . '.' . $key . ' AS ' . $table . '__' . $key;
-			$ATTR_FROM = ' INNER JOIN ( SELECT `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.',COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') AS ' . $key . $_FROM.$_WHERE.$bracket.' GROUP BY `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' HAVING ';
-			for ( $i = 0; $i < sizeof($values[5003]); $i++ ) {
-				if ( $values[5001][$i] == '' ) { $values[5001][$i] = 0; }
-				if ( $values[5002][$i] == '' ) { $values[5002][$i] = 1000000000; }
-				$ATTR_FROM .= $ATTR_OR.'( COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') >= '.$values[5001][$i].' AND COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') <= '.$values[5002][$i].')';
-				$ATTR_OR=" OR ";
-			}
-			$ATTR_FROM .= ' ) AS tmp__' . $table . '__' . $key. ' ON tmp__' . $table . '__' . $key . '.id_' . $table . ' = `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table;	
-//			$ATTR_WHERE = $komma2.'`view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' IN ( SELECT `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.$_FROM.$_WHERE.$bracket.' GROUP BY `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' HAVING COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') >= '.$values[5001][0].' AND COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') <= '.$values[5002][0].' )';
-//			$_WHERE .= $ATTR_WHERE;
-			$_SELECT .= $ATTR_SELECT;
-			$_FROM .= $ATTR_FROM;
-			$_ORDER_BY .= $komma.$table.'__'.$key;
-			$komma = ',';
-//			$komma2 = ') AND (';
-			continue;
-		}
 		//set strong or weak match strings
 		switch($_edittypes[$table][$key]) {
-			case 'EXTENSIBLE LIST; MULTIPLE':
-			case 'LIST; MULTIPLE':
-			case 'SUGGEST; MULTIPLE':
-			case 'SUGGEST BEFORE LIST; MULTIPLE':
 			case 'CHECKBOX':
-			case 'EXTENSIBLE CHECKBOX':
-			case 'SUGGEST':
 			case 'LIST':
-			case 'SUGGEST BEFORE LIST':
-			case 'EXTENSIBLE LIST':				
 				$_MATCHSTART = "= '";
 				$_MATCHEND = "'";
 				$_NOT = "!";
@@ -1941,9 +1806,6 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 	$_WHERE .= $bracket;
 	$_main_stmt_array = array();
 	$_main_stmt_array['stmt'] = 'SELECT '.$_SELECT.$_FROM.$_WHERE.$_ORDER_BY; //do not order by id!
-//	if ( $SHOWNOTALL ) {
-		$_main_stmt_array['stmt'] = 'SELECT DISTINCT '.implode(',',$SHOWME).' FROM ('.$_main_stmt_array['stmt'].') AS T ORDER BY '.implode(',',$EXT_ORDER_BY);
-//	}
 	//generate complementary statement if desired
 	//complementary means: find all ids of main table not occuring in stmt result and display maintable filters
 	if ( $complement ) {
@@ -2120,10 +1982,6 @@ function getDetails($PARAMETER,$conn)
 				{
 					if ( substr($value,0,strlen($table)) != $table ) { unset($_tmp_keys[$index]); }
 					else { $_tmp_keys[$index] = substr($value,strlen($table)+2); }
-					//exclude attributions for now:
-					for ( $i = 0; $i < sizeof($_table_result); $i++ ) {
-						if ( $_tmp_keys[$index] == $_table_result[$i]['tablemachine'] ) { unset($_tmp_keys[$index]); }
-					}
 				}
 				$_tmp_keys = array_values($_tmp_keys);
 				if ( sizeof($_tmp_keys) == 0 ) { $_tmp_keys = array('id_'.$table); }
@@ -2185,7 +2043,6 @@ function getDetails($PARAMETER,$conn)
 								<div class='ID_<?php echo($_tmp_table); ?>' id="NeedIDForDrag_<?php echo(rand(0,2147483647)); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="dropOnDetails(event,this)" ondragstart="dragOnDetails(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)">
 									<label class="unlimitedWidth"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> (keine Zuordnung)</label>
 									<input type="text" hidden value="<?php echo($default); ?>" name="<?php echo($key); ?>" class="inputid" />
-									<span class="newEntryFromEntry" onclick="newEntryFromEntry('<?php echo($table); ?>',<?php echo($id[0]); ?>,'<?php echo($_tmp_table); ?>')"><i class="fas fa-plus"></i> <i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i></span>
 								</div>
 								<br />	
 								<div class="clear"></div>
