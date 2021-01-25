@@ -151,7 +151,6 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			} else {
 				el.innerHTML = _request.responseText;
 			}
-			console.log(classes);
 			if (classes) { 
 				//not compatible with current usage: "details new": el.classList.add(classes); 
 				el.className += " "+classes;

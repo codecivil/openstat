@@ -510,7 +510,7 @@ function changeUserName(array $PARAM, $conn) {
 	return $_SESSION['os_username'];			
 }
 
-function trafficLight_new(array $PARAM, mysqli $conn)
+function trafficLight(array $PARAM, mysqli $conn)
 {
 	$tables = $PARAM['table'];
 	
