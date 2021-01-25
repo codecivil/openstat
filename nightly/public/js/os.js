@@ -206,13 +206,13 @@ function _setValue(el,_value,_position) {
 	}
 }
 
-function newEntryFromEntry(tablefrom,idfrom,tableto) {
-	var formobj = new Object();
-	formobj['id_'+tablefrom] = idfrom;
+function newEntryFromEntry(el,tableto) {
+	var formobj = JSON.parse(el.parentElement.parentElement.querySelector('.attribution').innerText);
+	console.log(formobj);
 	formobj.table = new Array();
 	formobj.table[0] = tableto;
 	document.getElementById('trash').value = JSON.stringify(formobj);
-	setTimeout(function(){callPHPFunction('_','newEntry','_popup_','details new').then(()=>{ return false; });},500);
+	setTimeout(function(){callPHPFunction('_','newEntry','_popup_','details new');},500);
 }
 
 function _toggleColumn(el,key) {

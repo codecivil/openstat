@@ -36,7 +36,6 @@ require_once('../../core/data/serverdata.php');
 require_once('../../core/scripts/getParameters.php');
 require_once('../../core/data/filedata.php');
 require_once('../../core/data/info.php');
-
 /*
 require_once('../../core/auth.php');
 require_once('../../core/edit.php');
@@ -63,10 +62,6 @@ $table = $PARAMETER['table'];
 $username = $_SESSION['os_rolename'];
 $password = $_SESSION['os_dbpwd'];
 
-//get changelog
-$changelog_array = explode('======',file_get_contents('../../changelog'),3);
-$changelog = $changelog_array[0]."======".$changelog_array[1];
-$olderchangelog = $changelog_array[2];	
 //extension file (with version)
 $_ext = scandir('../xpi',SCANDIR_SORT_DESCENDING)[0];
 
@@ -76,6 +71,23 @@ mysqli_set_charset($conn,"utf8");
 
 //get user config
 $_config = getConfig($conn);
+
+//update version
+$whatsnewclass = "changed";
+if ( isset($_config['version']) AND $_config['version'] == $versionnumber ) { $whatsnewclass = ""; $oldversion = $_config['version']; }
+changeConfig(array("version"=>$versionnumber),$conn);
+
+//get changelog
+if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
+	$changelog_array = explode('v'.$_config['version'],file_get_contents('../../changelog'),2);
+	$changelog = $changelog_array[0];
+	$olderchangelog = 'v'.$_config['version'].PHP_EOL.$changelog_array[1];	
+} else {
+	$changelog_array = explode('======',file_get_contents('../../changelog'),3);
+	$changelog = $changelog_array[0]."======".$changelog_array[1];
+	$olderchangelog = $changelog_array[2];
+}	
+
 ?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="de-DE">
@@ -165,7 +177,7 @@ $_config = getConfig($conn);
 				</select>
 			</form>
 		</div>
-		<div id="info">
+		<div id="info" class="<?php echo($whatsnewclass); ?>">
 			<form id="opszInfoForm"></form>
 			<label for="opszInfo">&nbsp;<i class="fas fa-info-circle"></i>&nbsp;</label>
 			<input form="opszInfoForm" type="checkbox" hidden id="opszInfo">

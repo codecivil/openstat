@@ -1335,7 +1335,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	foreach ( $_config_tables as $tindex => $table )
 	{
 		if ( ! isset($_config_hierarchy[$tindex]) ) { $_config_hierarchy[$tindex] = min($tindex,1); }
-		$_config_hierarchy[$tindex] = min($_config_hierarchy[$tindex],$_oldhier+1);
+		$_config_hierarchy[$tindex] = max(min($tindex,1),min($_config_hierarchy[$tindex],$_oldhier+1));
 		$_oldhier = $_config_hierarchy[$tindex];
 	}
 	$_parent_table = array(); unset($tindex);
@@ -2176,6 +2176,7 @@ function getDetails($PARAMETER,$conn)
 				<?php 
 				//list the assignments for single edit (perhaps later for mass edit)
 				if ( sizeof($id) == 1 ) {
+					$_attribution = array('id_'.$table=>$id[0]);
 					foreach( $PARAM as $key=>$default )
 					{
 						if ( substr($key,0,3) == 'id_'  OR $key == 'table' ) {
@@ -2185,13 +2186,15 @@ function getDetails($PARAMETER,$conn)
 								<div class='ID_<?php echo($_tmp_table); ?>' id="NeedIDForDrag_<?php echo(rand(0,2147483647)); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="dropOnDetails(event,this)" ondragstart="dragOnDetails(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)">
 									<label class="unlimitedWidth"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> (keine Zuordnung)</label>
 									<input type="text" hidden value="<?php echo($default); ?>" name="<?php echo($key); ?>" class="inputid" />
-									<span class="newEntryFromEntry" onclick="newEntryFromEntry('<?php echo($table); ?>',<?php echo($id[0]); ?>,'<?php echo($_tmp_table); ?>')"><i class="fas fa-plus"></i> <i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i></span>
+									<span class="newEntryFromEntry" onclick="newEntryFromEntry(this,'<?php echo($_tmp_table); ?>')"><i class="fas fa-plus"></i> <i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i></span>
 								</div>
 								<br />	
 								<div class="clear"></div>
 								<br />
 							<?php		
 								continue; }
+							//save non-empty attributions in php array
+							$_attribution[$key] = $default;
 							$_tmp_keys = array_keys($_config['filters']);
 							unset($value);
 							foreach ( $_tmp_keys as $index=>$value )
@@ -2252,6 +2255,7 @@ function getDetails($PARAMETER,$conn)
 							<br />
 							<?php }
 					}
+					?> <div hidden class="attribution"><?php html_echo(json_encode($_attribution)); ?></div> <?php
 				} ?>
 <!--				</div> -->
 				<?php

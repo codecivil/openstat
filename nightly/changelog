@@ -1,10 +1,17 @@
-#1.5.4
+v1.5.5
+======
+25.01.2021
+
+* Statusbar zeigt an, wenn eine neue Version zum ersten Mal benutzt wird
+* neuer Eintrag aus Eintrag übernimmt nun alle Attributionen (statt nur Haupttabelle)
+
+v1.5.4
 ======
 24.01.2021
 
 * Bugfix: Keine Aufsummierung numerischer Einträge in statTable
 
-#1.5.3
+v1.5.3
 ======
 23.01.2021
 
@@ -16,13 +23,13 @@
 * (bugfix) no unresolved promises any more
 * neues Feature: neue Einträge aus Einträgen heraus (mit automatischer Zuordnung)
 
-#1.5.2
+v1.5.2
 ======
 20.01.2021
 
 * bugfix: adding multiple classes became inconsistent
 
-#1.5.0
+v1.5.0
 ======
 19.01.2021
 
@@ -35,52 +42,52 @@
 * neues Feature: Filter für Anzahlen von Attributionen; Achtung: Reihenfolge der Filter kann nun das Resultat, nicht nur dessen Sortierung, verändern!
 * neues Feature: schwaches und starkes Matching nach Editierungstyp
 
-#1.4.22
+v1.4.22
 =======
 11.01.2021
 
 * bugfix: statTable für Bereiche (Datum, Zahl) war fehlerhaft
 
-#1.4.21
+v1.4.21
 =======
 11.01.2021
 
 * updateOS erlaubt nur signierte Updates
 * kleinere CSS-Verbesserungen
 
-#1.4.19
+v1.4.19
 =======
 24.12.2020
 
 * "Was ist neu?"-Toggler in Infokasten
 * exportCSV informiert über Anzahl exportierter Datensätze
 
-#1.4.18
+v1.4.18
 =======
 13.12.2020
 
 * SUGGEST dropdown: added markup for cursor over entry
 
-#1.4.17
+v1.4.17
 =======
 12.12.2020
 
 * bugfix: handling of single quotes in SUGGESTions
 * Auto-Completion in SUGGEST now offers a dropdown menu instead of completing the single hit
 
-#1.4.16
+v1.4.16
 =======
 15.09.2020
 
 * bugfix: import of single dates failed (import.js)
 
-#1.4.14
+v1.4.14
 =======
 09.9.2010
 
 * log button in openStatAdmin; logs are downloadable and saved to sql folder (so they can be seen with SQL import button)
 
-#1.4.13
+v1.4.13
 =======
 05.09.2020
 
@@ -89,32 +96,32 @@
 * preparations for subtable structures
 * openStat-SQL-extensions: "OS_TABLES LIKE" and "OS_ROLES LIKE" in createStructure.php::importSQL
 
-#v1.4.9
+v1.4.9
 =======
 18.08.2020
 
 * changelog and info.php updated
 
-#v1.4.8
+v1.4.8
 =======
 18.08.2020
 
 * bugfixes in compound structures
 
-#v1.4.7
+v1.4.7
 =======
 23.07.2020
 
 * completion of importing compound fields properly
 
-#v1.4.6
+v1.4.6
 =======
 20.07.2020
 
 * importCSV: preliminary fix for importing at least first component of compound structures if not in JSON
 * importCSV: fix for importing unmatched (LIST) entries: will now be sent as '' and saved as NULL
 
-#v1.4.5
+v1.4.5
 =======
 15.07.2020
 
@@ -124,20 +131,20 @@
 
 * feature: importCSV adapted for mutiple fields separated by '|' 
 
-#v1.4.4
+v1.4.4
 =======
 13.07.2020
 
 * bugfix in mass editing
 * bugfix in importCSV: tables with empty data are not creating empty entries any more, but no entry at all
 
-#v1.4.3
+v1.4.3
 =======
 12.07.2020
 
 * bugfix in mass editing
 
-#v1.4.2
+v1.4.2
 ======
 08.07.2020
 
