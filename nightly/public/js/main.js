@@ -101,12 +101,23 @@ function processForm(form,phpscript,id,add,classes) {
 //local=true: do not update config
 function _close(el,local) { 
 	var popup_wrapper = el.closest('.popup_wrapper');
+	var key = new Object();
 	if ( ! popup_wrapper ) { popup_wrapper = el.closest('.imp_wrapper'); };
+	// for old entries
 	if (popup_wrapper.getElementsByClassName('_table_')[0] && ( !(local) || ! local ) ) {
 		var table = popup_wrapper.getElementsByClassName('_table_')[0].innerText;
 		var id = popup_wrapper.getElementsByClassName('_id_')[0].innerText;
+		key._table_ = table;
+		key._id_ = id;
 		if ( id != '') { callJSFunction('{"id_'+table+'":"'+id+'"}',removeOpenId); };
 	}
+	// for new entries
+	if (! popup_wrapper.getElementsByClassName('_table_')[0] && ( !(local) || ! local ) ) {
+		key._table_ = popup_wrapper.querySelector('.inputtable').value;
+		key._id_ = 'new';
+	}
+	console.log(JSON.stringify(key));
+	sessionStorage.removeItem(JSON.stringify(key));
 	popup_wrapper.parentNode.removeChild(popup_wrapper);
 	return false;
 }
@@ -158,7 +169,7 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			tinyMCEinit();
 			document.body.style.cursor = 'auto';
 			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) ) { el.closest('.popup_wrapper').scrollIntoView(); }
-			if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; };	
+			if (callback) { resolve(window[callback](form,arg,_request.responseText)); /*return window[callback](form,arg,_request.responseText);*/ } else { resolve(false); return false; };	
 		}
 	} else {
 		_request.onload = function() { 	
@@ -202,7 +213,7 @@ function removeOpenId(form) {
 }
 
 function openIds(form) {
-	callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ return false; });	
+	callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ newEntry(form,'',''); return false; });	
 	//processForm(form,'../php/getDetails.php','_popup_',false,'details');
 	return false;
 }
@@ -263,6 +274,7 @@ function editTable(form,tablename) {
 	table.value = tablename;
 	callFunction(form,'getDetails','_popup_',false,'details').then(()=>{
 		//processForm(form,'../php/getDetails.php','_popup_',false,'details');
+		newEntry(form,'','');
 		table.value = old_tablename;
 		return false;
 	});

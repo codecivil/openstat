@@ -2106,10 +2106,10 @@ function getDetails($PARAMETER,$conn)
 		<?php 
 		//only for single edit
 		if ( sizeof($id) == 1 ) { ?>
-			<form method="post" id="reload<?php echo($rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','_close',true); return false;">
+			<form method="post" id="reload<?php echo($rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','_close',true).then(()=>{ return false; }); return false;">
 				<input hidden form="reload<?php echo($rnd); ?>" type="text" value="<?php html_echo($id[0]); ?>" name="id_<?php html_echo($table); ?>" />
 				<input form="reload<?php echo($rnd); ?>" id="submitReload<?php echo($rnd); ?>" type="submit" hidden />
-				<label class="unlimitedWidth date" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
+				<label class="unlimitedWidth date" title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
 			</form>
 			<?php updateTime(); updateLastEdit($PARAM['changedat']); ?>
 			<div class="db_headline_wrapper"><h2 class="db_headline"><i class="fas fa-<?php html_echo($iconname); ?>"></i> 
@@ -2147,7 +2147,7 @@ function getDetails($PARAMETER,$conn)
 			<div class="db_headline_wrapper"><h2 class="db_headline"><i class="fas fa-<?php html_echo($iconname); ?>"></i>&nbsp; <?php echo(sizeof($id)); ?> Einträge </h2></div>
 		<?php } ?>	
 		<div class="message" id="message<?php echo($table.$id[0]); ?>"><div class="dbMessage" class="<?php echo($dbMessageGood); ?>"><?php echo($dbMessage); ?></div></div>
-		<form class="db_options" method="POST" action="" onsubmit="callFunction(this,'dbAction','message'); return false;">
+		<form class="db_options" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">
 			<input type="text" hidden value="<?php echo($table); ?>" name="table" class="inputtable" />
 			<input type="text" hidden value="<?php html_echo(json_encode($id)); ?>" name="id_<?php echo($table); ?>" class="inputid" />
 			<input type="text" hidden value="<?php echo($_SESSION['os_user']); ?>" name="changedby" class="inputid" />
@@ -2159,7 +2159,7 @@ function getDetails($PARAMETER,$conn)
 		-->
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table.$id[0]); ?>_sticky" class="action">Aktion</label>
-					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction',''); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this); if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); }; return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); }; return false; }); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="" selected>[Bitte erst nach Bearbeitung wählen]</option>
 						<?php if ( isset($PARAM['id_'.$table]) ) { ?>
 							<option value="edit">Eintrag ändern</option>
@@ -2323,14 +2323,14 @@ function includeFunctions(string $scope, mysqli $conn)
 function updateTime()
 {
 	?>
-	<div class="time"><i class="fas fa-clock"></i> <?php echo(date("H:i:s")); ?></div>
+	<div class="time" title="zuletzt geladen"><i class="fas fa-clock"></i> <?php echo(date("H:i:s")); ?></div>
 	<?php
 }
 
 function updateLastEdit(string $datetime)
 {
 	?>
-	<div class="time"><i class="fas fa-pencil-alt"></i> <?php echo(DateTime::createFromFormat('Y-m-d H:i:s', $datetime)->format('d.m.Y H:i')); ?></div>
+	<div class="time" title="zuletzt gespeichert"><i class="fas fa-pencil-alt"></i> <?php echo(DateTime::createFromFormat('Y-m-d H:i:s', $datetime)->format('d.m.Y H:i')); ?></div>
 	<?php
 }
 
@@ -2480,7 +2480,7 @@ function openFile($PARAMETER)
 	<div class="db_headline_wrapper"><h2>Vorschau von <a href="<?php echo($filename); ?>?v=<?php echo($rnd); ?>" target="_blank"><?php echo($filename); ?></a></h2></div>
 	<iframe
 		src='<?php echo($filename); ?>?v=<?php echo($rnd); ?>' 
-		onload="document.getElementById('trash').value = '<?php echo($filename); ?>'; callFunction('_','_unlink'); document.getElementById('trash').value = '';"
+		onload="document.getElementById('trash').value = '<?php echo($filename); ?>'; callFunction('_','_unlink').then(()=>{ document.getElementById('trash').value = ''; });"
 		frameborder="0" border="0" cellspacing="0"
 		class="_iframe"
 	>

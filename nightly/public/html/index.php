@@ -87,8 +87,10 @@ if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 	$changelog = $changelog_array[0]."======".$changelog_array[1];
 	$olderchangelog = $changelog_array[2];
 }	
-
+//get timestamp for forcing fresh ressource loading
+$_v = time();
 ?>
+
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="de-DE">
 	<head profile="http://gmpg.org/xfn/11">
@@ -100,17 +102,17 @@ if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 	<meta name="author" content="<?php echo($author); ?>">
 	<meta name="description" content="openStat v<?php echo($versionnumber); ?>">
 	<title>openStat</title>
-	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/fontsize_<?php echo($_config['_fontSize']); ?>.css" id="cssFontSize" />
-	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/config_colors_<?php echo($_config['_colors']); ?>.css" id="cssColors" />
-	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/main.css" />
-	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontawesome/css/all.css" />
-	<script type="text/javascript" src="/js/main.js"></script>
-	<script type="text/javascript" src="/js/os.js"></script>
-	<script type="text/javascript" src="/js/import.js"></script>
-	<script type="text/javascript" src="/plugins/tinymce/js/tinymce.js"></script>
-	<script type="text/javascript" src="/plugins/tinymce/js/os_tinymce.js"></script>
+	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/fontsize_<?php echo($_config['_fontSize']); ?>.css?v=<?php echo($_v);?>" id="cssFontSize" />
+	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/config_colors_<?php echo($_config['_colors']); ?>.css?v=<?php echo($_v);?>" id="cssColors" />
+	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/main.css?v=<?php echo($_v);?>" />
+	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontawesome/css/all.css?v=<?php echo($_v);?>" />
+	<script type="text/javascript" src="/plugins/tinymce/js/tinymce.js?v=<?php echo($_v);?>"></script>
+	<script type="text/javascript" src="/plugins/tinymce/js/os_tinymce.js?v=<?php echo($_v);?>"></script>
+	<script type="text/javascript" src="/js/main.js?v=<?php echo($_v);?>"></script>
+	<script type="text/javascript" src="/js/os.js?v=<?php echo($_v);?>"></script>
+	<script type="text/javascript" src="/js/import.js?v=<?php echo($_v);?>"></script>
 </head>
-<body onload="setTimeout( function () { callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper'); } ,1500);">
+<body>
 <div hidden id="generator"></div>
 <div id="statusbar">
 	<div id="logo">
@@ -312,6 +314,7 @@ if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 	},500);
 	setTimeout(function () {
 		callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth').then(()=>{
+			callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ return false; });
 	//	processForm(document.getElementById('formAddFilters'),'../php/updateSidebar.php','sidebar');
 		<?php 
 			unset($value);
@@ -326,6 +329,7 @@ if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 			}  ?>
 		})
 	},1000);
+	_saveStateInterval = setInterval(_saveState,300000);
 </script> 
 </body>
 </html>

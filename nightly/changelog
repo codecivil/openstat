@@ -1,3 +1,12 @@
+v1.5.7
+======
+27.01.2021
+
+* erzwungenes Neuladen von Ressourcen bei Login
+* lokales Zwischenspeichern neuer Einträge alle 5 Minuten, auch über (erzwungenen) Logout
+  hinaus, bis zum Schließen des Browsers
+* Promise statt Timeout beim Laden der Seite
+
 v1.5.6
 ======
 25.01.2021

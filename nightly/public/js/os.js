@@ -3,7 +3,7 @@ function _onResetFilter(val,el) {
 // make new query at every change; uncomment to restrict to filter removals
 //	if ( val == "none" ) {
 		if ( val != "delete" || confirm("Wollen Sie den Eintrag wirklich löschen?") ) {
-			console.log(val);
+			//console.log(val);
 //			document.getElementById('db_options').submit();
 		}
 //	}
@@ -152,7 +152,7 @@ function updateSelection(el) {
 			}
 		}
 	}
-	console.log(conditions_met);
+	//console.log(conditions_met);
 	if ( conditions_met == 0 ) {
 	for (i=0; i<conditions.length; i++) {
 		var depends_on_key = conditions[i].depends_on_key;
@@ -213,6 +213,84 @@ function newEntryFromEntry(el,tableto) {
 	formobj.table[0] = tableto;
 	document.getElementById('trash').value = JSON.stringify(formobj);
 	setTimeout(function(){callPHPFunction('_','newEntry','_popup_','details new');},500);
+}
+
+function _form2obj(form) {
+	var formData = new FormData (form);
+	var obj = new Object();
+	for (var key of formData.keys()) {
+		obj[key] = formData.getAll(key);
+	}
+	return obj;
+}
+
+//newEntry also applies to opening existent entries!; distinguished in function...
+//how to distiguis new login: do not ask for every open item...
+function newEntry(form,arg,response) {
+	var key = new Object;
+	var el = document.querySelector('.popup.details');
+	// old entries:
+	if ( document.querySelector('.new') ) {
+		key._table_ = el.querySelector('.inputtable').value;
+		key._id_ = 'new';
+	} else {
+		key._table_ = el.querySelector('._table_').innerText;
+		key._id_ = el.querySelector('._id_').innerText;
+	}
+	var _form = el.querySelector('.db_options');
+	if ( sessionStorage.getItem(JSON.stringify(key)) != null && sessionStorage.getItem(JSON.stringify(key)) !== JSON.stringify(_form2obj(_form)) ) {
+		if( window.confirm('Es gibt eine ungespeicherte Version dieses Eintrags. Wollen Sie sie wiederherstellen?') ) {
+			var obj = JSON.parse(sessionStorage.getItem(JSON.stringify(key)));
+			for (var k in obj) {
+				try { var _fields = el.querySelectorAll(':not(:disabled)[name="'+k+'"]'); } catch(err) { var _fields = new Array(); }
+				//add searchfields for multiple values...
+				if ( _fields.length > 0) {
+					var _rnd = _fields[0].id
+					_fields[0].classList.forEach ( function(cl) {
+						_rnd = _rnd.replace(cl,'');
+					})
+					_rnd = _rnd.replace(/[^\d]*/g,'');
+					for ( var j = 0; j < obj[k].length-_fields.length; j++ ) {
+						addSearchfield(_fields[0].parentElement.parentElement,_rnd);
+					}
+				}
+				_fields = el.querySelectorAll(':not(:disabled)[name="'+k+'"]');
+				_fields.forEach( function (_field) {
+					if ( _field.id.endsWith('_list') ) {
+						var _keyname = _field.id.replace('db_','').replace('_list','');
+						_toggleOption(_keyname);
+					}
+				});
+				_fields = el.querySelectorAll(':not(:disabled)[name="'+k+'"]');
+				for (var i = 0; i < _fields.length; i++) {						
+					try { _fields[i].value = obj[k][i]; } catch(err) { continue; }
+				}
+			}
+			sessionStorage.removeItem(JSON.stringify(key));
+		}
+	}
+}
+
+function _saveState() {
+	tinyMCEinit();
+	try { tinyMCEinit(); tinyMCE.triggerSave(); } catch(err) { console.log('No TinyMCE'); }
+	document.querySelectorAll('.details').forEach(
+	function(_el) {
+		var key = new Object;
+		if ( _el.classList.contains('new') ) {
+			try { 
+				key._table_ = _el.querySelector('.inputtable').value;
+				key._id_ = 'new';
+			} catch(err) { return; }
+		} else {
+			try {
+				key._table_ = _el.querySelector('._table_').innerText;
+				key._id_ = _el.querySelector('._id_').innerText;
+			} catch(err) { return; }		
+		}
+		var _form = _el.querySelector('.db_options');
+		sessionStorage.setItem(JSON.stringify(key),JSON.stringify(_form2obj(_form)));
+	});
 }
 
 function _toggleColumn(el,key) {
@@ -353,7 +431,7 @@ function editEntries(form,tablename) {
 		document.getElementById('editTableName').value = tablename;
 		callFunction(document.getElementById('formMassEdit'),'getDetails','_popup_',false,'details').then(()=>{ return false; });
 	} else {
-		callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ return false; });
+		callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ newEntry(form,'',''); return false; });
 	}
 	return false
 }
