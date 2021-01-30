@@ -95,7 +95,7 @@ $conn->close();
 		</div>
 		<form action="" method="post">
 			<label for="user"><i class="fas fa-user"></i></label>
-			<input id="user" type="text" name="user" required <?php echo($disabled); ?>><br /><br />
+			<input id="user" type="text" name="user" autofocus required <?php echo($disabled); ?>><br /><br />
 			<label for="pwd"><i class="fas fa-key"></i></label>
 			<input id="pwd" type="password" name="password" required <?php echo($disabled); ?>><br />
 			<input id="test" type="submit" hidden <?php echo($disabled); ?>><br /><br />

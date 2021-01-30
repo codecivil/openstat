@@ -126,50 +126,74 @@ function _oldautoComplete(el,suggest_array,suggest_conditions) {
 
 function updateSelection(el) {
 	var id = el.id;
-	var option = el.getElementsByTagName('option'); 
+	var option = el.getElementsByTagName('option');
+	var _disabled = new Array(); //the state for checkboxes: activate all options matching a checked checkbox
 	for (j=0; j<option.length; j++) {
 		option[j].disabled = false;
+		_disabled[j] = true;
 	}
 	var conditions = JSON.parse(document.getElementById(id+'_conditions').innerText);
 	var conditions_met = 0;
 	for (i=0; i<conditions.length; i++) {
-		var depends_on_key = conditions[i].depends_on_key;
+		var depends_on_key = conditions[i].depends_on_key.split(';')[0];
+		var depends_local = conditions[i].depends_on_key.split(';')[1];
+		if ( typeof depends_local == 'undefined' ) { depends_local = ''; }
 		var depends_on_value = conditions[i].depends_on_value;
 		var allowed_values = conditions[i].allowed_values;
 		//do not restrict on EXTENSIBLE LISTS: mark in allowed_values with "***"
 		if ( allowed_values.indexOf('\"***\"') > -1 ) { continue; }
 		//
-		if ( el.closest('form').querySelector('[name*="'+depends_on_key+'"]') ) {
-			_hits = el.closest('form').querySelectorAll('[name*="'+depends_on_key+'"]');
-			for (k=0; k<_hits.length; k++) {
-				if ( _hits[k].value == depends_on_value ) {
-					conditions_met++;
-					for (j=0; j<option.length; j++) {
-						var match = allowed_values.indexOf(option[j].value);
-						if ( match == -1 ) { option[j].disabled = true; }; 
+		if ( depends_local != '' ) { var search_el = el.closest('.searchfield'); } else { var search_el = el.closest('form'); }
+		if ( search_el.querySelector('[name*="'+depends_on_key+'"]') ) {
+			_hits = search_el.querySelectorAll('[name*="'+depends_on_key+'"]');
+			//restrict successively for almost all fields
+			if ( _hits[0].type != "checkbox" ) {
+				for (k=0; k<_hits.length; k++) {
+					if ( _hits[k].value == depends_on_value ) {
+						conditions_met++;
+						for (j=0; j<option.length; j++) {
+							var match = allowed_values.indexOf(option[j].value);
+							if ( match == -1 ) { option[j].disabled = true; }; 
+						}
 					}
+				}
+			} else {
+			//do the opposite for checkboxes
+			//here is sth wrong: to be continued
+				_hits = search_el.querySelectorAll(':checked[name*="'+depends_on_key+'"]');
+				for (j=0; j<option.length; j++) {
+					for (k=0; k<_hits.length; k++) {
+						if ( _hits[k].value == depends_on_value ) {
+							conditions_met++;
+							var match = allowed_values.indexOf(option[j].value);
+							if ( match > -1 ) { _disabled[j] = false; }; 
+						}
+					}
+					option[j].disabled = _disabled[j	];
 				}
 			}
 		}
 	}
-	//console.log(conditions_met);
 	if ( conditions_met == 0 ) {
-	for (i=0; i<conditions.length; i++) {
-		var depends_on_key = conditions[i].depends_on_key;
-		var depends_on_value = conditions[i].depends_on_value;
-		var allowed_values = conditions[i].allowed_values;
-		//do not restrict on EXTENSIBLE LISTS: mark in allowed_values with "***"
-		if ( allowed_values.indexOf('\"***\"') > -1 ) { continue; }
-		//
-		if ( !(depends_on_value) && !(depends_on_key) ) {
-			for (j=0; j<option.length; j++) {
-				var match = allowed_values.indexOf(option[j].value);
-//				console.log(option[j].value+' '+match);
-				if ( match == -1 ) { option[j].disabled = true; }
+		for (i=0; i<conditions.length; i++) {
+			var depends_on_key = conditions[i].depends_on_key.split(';')[0];
+			try { var depends_local = conditions[i].depends_on_key.split(';')[1]; } catch(err) { var depends_local = ''; }
+			var depends_on_value = conditions[i].depends_on_value;
+			var allowed_values = conditions[i].allowed_values;
+			//do not restrict on EXTENSIBLE LISTS: mark in allowed_values with "***"
+			if ( allowed_values.indexOf('\"***\"') > -1 ) { continue; }
+			//
+			if ( !(depends_on_value) && !(depends_on_key) ) {
+				for (j=0; j<option.length; j++) {
+					var match = allowed_values.indexOf(option[j].value);
+					if ( match == -1 ) { option[j].disabled = true; }
 				} 
 			}
 		}
-	}	
+	}
+	if ( el.querySelectorAll('option:checked:disabled').length > 0 ) {
+		el.querySelectorAll('option:checked:disabled')[0].selected = false;
+	}
 }
 
 function addSearchfield(el,rnd) {
@@ -202,7 +226,7 @@ function _setValue(el,_value,_position) {
 		document.getElementById('editTableName').value = _value;
 		callFunction(document.getElementById('formMassEdit'),'newEntry','_popup_',false,'details new').then(()=>{ return false; });
 	} else {
-		setTimeout(function(){callPHPFunction(_form,'newEntry','_popup_','details new').then(()=>{ return false; });},500);
+		setTimeout(function(){callPHPFunction(_form,'newEntry','_popup_','details new');},500);
 	}
 }
 
@@ -266,8 +290,8 @@ function newEntry(form,arg,response) {
 					try { _fields[i].value = obj[k][i]; } catch(err) { continue; }
 				}
 			}
-			sessionStorage.removeItem(JSON.stringify(key));
 		}
+		sessionStorage.removeItem(JSON.stringify(key));
 	}
 }
 

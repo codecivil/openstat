@@ -247,7 +247,17 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details label.fullWidth { width: calc(100% - 15rem); text-align: left; }
 .details label.date { margin-top: 0; }
 .details label.right { float: right; }
+.details label ~ .searchfield::before { content: '\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\00A0\221F'; display: flex; justify-content: flex-start;}
+.details label ~ .searchfield { 
+	font-style: italic;
+/*	border-top: 1px solid;
+	border-image: linear-gradient(to right,transparent,var(--color-detailswrapper),transparent);
+	border-image-slice: 1;
+	*/
+}
+.details .searchfield + .searchfield { border: 0; }
 .details .searchfield + .searchfield label.onlyone { opacity: 0; }
+.details label ~  .searchfield + .searchfield label.onlyone { opacity: 0.5; }
 .details input[type="button"] { margin: 0 auto; float: left; }
 .details .fieldset { padding: 0.2rem; border: 1px solid black; border-radius: 5px; }
 .details .remove { float: right; opacity: 0; }

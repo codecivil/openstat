@@ -127,13 +127,13 @@ if ( isset($PARAMETER['logActivity']) ) {
 	if ( isset($_SESSION['log']) AND $_SESSION['log'] ) {
 		$_SESSION['log'] = false;
 		$_save = true;
-		$_SESSION['logfinishedtimereadable'] = date('m.d.Y H:i:s');
+		$_SESSION['logfinishedtimereadable'] = date('d.m.Y H:i:s');
 		$_SESSION['logfinishedtime'] = date('Y-m-d_His');
 		$_SESSION['logsaved'] = $_SESSION['logstring']."-- openStatAdmin-log finished ".$_SESSION['logfinishedtimereadable'].PHP_EOL;
 		$_SESSION['logstring'] = "";
 	} else { 
 		$_SESSION['log'] = true;
-		$_SESSION['logstring'] = "-- openStatAdmin-log started ".date('m.d.Y H:i:s').PHP_EOL;
+		$_SESSION['logstring'] = "-- openStatAdmin-log started ".date('d.m.Y H:i:s').PHP_EOL;
 	}
 	unset($PARAMETER['logActivity']);
 }
@@ -1026,7 +1026,7 @@ function _dbAction(array $PARAMETER,mysqli $conn) {
 			$values = " VALUES ";
 			foreach($PARAMETER as $key=>$value)
 			{
-				if ( $value != 'none' AND $value != '' AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
+				if ( $value != 'none' AND $value != '' AND $key != 'id' AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
 					$into .= $komma . "`" . str_replace("_","_",$key) . "`";
 					$values .= $komma. "?";
 					$arr_values[] = rtrim($value);

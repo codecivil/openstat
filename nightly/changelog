@@ -1,3 +1,12 @@
+v1.5.8
+======
+29.01.2021
+
+* Ergänzung lokaler Referenzabhängigkeiten (innerhalb eines searchfields)
+* Inkludierende Referenzabhängigkeiten bei Checkboxes als Feldabhängigkeit: 
+  es werden alle Optionen aktiviert, die mindestens eine gewählte Checkbox erlaubt
+* Autofokus auf Benutzername bei Login
+
 v1.5.7
 ======
 27.01.2021
