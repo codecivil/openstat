@@ -113,11 +113,12 @@ function _close(el,local) {
 	}
 	// for new entries
 	if (! popup_wrapper.getElementsByClassName('_table_')[0] && ( !(local) || ! local ) ) {
-		key._table_ = popup_wrapper.querySelector('.inputtable').value;
+		try { key._table_ = popup_wrapper.querySelector('.inputtable').value; } catch(err) { key._table_ = 'none'; }
 		key._id_ = 'new';
 	}
-	console.log(JSON.stringify(key));
-	sessionStorage.removeItem(JSON.stringify(key));
+	if ( key._table_ != 'none' ) { 
+		sessionStorage.removeItem(JSON.stringify(key));
+	}
 	popup_wrapper.parentNode.removeChild(popup_wrapper);
 	return false;
 }
