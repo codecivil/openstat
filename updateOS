@@ -10,7 +10,7 @@
 #
 USAGE='updateOS [--opsz] [--instance INSTANCENAME] [--webdir ABSOLUTEPATHTOWEBDIR]\n\n--webdir defaults to /var/www/html/openStat or /var/www/html/$INSTANCE.'
 function php_no_error_reporting {
-        cd /var/www/html/$INSTANCE/latest
+        cd "$WEBDIR"/latest
         _files=( public/html/index.php public/php/browseFileserver.php public/php/callFunction.php public/html/login.php public/html/changePassword.php )
         for _file in ${_files[@]}; do
                 sed -i 's/\/\/error_reporting/error_reporting/' $_file
@@ -93,7 +93,7 @@ if [[ "$INSTANCE" == "" ]]; then exit 0; fi
 # get latest $INSTANCE release
 REPO="$INSTANCE"
 read OLDVERSION < "$WEBDIR/$INSTANCE.version"
-#make old version available
+#make old version available; !!!this only works if the INSTANCE release number equals the current openStat release number at the time of release
 cp -a "$WEBDIR/$OLDVERSION/$INSTANCE.tgz" "$WEBDIR/latest/"
 #check for new version
 VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/latest | grep 'tag_name' | sed 's/.*\": //;s/,//;s/\"//g' )"
