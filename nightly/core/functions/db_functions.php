@@ -1636,9 +1636,13 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 	$HIERARCHY[-1] = 0;
 	$HIERARCHY[sizeof($TABLES)] = 1;
 	$JOINSRC = array();
+	$SHOWME = array(); //array of fields to be displayed in results
 	unset($tindex);
 	foreach ( $TABLES as $tindex => $table )
 	{
+		//add table to showme (customer request); here for economic reasons...
+		array_push($SHOWME,$table.'__id_'.$table);
+		//
 		$JOINSRC[$HIERARCHY[$tindex]] = $table;
 		$_JOIN = '';
 		if ( $tindex > 0 AND $HIERARCHY[$tindex] >= $HIERARCHY[$tindex-1] ) {
@@ -1669,7 +1673,6 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 	$_ORDER_BY = ' ORDER BY ';
 	$_komma_cmp = ' AND '; //conditions for different compounds in one key filter have all to be satisfied
 	$_komma_cmp_entry = ' OR '; //a certain index has to match every compound
-	$SHOWME = array(); //array of fields to be displayed in results
 	$SHOWNOTALL = false;
 	$EXT_ORDER_BY = array(); //order in case not all fields are going to be displayed
 	foreach ($PARAMETER as $key=>$values) 

@@ -234,7 +234,6 @@ function importCSV(array $PARAM,$conn) {
 		}
 		$headers = $key_array['keyreadable'];
 		//transfer to js on client side
-		//print_r($key_array);
 		echo(json_encode($key_array));
 	?>
 	</div>
@@ -535,74 +534,103 @@ function trafficLight(array $PARAM, mysqli $conn)
 	foreach ( $tables as $table ) {
 		$ids = array(); $resultin = array(); $_param = array();
 		foreach ( $_config['criteria'] as $criterion ){
-			if ($criterion['table'] == $table ) { 
-				$resultout_array = _parseCriterion($resultin,$_param,$criterion,$conn);
+			if ( $criterion['associated_table'] == $table ) {
+				$resultout_array = _parseCriterion($resultin,$_param,$criterion,$tables,$conn);
 				$resultout = $resultout_array[0];
 				$_param = $resultout_array[1];
 				foreach ( $resultout as $id ) {
+					if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
 					$_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
-					if ( ! array_key_exists($id,$ids) ) { $ids[$id] = array(); $ids[$id]['urgency'] = 0; $ids[$id]['criteria'] = array(); }
-					if ( $criterion['urgency'] == "+" ) { $ids[$id]['urgency'] += 1; }
-					if ( $criterion['urgency'] == "-" ) { $ids[$id]['urgency'] -= 1; }
-					if ( is_int($criterion['urgency']) ) { $ids[$id]['urgency'] = max($ids[$id]['urgency'],$criterion['urgency']); }
-					if (! substr_in_array($criterion['name'],$ids[$id]['criteria']) ) { array_push($ids[$id]['criteria'],$criterion['name'].$_criteriondetail); } 
+					if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
+					if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }
+					if ( $criterion['urgency'] == "-" ) { $ids[$criterion['table']][$id]['urgency'] -= 1; }
+					if ( is_int($criterion['urgency']) ) { $ids[$criterion['table']][$id]['urgency'] = max($ids[$criterion['table']][$id]['urgency'],$criterion['urgency']); }
+					if (! substr_in_array($criterion['name'],$ids[$criterion['table']][$id]['criteria']) ) { array_push($ids[$criterion['table']][$id]['criteria'],$criterion['name'].$_criteriondetail); } 
 				}
 			}
 		}
-		$identifiers = implode(',',$_config['identifiers'][$table]);
-		$identifiers_esc = "'".str_replace(",","','",$identifiers)."'";
-		unset($_stmt_array); $_stmt_array = array();
-		$_stmt_array['stmt'] = 'SELECT keymachine,keyreadable from '.$table.'_permissions WHERE keymachine IN ('.$identifiers_esc.')';
-		$_identifiers_result = execute_stmt($_stmt_array,$conn)['result'];
-		$_identifiers_readable = array_combine($_identifiers_result['keymachine'],$_identifiers_result['keyreadable']);						
-		unset($_stmt_array); $_stmt_array = array();
-		$_stmt_array['stmt'] = 'SELECT id_'.$table.','.$identifiers.' from view__'.$table.'__'.$_SESSION['os_role'].' WHERE id_'.$table.' IN ('.implode(',',array_keys($ids)).')';						
-		$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
-		if ( ! $_table_result OR sizeof($_table_result) == 0 ) { continue; }
+		if ( sizeof($ids) > 0 ) {
 		?>
-		<div class="tableicon"><i class="fas fa-<?php html_echo($icon[$table]); ?>"></i></div>
-		<div>
-			<table>
-				<tr>
+			<div class="tableicon"><i class="fas fa-<?php html_echo($icon[$table]); ?>"></i></div>
+		<?php
+		}
+		foreach ( array_keys($ids) as $idstable ) {
+			$identifiers = implode(',',$_config['identifiers'][$idstable]);
+			$identifiers_esc = "'".str_replace(",","','",$identifiers)."'";
+			unset($_stmt_array); $_stmt_array = array();
+			$_stmt_array['stmt'] = 'SELECT keymachine,keyreadable from '.$idstable.'_permissions WHERE keymachine IN ('.$identifiers_esc.')';
+			$_identifiers_result = execute_stmt($_stmt_array,$conn)['result'];
+			$_identifiers_readable = array_combine($_identifiers_result['keymachine'],$_identifiers_result['keyreadable']);						
+			unset($_stmt_array); $_stmt_array = array();
+			$_stmt_array['stmt'] = 'SELECT id_'.$idstable.','.$identifiers.' from view__'.$idstable.'__'.$_SESSION['os_role'].' WHERE id_'.$idstable.' IN ('.implode(',',array_keys($ids[$idstable])).')';
+			$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
+			unset($_stmt_array); $_stmt_array = array();
+			$_stmt_array['stmt'] = 'SELECT id_'.$table.',id_'.$idstable.' from view__'.$table.'__'.$_SESSION['os_role'].' WHERE id_'.$idstable.' IN ('.implode(',',array_keys($ids[$idstable])).')';
+			$_assoc_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
+			if ( ! $_table_result OR sizeof($_table_result) == 0 ) { continue; }
+			?>
+			<div>
+				<table>
+					<tr>
+						<?php
+						foreach ( $_config['identifiers'][$idstable] as $identifier ) {
+						?>
+							<th><?php echo($_identifiers_readable[$identifier]); ?></th>
+						<?php
+						}
+						?>
+						<th>Kriterien</th>
+					</tr>
+			<?php
+			foreach ( $_table_result as $_item ) {
+				$_rnd = rand(0,32767);
+				if ( $ids[$idstable][$_item['id_'.$idstable]]['urgency'] == 1 ) { $_class = "yellow"; }
+				if ( $ids[$idstable][$_item['id_'.$idstable]]['urgency'] == 2 ) { $_class = "orange"; }
+				if ( $ids[$idstable][$_item['id_'.$idstable]]['urgency'] > 2 ) { $_class = "red"; }
+				?>
+				<tr class="<?php html_echo($_class); ?>">
 					<?php
-					foreach ( $_config['identifiers'][$table] as $identifier ) {
+					foreach ( $_config['identifiers'][$idstable] as $identifier ) {
 					?>
-						<th><?php echo($_identifiers_readable[$identifier]); ?></th>
+						<td><?php html_echo($_item[$identifier]); ?></td>
+					<?php } ?>
+					<td><?php html_echo(implode(' | ',$ids[$idstable][$_item['id_'.$idstable]]['criteria'])); ?></td>
+					<td>
+						<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_item['id_'.$idstable]); ?>" name="id_<?php echo($idstable); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
+						<label for="ampelSubmit__<?php echo($_rnd); ?>" title="ID: <?php echo($_item['id_'.$idstable]); ?>"><i class="fas fa-<?php echo($icon[$idstable]); ?>"></i></label>
+					</td>
 					<?php
+					foreach ( $_assoc_table_result as $_assoc_item ) {
+						if ( $_assoc_item['id_'.$idstable] == $_item['id_'.$idstable] ) {
+							$_rnd = rand(0,32767);
+							?>
+							<td>
+								<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_assoc_item['id_'.$table]); ?>" name="id_<?php echo($table); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
+								<label for="ampelSubmit__<?php echo($_rnd); ?>" title="ID: <?php echo($_assoc_item['id_'.$table]); ?>"><i class="fas fa-<?php echo($icon[$table]); ?>"></i></label>
+							</td>							
+							<?php
+						}
 					}
 					?>
-					<th>Kriterien</th>
 				</tr>
-		<?php
-		foreach ( $_table_result as $_item ) {
-			$_rnd = rand(0,32767);
-			if ( $ids[$_item['id_'.$table]]['urgency'] == 1 ) { $_class = "yellow"; }
-			if ( $ids[$_item['id_'.$table]]['urgency'] == 2 ) { $_class = "orange"; }
-			if ( $ids[$_item['id_'.$table]]['urgency'] > 2 ) { $_class = "red"; }
-			?>
-			<tr class="<?php html_echo($_class); ?>">
 				<?php
-				foreach ( $_config['identifiers'][$table] as $identifier ) {
-				?>
-					<td><?php html_echo($_item[$identifier]); ?></td>
-				<?php } ?>
-				<td><?php html_echo(implode(' | ',$ids[$_item['id_'.$table]]['criteria'])); ?></td>
-				<td>
-					<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_item['id_'.$table]); ?>" name="id_opsz_aufnahme" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
-					<label for="ampelSubmit__<?php echo($_rnd); ?>"><i class="fas fa-address-card"></i></label>
-				</td>							
-			</tr>
-			<?php
-		}
-		?>
-			</table>
-			<br />
+			}
+			?>
+				</table>
+				<br />
 		</div>
 		<?php 
+		} 
 	}
 }
 
-function _parseCriterion(array $resultin, array $_param, array $criterion, mysqli $conn) {
+function _parseCriterion(array $resultin, array $_param, array $criterion, array $tables, mysqli $conn) {
+	//make tables to views
+	foreach ( $tables as $cftable ) {
+		if ( isset($criterion['sql']) ){
+			$criterion['sql'] = preg_replace('/([^_])('.$cftable.')/','${1}view__${2}__'.$_SESSION['os_role'],$criterion['sql']);
+		} 
+	}
 	//included 'not': use notimplies whenever possible, since otherwise we have to define an _all array, what costs a lot if time!
 	$_logical = array("and","or","not","notimplies","implies");
 	$_logical = array_values(array_intersect($_logical,array_keys($criterion)));
@@ -623,7 +651,8 @@ function _parseCriterion(array $resultin, array $_param, array $criterion, mysql
 		if ( ! $subcriteria[0] ) { $subcriteria = array($subcriteria); } // this is for "not": applies only to one criterion, so is no array of criteria by design
 		foreach ($subcriteria as $index => $subcriterion ) {
 			$subcriterion['table'] = $criterion['table'];
-			$subresultout_array = _parseCriterion($resultin,$_param,$subcriterion,$conn);
+			$subcriterion['associated_table'] = $criterion['associated_table'];
+			$subresultout_array = _parseCriterion($resultin,$_param,$subcriterion,$tables,$conn);
 			$subresultout = $subresultout_array[0];
 			$_subparam = $subresultout_array[1];
 			$_param = array_merge($_param,$_subparam);
@@ -657,13 +686,15 @@ function _parseCriterion(array $resultin, array $_param, array $criterion, mysql
 	//the following only works for simple queries: fix it for multiple select, from, where and 'distinct'... keywords
 		$_where_array = preg_split('/ WHERE /i',$criterion['sql'],2);
 		$_where = $_where_array[1];
+		if ( isset($_where) AND $_where != '' ) { $_where = " WHERE ".$_where; }
 		$_from_array = preg_split('/ FROM /i',$_where_array[0],2);
 		$_from = $_from_array[1];
 		$_select_array = preg_split('/SELECT /i',$_from_array[0],2);
 		$_select = $_select_array[1];
 		unset($_stmt_array); $_stmt_array = array();
 		$_resultout = array (); $_param = array ();
-		$_stmt_array['stmt'] = "SELECT id_".$criterion['table'].",".$_select." AS PARAM FROM view__".$_from."__".$_SESSION['os_role']." WHERE ".$_where." GROUP BY id_".$criterion['table']." ORDER BY PARAM DESC";
+//was:		$_stmt_array['stmt'] = "SELECT id_".$criterion['table'].",".$_select." AS PARAM FROM view__".$_from."__".$_SESSION['os_role']." WHERE ".$_where." GROUP BY id_".$criterion['table']." ORDER BY PARAM DESC";
+		$_stmt_array['stmt'] = "SELECT id_".$criterion['table'].",".$_select." AS PARAM FROM ".$_from.$_where." GROUP BY id_".$criterion['table']." ORDER BY PARAM DESC";
 		foreach ( execute_stmt($_stmt_array,$conn,true)['result'] as $_maybe ) {
 			$value = $_maybe['PARAM'];
 			if ( $key == 'id_'.$criterion['table'] ) { continue; }
