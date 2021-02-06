@@ -117,8 +117,12 @@ tar xzf $INSTANCE.tgz && {
 	#
 	cp -a codecivil-*/nightly/* ./
 	cp core/data/info.php  core/data/info.php.bkp
+	cp core/data/debugdata.php  core/data/debugdata.php.bkp
+	cp settings.php  settings.php.bkp
 	cp -a "$WEBDIR/v1.0/core/data" "$WEBDIR/latest/core/"
 	mv core/data/info.php.bkp  core/data/info.php
+	mv core/data/debugdata.php.bkp  core/data/debugdata.php
+	mv settings.php.bkp  settings.php
 	rm -r codecivil-*
 	cp -a "$WEBDIR/v1.0/vendor/" "$WEBDIR/latest/"
 	cp -a "$WEBDIR/v1.0/vendor/css/" "$WEBDIR/latest/public/"
