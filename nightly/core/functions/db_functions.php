@@ -1,5 +1,4 @@
 <?php
-$_SESSION['DEBUG'] = "on";
 //returns raw result
 //logs if $_SESSION['log'] is set and true (in order to avoid changing all execute_stmts), or if parameter $log is set and true
 function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
@@ -19,7 +18,7 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 				$dbMessage = $message; $dbMessageGood = "true";
 				$result = $statement->get_result();
 				//log if log is enabled and stmt is not internal (grants, revokes, selects...)
-				if ( strpos($stmt,'view__') === false AND strpos($stmt,'GRANT') === false AND strpos($stmt,'FLUSH') === false AND strpos($stmt,'SELECT') !== 0 AND strpos($stmt,'REVOKE') === false AND ( $_SESSION['log'] OR $log ) ) {
+				if ( strpos($stmt,'view__') === false AND strpos($stmt,'GRANT') === false AND strpos($stmt,'FLUSH') === false AND strpos($stmt,'SELECT') !== 0 AND strpos($stmt,'REVOKE') === false AND isset($_SESSION['log']) AND ( $_SESSION['log'] OR $log ) ) {
 					//test for unchanging ALTER TABLE statements
 					$_stmt_exploded = explode('`',$stmt); // index 3 aand 5 are the old and new id_-names
 					if ( ! isset($_stmt_exploded[3]) OR ! isset($_stmt_exploded[5]) OR $_stmt_exploded[3] != $_stmt_exploded[5] ) {
@@ -543,7 +542,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
     usort($data, function($a, $b) use($field) {
       $retval = 0;
       foreach($field as $fieldname) {
-        if($retval == 0) $retval = strnatcmp($a[$fieldname],$b[$fieldname]);
+        if($retval == 0 AND $fieldname != '_none_') $retval = strnatcmp($a[$fieldname],$b[$fieldname]);
       }
       return $retval;
     });
@@ -756,7 +755,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 
 function dbAction(array $_PARAMETER,mysqli $conn) {
 	$message = '';
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt','PARAM: '.json_encode($_PARAMETER).PHP_EOL,FILE_APPEND); }
+	if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($debugpath.$debugfilename,'PARAM: '.json_encode($_PARAMETER).PHP_EOL,FILE_APPEND); }
 	//allow json encoded parameters in 'trash' variable
 	if ( isset($_PARAMETER['trash']) ) { 
 	$PARAMETER = json_decode($_PARAMETER['trash'],true);
@@ -805,6 +804,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			}
 			break; //correct? inserted on 20200516
 		case 'insert':
+			$_SESSION['insert_id'] = array($PARAMETER['table']);
 			$config = getConfig($conn);
 			$maintable = $config['table'][0];
 			//if there is no assignment, define empty $_MAINIDS as array of length 1
@@ -841,7 +841,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 					unset($_stmt_array);
 					$_stmt_array = array(); $_stmt_array['stmt'] = $stmt; $_stmt_array['str_types'] = $str_types; $_stmt_array['arr_values'] = $arr_values; $_stmt_array['message'] = $message;  
 					$_return=_execute_stmt($_stmt_array,$conn);
-					$_SESSION['insert_id'] = $_return['insert_id'];
+					$_SESSION['insert_id'][] = json_encode(array( 'id_'.$PARAMETER['table'] => $_return['insert_id'] ));
 					$return = '<div class="dbMessage '.$_return['dbMessageGood'].'">'.$_return['dbMessage'].'</div>';
 				}
 			}
@@ -924,12 +924,12 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 	}
 	unset($_stmt_array);
 	$_stmt_array = array(); $_stmt_array['stmt'] = $stmt; $_stmt_array['str_types'] = $str_types; $_stmt_array['arr_values'] = $arr_values; $_stmt_array['message'] = $message;  
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt','STATEMENT: '.json_encode($_stmt_array).PHP_EOL,FILE_APPEND); }
+	if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($debugpath.$debugfilename,'STATEMENT: '.json_encode($_stmt_array).PHP_EOL,FILE_APPEND); }
 	$_return=_execute_stmt($_stmt_array,$conn);
-	$_SESSION['insert_id'] = $_return['insert_id'];
-	$return = '<div class="dbMessage '.$_return['dbMessageGood'].'">'.$_return['dbMessage'].'</div>';
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt',json_encode($_return).PHP_EOL,FILE_APPEND); }
-	if ( isset($_SESSION['DEBUG']) ) { file_put_contents('/var/www/test/openStat/v1.0/tmplog.txt',PHP_EOL,FILE_APPEND); }
+	$_SESSION['insert_id'][] = json_encode(array( 'id_'.$PARAMETER['table'] => $_return['insert_id'] ));
+	$return = '<div class="dbMessage '.$_return['dbMessageGood'].'">'.$_return['dbMessage'].'<div hidden class="insertID">'.json_encode($_SESSION['insert_id']).'</div></div>';
+	if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($debugpath.$debugfilename,json_encode($_return).PHP_EOL,FILE_APPEND); }
+	if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($debugpath.$debugfilename,PHP_EOL,FILE_APPEND); }
 	//return the results for searches and the error statement in all other cases
 //	if ( isset($PARAMETER['dbAction']) AND $PARAMETER['dbAction'] != '' ) { return $return; } else { return $_return; }
 	if ( isset($PARAMETER['dbAction']) ) { 
@@ -1344,7 +1344,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	{
 		$_parent_table[$_config_hierarchy[$tindex]] = $table;
 		if ( $_config_hierarchy[$tindex] >= 1 ) { 
-			if ( is_array($_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]]) ) {
+			if ( isset($_parent_table[$_config_hierarchy[$tindex]-1]) AND isset($_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]]) ) {
 				array_push($_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]],$table); 
 			} else {
 				$_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]] = array($table);
@@ -1471,17 +1471,19 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype FROM ".$table."_permissions ORDER BY realid";
 						$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field
 						if ($_result_array['dbMessageGood']) { $key_array = $_result_array['result']; };
-						foreach ( $_children_table[$table] as $_child ) {
-							if ( ! array_key_exists($table.'__'.$_child,$_config) ) 
-							{ ?> 
-							<input 
-								name="<?php html_echo($table.'__'.$_child); ?>" 
-								id="add_<?php html_echo($table.'__'.$_child); ?>" 
-								type="checkbox" 
-								value="add"
-							/>
-							<label for="add_<?php html_echo($table.'__'.$_child); ?>"># <i class="fas fa-<?php html_echo($tables_array[array_search($_child,$_config_tables)]['iconname']); ?>"></i> <strong><?php html_echo($tables_array[array_search($_child,$_config_tables)]['tablereadable']); ?></strong></label><br>
-							<?php }							
+						if ( isset($_children_table[$table]) ) {
+							foreach ( $_children_table[$table] as $_child ) {
+								if ( ! array_key_exists($table.'__'.$_child,$_config) ) 
+								{ ?> 
+								<input 
+									name="<?php html_echo($table.'__'.$_child); ?>" 
+									id="add_<?php html_echo($table.'__'.$_child); ?>" 
+									type="checkbox" 
+									value="add"
+								/>
+								<label for="add_<?php html_echo($table.'__'.$_child); ?>"># <i class="fas fa-<?php html_echo($tables_array[array_search($_child,$_config_tables)]['iconname']); ?>"></i> <strong><?php html_echo($tables_array[array_search($_child,$_config_tables)]['tablereadable']); ?></strong></label><br>
+								<?php }							
+							}
 						}
 						?>
 						<?php
@@ -1528,7 +1530,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					if ($_result_array['dbMessageGood']) { $table_icon = $_result_array['result']['iconname'][0]; };
 
 					//first look for attributions, then for normal keys
-					if ( in_array($keymachine,$_children_table[$table]) ) {
+					if ( isset($_children_table[$table]) AND in_array($keymachine,$_children_table[$table]) ) {
 						$keyreadable = '#'.$tables_array[array_search($keymachine,$_config_tables)]['tablereadable'];
 					} else {
 						unset($_stmt_array); $_stmt_array = array();
@@ -2118,7 +2120,7 @@ function getDetails($PARAMETER,$conn)
 			<div class="db_headline_wrapper"><h2 class="db_headline"><i class="fas fa-<?php html_echo($iconname); ?>"></i> 
 			<?php
 				$_tmp_keys = array_keys($_config['filters']);
-				unset($value);
+				unset($value); unset($index);
 				foreach ( $_tmp_keys as $index=>$value )
 				{
 					if ( substr($value,0,strlen($table)) != $table ) { unset($_tmp_keys[$index]); }
@@ -2135,7 +2137,7 @@ function getDetails($PARAMETER,$conn)
 				$_stmt_array['str_types'] = 'i';
 				$_stmt_array['arr_values'] = $id;
 				$_table_result = execute_stmt($_stmt_array,$conn,true)['result'][0];
-				unset($value);
+				unset($value); unset($index);
 				foreach ( $_table_result  as $index=>$value )
 				{
 					$_table_result[$index] = _strip_tags(_cleanup($value),20);

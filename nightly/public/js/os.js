@@ -26,8 +26,21 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 				break;
 		}
 		callFunction(el,fct,div,add,classes,callback,arg).then(()=>{
+			//clode entry on delete:
 			if ( val == "delete" ) { _close(el); };
-			el = clone_el.cloneNode(true);
+			//close entry window and open newly created entry if insert was successful:
+			if ( val == "insert" && el.closest('.section').querySelector('.message') && el.closest('.section').querySelector('.message').textContent.indexOf('Eintrag wurde neu hinzugefügt') > -1 ) {
+				var insert_id = el.closest('.section').querySelector('.insertID').textContent;
+				var formobj = new Object();
+				formobj.massEdit = JSON.parse(insert_id);
+				document.getElementById('trash').value = JSON.stringify(formobj);
+				console.log(document.getElementById('trash').value);
+				setTimeout(function(){callFunction('_','getDetails','_popup_',false,'details').then(()=>{ console.log(el.parentElement); _close(el); return false; });},500);
+			}
+//this just changes el to a node outside the document; purpose was to revert the _disable above; solution below?
+//			el = clone_el.cloneNode(true);	
+			el.parentElement.replaceChild(clone_el,el);
+			el = clone_el;
 		});
  	}
 //	}

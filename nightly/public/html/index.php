@@ -2,6 +2,8 @@
 //error_reporting(0); //just in case the webserver does not comply...
 //start session
 session_start();
+//Debug on/off
+//$_SESSION['DEBUG'] = true;
 
 if ( ! isset($_SESSION['os_user']) ) { header('Location:/login.php'); } //redirect to login page if not logged in
 
@@ -36,6 +38,9 @@ require_once('../../core/data/serverdata.php');
 require_once('../../core/scripts/getParameters.php');
 require_once('../../core/data/filedata.php');
 require_once('../../core/data/info.php');
+require_once('../../core/data/debugdata.php');
+require_once('../../settings.php');
+
 /*
 require_once('../../core/auth.php');
 require_once('../../core/edit.php');
@@ -226,7 +231,7 @@ $_v = time();
 	<div id="config" class="section">
 		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });" >
 		<?php //save button and load input like in openStat.plan explained ?>
-			<label for="config_save" class="<?php echo($config_save_class); ?>" title="Konfiguration speichern"><i class="fas fa-save"></i></label>
+			<label for="config_save" class="disabled" title="Konfiguration speichern"><i class="fas fa-save"></i></label>
 			<input hidden type="submit" id="config_save">
 			<label for="config_load" title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
 			<input hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
@@ -236,13 +241,7 @@ $_v = time();
 				<label for="db__config__list"></label>
 				<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
 				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
-				<!--	<option value="none"></option> -->
-					<?php foreach ( $options as $value ) { 
-						$_sel = '';
-						if ( isset($_config_array['configname']) AND $_config_array['configname'] == $value ) { $_sel = 'selected'; };
-						?>				
-						<option value="<?php echo($value); ?>" <?php echo($_sel); ?> ><?php echo($value); ?></option>
-					<?php } ?>
+					<option value="none"></option>
 				</select>
 				<label class="toggler" for="minus_config">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
 				<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
@@ -256,26 +255,6 @@ $_v = time();
 			<input type="checkbox" hidden id="toggleAddFilter" class="toggle">
 			<form id="formAddFilters" class="form" method="post" action="../php/addFilters.php" onsubmit="return addFilters(this);">
 					<input type="submit" value="Auswählen" >
-				<?php
-					unset($_stmt_array); $_stmt_array = array(); $key_array = array();
-					$_stmt_array['stmt'] = "SELECT keymachine,keyreadable FROM ".$table."_permissions";
-					$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field 
-					if ($_result_array['dbMessageGood']) { $key_array = $_result_array['result']; };
-					foreach ( $key_array as $key ) 
-					{ 
-						if ( ! array_key_exists($key['keymachine'],$_config) ) 
-						{ ?> 
-						<input 
-							name="<?php html_echo($key['keymachine']); ?>" 
-							id="add_<?php html_echo($key['keymachine']); ?>" 
-							type="checkbox" 
-							value="add"
-						/>
-						<label for="add_<?php html_echo($key['keymachine']); ?>"><?php html_echo(explode(': ',$key['keyreadable'])[0]); ?></label><br>
-						<?php }
-					}
-					unset($key);
-				?>
 			</form>
 		</div>
 	</div>

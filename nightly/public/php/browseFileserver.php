@@ -22,7 +22,8 @@ $conn = new mysqli($servername, $username, $password, $dbname) or die ("Connecti
 mysqli_set_charset($conn,"utf8");
 
 //get user's fileroot
-$_fileroot = getConfig($conn)['fileroot'];
+$_config = getConfig($conn);
+$_fileroot = $_config['fileroot'];
 $conn->close();
 
 if ( isset($_fileroot) AND $_fileroot != '' ) { $fileroot .= '/'.$_fileroot; }

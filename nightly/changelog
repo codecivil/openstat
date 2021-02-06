@@ -1,8 +1,20 @@
+#v1.5.11
+=======
+06.02.2021
+
+* formale Codekorrekturen
+* Implementierung einer simplen Debug-Flag
+
+04.02.2021
+
+* automatisches Öffnen neuer Einträge (und Schließen des "alten" Fensters)
+
 v1.5.10
 =======
 03.02.2021
 
 * auf Kundenwunsch: Anzeige wieder aller ausgewählter Tabellen, nicht nur der der Filter (bei Details > Icons)
+  Nachteil: Anzeige von Anzahlfeldern in der Statistik stets fehlerhaft (wird später korrigiert)
 * Ampelfunktion umgearbeitet
 
 v1.5.9

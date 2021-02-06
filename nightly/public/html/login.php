@@ -40,7 +40,7 @@ $conn = new mysqli($servername, $username, $password, $dbname) or die ("Connecti
 mysqli_set_charset($conn,"utf8");
 //login
 
-if ( !empty($PARAMETER) ) {
+if ( isset($PARAMETER['user']) AND isset($PARAMETER['password']) AND $PARAMETER['user'] != '' ) {
 	$_login = new OpenStatAuth($PARAMETER['user'],$PARAMETER['password'],$conn);
 	$_success = $_login->login();
 	if ( ! isset($_success['error']) ) { header('Refresh:0; url=/index.php'); };

@@ -400,7 +400,7 @@ function improveLayout() {
 //this is a callback function for callFunction(), so has to have arguments form, arg, responsetext; we only need arg, which is the element the function
 //is called on
 function scrollTo(form,arg,text) {
-	arg.closest('.popup_wrapper').scrollIntoView({behavior: "smooth"});
+	if ( arg.closest('.popup_wrapper') ) { arg.closest('.popup_wrapper').scrollIntoView({behavior: "smooth"}); };
 }
 
 //remove oldest for first five levles, newest for older ones

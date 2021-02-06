@@ -736,7 +736,9 @@ class OpenStatEdit {
 				<div class="searchfield compound">
 				<?php
 			}
+			unset($indexedit); unset($_edittype);
 			foreach ( $_result['edittype_array'] as $indexedit => $_edittype ) {
+				$_searchfieldcompound = "";
 				//use indices 6001+ for compounds of keys
 				if ( $_result['compound'] ) {
 					//restore original key for getting options
