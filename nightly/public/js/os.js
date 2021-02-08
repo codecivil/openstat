@@ -16,6 +16,9 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 //	if ( val == "none" ) {
 	if ( val == "pleasechoose" ) { return; }
 	if ( val != "delete" || confirm("Wollen Sie den Eintrag wirklich löschen? Davon abhängige Einträge werden ebenfalls gelöscht.") ) {
+		//update html "selected" attribute before cloning
+		el.querySelectorAll('option').forEach(function(opt){if ( opt.selected ) {opt.setAttribute('selected','');} else { opt.removeAttribute('selected'); };});
+		//
 		var clone_el = el.cloneNode(true);
 		switch(val) {
 			case 'insert':
@@ -34,8 +37,7 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 				var formobj = new Object();
 				formobj.massEdit = JSON.parse(insert_id);
 				document.getElementById('trash').value = JSON.stringify(formobj);
-				console.log(document.getElementById('trash').value);
-				setTimeout(function(){callFunction('_','getDetails','_popup_',false,'details').then(()=>{ console.log(el.parentElement); _close(el); return false; });},500);
+				setTimeout(function(){callFunction('_','getDetails','_popup_',false,'details').then(()=>{ _close(el); return false; });},500);
 			}
 //this just changes el to a node outside the document; purpose was to revert the _disable above; solution below?
 //			el = clone_el.cloneNode(true);	

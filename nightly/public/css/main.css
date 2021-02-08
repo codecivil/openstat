@@ -1,6 +1,6 @@
 /* general */
 
-* { transition: 0.3s ease; }
+* { transition: 0.3s ease; hyphens: auto; }
 label[onclick]:hover { cursor: pointer; }
 label[class^="submit"]:hover { cursor: pointer; }
 label[for^="toggle"]:hover { cursor: pointer; }

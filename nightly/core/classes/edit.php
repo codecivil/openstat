@@ -175,6 +175,7 @@ class OpenStatEdit {
 		//separate MULTIPLE keyword, e.g. EXTENSIBLE LIST; MULTIPLE
 		$_tmp_array = explode('; ',$_result['edittype']);
 		$_result['edittype'] = $_tmp_array[0];
+		//print_r($_tmp_array);
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'MULTIPLE' ) { $_result['multiple'] = true; } else { $_result['multiple'] = false; };
 		unset($_tmp_array);
 		//
@@ -283,7 +284,7 @@ class OpenStatEdit {
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 						<select <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value)">
 						<!--	<option value="none"></option> -->
-							<?php print_r($default); foreach ( $options as $value ) { 
+							<?php foreach ( $options as $value ) { 
 								$_sel = '';
 								if ( _cleanup($default) == _cleanup($value) ) { $_sel = 'selected'; };
 								?>				

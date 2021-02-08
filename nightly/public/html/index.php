@@ -94,6 +94,7 @@ if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 }	
 //get timestamp for forcing fresh ressource loading
 $_v = time();
+$conn->close(); //2021-02-08 can we close this initial connection?
 ?>
 
 <!DOCTYPE html>
