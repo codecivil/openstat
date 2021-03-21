@@ -1,3 +1,9 @@
+#v1.5.14
+======
+21.03.2021
+
+* os_tinymce.js: Encoding führte zu Diskrepanzen zwischen HTML und XML (ODS-Exporte)
+
 #v1.5.13
 ======
 08.02.2021
