@@ -8,6 +8,8 @@ label[for^="logout"]:hover { cursor: pointer; }
 label[for^="stat"]:hover { cursor: pointer; }
 label[for^="config"]:hover { cursor: pointer; }
 label.not:hover { cursor: pointer; }
+label.shownot:hover { cursor: pointer; }
+label.show:hover { cursor: pointer; }
 div[id^="showHistory"]:hover { cursor: pointer; }
 
 /*label[class^="submit"]:active { cursor: wait; }
