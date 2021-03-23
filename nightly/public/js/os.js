@@ -17,15 +17,19 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 	if ( val == "pleasechoose" ) { return; }
 	if ( val != "delete" || confirm("Wollen Sie den Eintrag wirklich löschen? Davon abhängige Einträge werden ebenfalls gelöscht.") ) {
 		//update html "selected" attribute before cloning
-		el.querySelectorAll('option').forEach(function(opt){if ( opt.selected ) {opt.setAttribute('selected','');} else { opt.removeAttribute('selected'); };});
+//		el.querySelectorAll('option').forEach(function(opt){if ( opt.selected ) {opt.setAttribute('selected','');} else { opt.removeAttribute('selected'); };});
 		//
-		var clone_el = el.cloneNode(true);
+//		var clone_el = el.cloneNode(true);
+		//clone included iframes
+//		var _iframes = new Object();
+//		el.querySelectorAll('iframe').forEach(function(_iframe){_iframes[_iframe.id] = document.importNode(_iframe.contentWindow.document.body,true).outerHTML;});
+		var _before = new Object();
 		switch(val) {
 			case 'insert':
-				_disableClass(el,'noinsert');
+				_before = _disableClass(el,'noinsert');
 				break;
 			case 'edit':
-				_disableClass(el,'noupdate');
+				_before = _disableClass(el,'noupdate');
 				break;
 		}
 		callFunction(el,fct,div,add,classes,callback,arg).then(()=>{
@@ -41,8 +45,14 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 			}
 //this just changes el to a node outside the document; purpose was to revert the _disable above; solution below?
 //			el = clone_el.cloneNode(true);	
-			el.parentElement.replaceChild(clone_el,el);
-			el = clone_el;
+
+//			el.parentElement.replaceChild(clone_el,el);
+			//does not yet work... to be continued
+//			el.querySelectorAll('iframe').forEach(function(_iframe){console.log(_iframes[_iframe.id]);_iframe.srcdoc = 'data:text/html;charset=utf-8,' + encodeURI(_iframes[_iframe.id]); console.log('iframe.contentWindow =', _iframe.contentWindow);});		
+//			el = clone_el;
+			for (const [_key, _value] of Object.entries(_before)) {
+				document.getElementById(_key).disabled = _value;
+			}
 		});
  	}
 //	}
@@ -50,21 +60,26 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 
 //disables all elements of class _className inside el
 function _disableClass(el,_className) {
+	var _before = new Object();
 	_elements = el.getElementsByClassName(_className);
 	for ( i = 0; i < _elements.length; i++ ) {
 		_inputs = _elements[i].getElementsByTagName('input');
 		for ( j = 0; j < _inputs.length; j++ ) {
+			_before[_inputs[j].id] = _inputs[j].disabled;
 			_inputs[j].disabled = true;
 		}
 		_selects = _elements[i].getElementsByTagName('select');
 		for ( j = 0; j < _selects.length; j++ ) {
+			_before[_selects[j].id] = _selects[j].disabled;
 			_selects[j].disabled = true;
 		}
 		_textareas = _elements[i].getElementsByTagName('textarea');
 		for ( j = 0; j < _textareas.length; j++ ) {
+			_before[_textareas[j].id] = _textareas[j].disabled;
 			_textareas[j].disabled = true;
 		}
 	}
+	return _before;
 }
 
 function _addOption(keyname) {
