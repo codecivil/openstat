@@ -4,6 +4,7 @@
 
 * Fix: Suche nach Checkboxeinträgen lieferte meist keine Ergebnisse
 * Feature: Auch bei Checkboxeinträge können nun mehrfache Suchbegriffe mit UND verknüpft werden
+* Fix: ODT/ODS-Funktionen nun auch bei älteren Einträgen (mit Umlauten in Editorfeldern) funktional
 
 #v1.5.15
 ======

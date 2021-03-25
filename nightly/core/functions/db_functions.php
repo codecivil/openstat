@@ -1722,8 +1722,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 			case 'LIST; MULTIPLE':
 			case 'SUGGEST; MULTIPLE':
 			case 'SUGGEST BEFORE LIST; MULTIPLE':
-			case 'CHECKBOX':
-			case 'EXTENSIBLE CHECKBOX':
+//			case 'CHECKBOX':
+//			case 'EXTENSIBLE CHECKBOX':
 			case 'SUGGEST':
 			case 'LIST':
 			case 'SUGGEST BEFORE LIST':

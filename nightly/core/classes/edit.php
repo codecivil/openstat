@@ -711,7 +711,7 @@ class OpenStatEdit {
 				<label class="not" for="<?php html_echo($this->table.'__'.$this->key); ?>not"><i class="fas fa-arrows-alt-h"></i></label>
 			</div>
 		<?php }	
-		if ( $_result['multiple'] ) {
+		if ( $_result['multiple'] OR $_result['edittype'] == "CHECKBOX" OR $_result['edittype'] == "EXTENSIBLE CHECKBOX" ) {
 			//use index 2001 for the choice of OR or AND
 			if ( ! isset($checked[2001]) ) { $checked[2001] = "-500"; }
 			?>

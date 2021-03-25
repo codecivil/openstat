@@ -84,11 +84,11 @@ changeConfig(array("version"=>$versionnumber),$conn);
 
 //get changelog
 if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
-	$changelog_array = explode('v'.$_config['version'],file_get_contents('../../changelog'),2);
+	$changelog_array = explode('v'.$_config['version'],file_get_contents('../../changelog_user'),2);
 	$changelog = $changelog_array[0];
 	$olderchangelog = 'v'.$_config['version'].PHP_EOL.$changelog_array[1];	
 } else {
-	$changelog_array = explode('======',file_get_contents('../../changelog'),3);
+	$changelog_array = explode('======',file_get_contents('../../changelog_user'),3);
 	$changelog = $changelog_array[0]."======".$changelog_array[1];
 	$olderchangelog = $changelog_array[2];
 }	
