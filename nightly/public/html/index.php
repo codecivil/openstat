@@ -277,8 +277,26 @@ $conn->close(); //2021-02-08 can we close this initial connection?
 </form>
 
 <script>
+	function standard500 () {
+		var t0 = performance.now();
+		for ( var _i = 0; _i < 500; _i++ ) {
+			var testdiv = document.createElement('div');
+			testdiv.innerText = "Test";
+			testdiv.hidden = "true";
+			testdiv.id = "testdiv";
+			document.body.appendChild(testdiv);
+			document.body.removeChild(document.querySelector('#testdiv'));
+		}
+		var t1 = performance.now();
+		var _standard500 = 75*(t1-t0);
+		return _standard500
+	}
+	
+	var st500 = standard500();
+	console.log("Standard 500ms here: "+st500+"ms");
 	function restrictResultWidth () {
-		setTimeout(function () { document.getElementById('results_wrapper').style.maxWidth = document.body.offsetWidth - document.getElementById('sidebar').offsetWidth - 5*parseFloat(getComputedStyle(document.documentElement).fontSize) + "px"; }, 500);
+		var _st500 = standard500();
+		setTimeout(function () { document.getElementById('results_wrapper').style.maxWidth = document.body.offsetWidth - document.getElementById('sidebar').offsetWidth - 5*parseFloat(getComputedStyle(document.documentElement).fontSize) + "px"; }, _st500);
 	}
 	setTimeout(function () {
 		switch(document.getElementById('generator').innerText) {
@@ -291,7 +309,7 @@ $conn->close(); //2021-02-08 can we close this initial connection?
 				window.location = window.location+'?submit=extensionupdate';
 				break;
 		}
-	},500);
+	},st500);
 	setTimeout(function () {
 		callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth').then(()=>{
 			callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ return false; });
@@ -308,7 +326,7 @@ $conn->close(); //2021-02-08 can we close this initial connection?
 				}
 			}  ?>
 		})
-	},1000);
+	},2*st500);
 	_saveStateInterval = setInterval(_saveState,300000);
 </script> 
 </body>
