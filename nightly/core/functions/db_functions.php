@@ -1718,10 +1718,12 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		}
 		//set strong or weak match strings
 		switch($_edittypes[$table][$key]) {
-			case 'EXTENSIBLE LIST; MULTIPLE':
+/*	MULTIPLE cases do not yet work, since the values ar JSONized...
+ * 			case 'EXTENSIBLE LIST; MULTIPLE':
 			case 'LIST; MULTIPLE':
 			case 'SUGGEST; MULTIPLE':
 			case 'SUGGEST BEFORE LIST; MULTIPLE':
+*/
 //			case 'CHECKBOX':
 //			case 'EXTENSIBLE CHECKBOX':
 			case 'SUGGEST':
