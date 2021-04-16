@@ -1,3 +1,9 @@
+#v1.5.18
+======
+16.04.2021
+
+* Filterung nach einfachen multiplen Feldern wieder korrekt; aber (noch) keine exakten Matches möglich
+
 #v1.5.17
 ======
 08.04.2021

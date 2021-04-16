@@ -1,3 +1,10 @@
+#v1.5.18
+======
+16.04.2021
+
+* Filterung nach einfachen multiplen Feldern liefert wieder richtige Ergebnisse; allerdings sind (noch) keine exakten Matches möglich, z.B liefert die Filterung nach
+  "Sucht" auch "Suchtraining" als Treffer
+ 
 #v1.5.16
 ======
 25.03.2021
