@@ -1,3 +1,10 @@
+#v1.5.19
+======
+02.07.2021
+
+* Feature: Ampelfunktion nun mit Sortierung (Klick auf Überschriften), Kriterienauswahl (Klick auf Werkzeugsymbol) und Reloadbutton (z.B. nach Änderung der
+Kriterienauswahl; oben links); es muss mindestens ein Kriterium ausgewählt sein
+
 #v1.5.18
 ======
 16.04.2021

@@ -94,8 +94,11 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #important tr.orange { background: orange; }
 #important tr.red { background: red; }
 #important .imp_close { position: relative; left: calc(100% - 1.2rem); top: 0.2rem; width: 1rem;}
-#important .tableicon { position: relative; width: 1.5rem; font-size: 1.5rem; margin: 0 auto;}
-
+#important .tableicon { position: relative; font-size: 1.5rem; margin: 0 auto; text-align: center; }
+#important .toggle + div { display: none; }
+#important .toggle:checked + div { display: flex; justify-content: center; padding: 0.5rem; }
+#important .tools { position: relative; top: -0.8rem; left: 0.2rem; cursor: pointer; }
+ 
 /* sidebar */
 #sidebar {float: left; font: 0.7rem sans-serif; padding: 0.2rem; color: var(--color-sidebar); }
 #sidebar .form { display: none; border: 1px solid black; border-radius: 5px; padding: 0.2rem; }

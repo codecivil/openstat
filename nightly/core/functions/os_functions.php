@@ -512,6 +512,7 @@ function changeUserName(array $PARAM, $conn) {
 function trafficLight(array $PARAM, mysqli $conn)
 {
 	$tables = $PARAM['table'];
+	$userconfig = getConfig($conn);
 	
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = "SELECT functionconfig from os_functions where functionmachine = 'trafficLight'";
@@ -530,11 +531,45 @@ function trafficLight(array $PARAM, mysqli $conn)
 	?>
 	<div class="imp_wrapper">
 		<div class="imp_close"><i class="fas fa-times-circle" onclick="_close(this,true);"></i></div>
+		<form method="post" id="reload<?php echo($rnd); ?>" class="inline tools" action="" onsubmit="callPHPFunction(document.getElementById('formChooseTables'),'trafficLight','important',''); return false;">
+			<input form="reload<?php echo($rnd); ?>" id="submitReload<?php echo($rnd); ?>" type="submit" hidden />
+			<label class="unlimitedWidth date" title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
+		</form>
+		<div class="inline tools"><label for="toggleTrafficLight__config"><i class="fas fa-tools"></i></label></div>
+		<input class="toggle" type="checkbox" id="toggleTrafficLight__config" hidden>
+		<div>
+			<form id="trafficLightSettingsForm" action="" method="post" onsubmit="callFunction(this,'changeConfig').then(()=>{ return false; }); return false;">
+				<h2>Kriterien</h2>
+			<?php
+			$_criteria_names = array();
+			foreach ( $_config['criteria'] as $criterion ) {
+				if ( ! isset($_criteria_names[$criterion['associated_table']]) ) { $_criteria_names[$criterion['associated_table']] = array(); }
+				$_criteria_names[$criterion['associated_table']][] = $criterion['name'];
+				$_criteria_names[$criterion['associated_table']] = array_unique($_criteria_names[$criterion['associated_table']]);
+				asort($_criteria_names[$criterion['associated_table']]); 
+			}
+			foreach ( $_criteria_names as $assoc_table => $criteria_names_of_assoc_table ) {
+				?>
+				<h3><i class="fas fa-<?php html_echo($icon[$assoc_table]); ?>"></i></h3>
+				<?php
+				foreach ( $criteria_names_of_assoc_table as $criterion_name ) {
+					$checked = "checked";
+					if ( isset($userconfig['trafficLight']) AND ! in_array($criterion_name,$userconfig['trafficLight']) ) { $checked = ""; }
+				?>
+				<input type="checkbox" name="trafficLight[]" value="<?php echo($criterion_name); ?>" onchange="document.getElementById('submitTrafficLightSettingsForm').click()" <?php echo($checked); ?>>
+				<label><?php echo($criterion_name); ?></label><br />
+				<?php	
+				}
+			}
+			?>
+			<input id="submitTrafficLightSettingsForm" type="submit" hidden>
+			</form>
+		</div>
 	<?php
 	foreach ( $tables as $table ) {
 		$ids = array(); $resultin = array(); $_param = array();
 		foreach ( $_config['criteria'] as $criterion ){
-			if ( $criterion['associated_table'] == $table ) {
+			if ( ( ! isset($userconfig['trafficLight']) OR in_array($criterion['name'],$userconfig['trafficLight']) ) AND $criterion['associated_table'] == $table ) {
 				$resultout_array = _parseCriterion($resultin,$_param,$criterion,$tables,$conn);
 				$resultout = $resultout_array[0];
 				$_param = $resultout_array[1];
@@ -550,8 +585,11 @@ function trafficLight(array $PARAM, mysqli $conn)
 			}
 		}
 		if ( sizeof($ids) > 0 ) {
+			$result_size = 0;
+			foreach ( $ids as $ids_in_table ) { $result_size += sizeof($ids_in_table); }
 		?>
-			<div class="tableicon"><i class="fas fa-<?php html_echo($icon[$table]); ?>"></i></div>
+			<div class="tableicon"><label for="toggleTrafficLight_<?php echo($table); ?>"><i class="fas fa-<?php html_echo($icon[$table]); ?>"></i></label>&nbsp; <?php echo($result_size); ?></div>
+			<input class="toggle" type="checkbox" id="toggleTrafficLight_<?php echo($table); ?>" hidden>
 		<?php
 		}
 		foreach ( array_keys($ids) as $idstable ) {
@@ -562,7 +600,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 			$_identifiers_result = execute_stmt($_stmt_array,$conn)['result'];
 			$_identifiers_readable = array_combine($_identifiers_result['keymachine'],$_identifiers_result['keyreadable']);						
 			unset($_stmt_array); $_stmt_array = array();
-			$_stmt_array['stmt'] = 'SELECT id_'.$idstable.','.$identifiers.' from view__'.$idstable.'__'.$_SESSION['os_role'].' WHERE id_'.$idstable.' IN ('.implode(',',array_keys($ids[$idstable])).')';
+			$_stmt_array['stmt'] = 'SELECT id_'.$idstable.','.$identifiers.' from view__'.$idstable.'__'.$_SESSION['os_role'].' WHERE id_'.$idstable.' IN ('.implode(',',array_keys($ids[$idstable])).') ORDER BY '.$identifiers;
 			$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
 			unset($_stmt_array); $_stmt_array = array();
 			$_stmt_array['stmt'] = 'SELECT id_'.$table.',id_'.$idstable.' from view__'.$table.'__'.$_SESSION['os_role'].' WHERE id_'.$idstable.' IN ('.implode(',',array_keys($ids[$idstable])).')';
@@ -575,11 +613,11 @@ function trafficLight(array $PARAM, mysqli $conn)
 						<?php
 						foreach ( $_config['identifiers'][$idstable] as $identifier ) {
 						?>
-							<th><?php echo($_identifiers_readable[$identifier]); ?></th>
+							<th onclick="sortTable(this);" title="sortieren"><?php echo($_identifiers_readable[$identifier]); ?></th>
 						<?php
 						}
 						?>
-						<th>Kriterien</th>
+						<th onclick="sortTable(this);" title="sortieren">Kriterien</th>
 					</tr>
 			<?php
 			foreach ( $_table_result as $_item ) {

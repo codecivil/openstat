@@ -834,3 +834,38 @@ function changeUserName(form,arg,_response) {
 */
 }
 
+/*
+ * sorts a table by the column of the given table element
+ * DOMNode	tableel
+ * todo: preserve classes of rows!
+ */
+function sortTable(tableel) {
+	var table = tableel.closest('table');
+	var prev = tableel; var columnnumber = -1;
+	while ( prev != null ) { prev = prev.previousElementSibling; columnnumber++; }
+	var table_array = new Array();
+	var headers = '';
+	for ( let row of table.rows ) {
+		ta_length = table_array.push({"classes": row.className, "data": new Array()});
+		for ( let td of row.children ) {
+			if ( td.tagName == "TH" ) { headers = row.innerHTML; }
+			if ( td.tagName == "TD" ) { table_array[ta_length-1].data.push(td.innerHTML); }
+		}
+		if ( table_array[ta_length-1].data.length == 0 ) { table_array.pop(); }
+	}
+	//sort and reverse sorting if nothing has changed
+	old_table_json = JSON.stringify(table_array);
+	table_array.sort( (row1,row2) => parseInt(row2.data[columnnumber]) - parseInt(row1.data[columnnumber]) || row1.data[columnnumber].localeCompare(row2.data[columnnumber]) );
+	if ( old_table_json == JSON.stringify(table_array) ) {
+		table_array.reverse();
+	}
+	var newInnerHTML = '<tr>' + headers + '</tr>';
+	table_array.forEach( row => {
+		newInnerHTML += '<tr class="' + row.classes + '">';
+		row.data.forEach( td => {
+			newInnerHTML += '<td>' + td + '</td>';
+		})
+		newInnerHTML += '</tr>';
+	})
+	table.innerHTML = newInnerHTML; 
+}

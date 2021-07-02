@@ -84,7 +84,7 @@ textarea + .tox-tinymce + .tox-tinymce { display: none !important; }
 
 /* popup "windows" */
 .popup_wrapper { float: left; display: flex; min-width: 20rem; }
-.popup {float:left; margin: 0.2rem; padding: 0.5rem; font: 1rem sans-serif; border: 1px solid black; border-radius: 5px; }
+.popup {float:left; margin: 0.2rem; padding: 0.5rem; font: 1rem sans-serif; border: 0 /* border: 1px solid black; border-radius: 5px; */ }
 .popup_close { position: relative; left: calc(100% - 1.5rem); top: 0.5rem; width: 1rem;}
 .section { background: var(--background-section); min-width: 50rem;}
 .section.new { background: var(--background-section-new); }
