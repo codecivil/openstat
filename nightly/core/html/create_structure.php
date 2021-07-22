@@ -1,7 +1,7 @@
 <?php 
 // adapt for openStat-extension
 session_start();
-if ( ! isset($_SESSION['user']) ) { header('Location:/html/admin.php'); } //redirect to login page if not logged in
+if ( ! isset($_SESSION['user']) ) { header('Location:/html/admin.php'); exit(); } //redirect to login page if not logged in
 
 require_once('../../core/classes/auth.php');
 require_once('../../core/functions/db_functions.php');
@@ -26,7 +26,7 @@ require_once('../../core/functions/frontend_functions.php');
 <body>
 <?php 
 //$ENCRYPTED = '';
-$ENCRYPTED = ' ENCRYPTED=YES'; //NO for debug only
+$ENCRYPTED = ' ENCRYPTED=NO'; //NO for debug only
 $PARAMETER = array(); 
 $action = '';
 $_warning = '';
@@ -90,7 +90,11 @@ $dbname = "d02839e2"; */
 $password = $_SESSION['password'];
 
 // Create connection
-$conn = new mysqli($servername, $username, $password, $dbname) or die ("Connection failed.");
+try {
+	$conn = new mysqli($servername, $username, $password, $dbname); 
+} catch(Exception $e) { 
+	exit;
+}
 mysqli_set_charset($conn,"utf8");
 
 //collect most important info

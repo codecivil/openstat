@@ -44,7 +44,7 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 			}
 		}
 	}
-	if ( isset($statement) ) { $statement->close(); } // added 2021-07-22
+	if ( isset($result) ) { $statement->close(); } // added 2021-07-22
 	$_return = array();
 	if ( isset($result) ) { $_return['result'] = $result; };
 	$_return['dbMessage'] = $dbMessage;

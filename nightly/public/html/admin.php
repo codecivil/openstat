@@ -28,12 +28,19 @@ foreach($_POST as $key=>$value)
 if ( isset($_GET['e']) ) { $disabled = "disabled"; }
 
 // Create connection
-$conn = new mysqli($PARAMETER['server'], $PARAMETER['user'], $PARAMETER['password'], $PARAMETER['database']) or die ("Connection failed.");
+try {
+	$conn = new mysqli($PARAMETER['server'], $PARAMETER['user'], $PARAMETER['password'], $PARAMETER['database']); 
+} catch(Exception $e) { 
+	exit;
+}
+mysqli_set_charset($conn,"utf8");
+
 if ( ! $conn->connect_errno ) { 
 	$conn->close();
 	session_start();
 	$_SESSION = $PARAMETER;
 	header('Location:/html/create_structure.php');
+	exit();
 } else { logout(''); }
 
 //rerun 'e'-Tests if loaded for the second time: reload without parameters every second time

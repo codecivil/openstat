@@ -2,7 +2,7 @@
 //error_reporting(0); //just in case the webserver does not comply...
 
 session_start();
-if ( ! isset($_SESSION['os_user']) ) { header('Location:/login.php'); exit(); )} //redirect to login page if not logged in
+if ( ! isset($_SESSION['os_user']) ) { header('Location:/login.php'); exit(); } //redirect to login page if not logged in
 
 require_once('../../core/data/filedata.php');
 require_once('../../core/data/serverdata.php');
