@@ -1,3 +1,14 @@
+======
+22.07.2021
+
+* Feature: retrying database queries every 2 seconds until succesful, at most 20 tries
+* Feature: sticky status bar of entries
+* some internal improvements, e.g. _execute_stmt now closes the statement
+
+13.07.2021
+
+* Feature: Lockbutton
+
 #v1.5.19
 ======
 02.07.2021

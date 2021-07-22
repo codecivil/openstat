@@ -95,6 +95,8 @@ class OpenStatAuth {
 	}
 
 	public function logout() { session_start(); session_destroy(); }
+	
+	public function lock() { unset($_SESSION['os_dbpwd']); return "locked"; } 
 		
 	public function new_user() {}
 

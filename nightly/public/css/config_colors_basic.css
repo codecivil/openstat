@@ -1,0 +1,31 @@
+body {
+	--background-body: linear-gradient(#fff,#ff0);
+	--background-statusbar: #0080ff;
+	--background-important: #f0f0f0;
+	--background-addfilters: #80c0ff;
+	--background-filters: #80ffff;
+	--background-functions: #ff80ff;
+	--background-config: #80c0ff;
+	--background-tables: #c0ff80;
+	--background-resultswrapper: linear-gradient(#ffff00,#ffff80);
+	--background-statwrapper: linear-gradient(#ffffff,#ffff80);
+	--background-detailswrapper: linear-gradient(#ffffff,#ffff80);
+	--background-goodmessage: #80ff80;
+	--background-badmessage: #ff8080;
+	--background-action: #ff80ff;
+	/*--background-detailswrapper: #fff;*/
+	--background-row-odd: transparent;
+	--background-row-even: rgb(128,128,128,0.1);
+	--background-details: linear-gradient(#ffffff,#ffff80);	
+	--background-details-new: linear-gradient(#80ff80,#80ffff);	
+	--background-marked: #80ff80;
+	--color-statusbar: #fff;
+	--color-resultswrapper: #000;
+	--color-statwrapper: #000;
+	--color-detailswrapper: #000;
+	--color-hits: #000;
+	--color-unique: #0000ff;	
+	--color-fontsize-selector: #ffff00;
+	--color-sidebar-inactive: #808080;
+	--color-sidebar-changed: #0000c0;	
+}

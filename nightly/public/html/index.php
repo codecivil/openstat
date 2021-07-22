@@ -5,7 +5,10 @@ session_start();
 //Debug on/off
 //$_SESSION['DEBUG'] = true;
 
-if ( ! isset($_SESSION['os_user']) ) { header('Location:/login.php'); } //redirect to login page if not logged in
+//mysqli throws errors
+mysqli_report(MYSQLI_REPORT_STRICT);
+
+if ( ! isset($_SESSION['os_user']) OR ! isset($_SESSION['os_dbpwd']) ) { header('Location:/login.php'); exit(); } //redirect to login page if not logged in
 
 //load classes, functions and constants
 
@@ -71,7 +74,11 @@ $password = $_SESSION['os_dbpwd'];
 $_ext = scandir('../xpi',SCANDIR_SORT_DESCENDING)[0];
 
 // Create connection
-$conn = new mysqli($servername, $username, $password, $dbname) or die ("Connection failed.");
+try {
+	$conn = new mysqli($servername, $username, $password, $dbname); 
+} catch(Exception $e) { 
+	exit;
+}
 mysqli_set_charset($conn,"utf8");
 
 //get user config
@@ -94,7 +101,7 @@ if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 }	
 //get timestamp for forcing fresh ressource loading
 $_v = time();
-$conn->close(); //2021-02-08 can we close this initial connection?
+$conn->close(); //2021-07-15
 ?>
 
 <!DOCTYPE html>
@@ -120,12 +127,21 @@ $conn->close(); //2021-02-08 can we close this initial connection?
 </head>
 <body>
 <div hidden id="generator"></div>
+<div id="veil"></div>
 <div id="statusbar">
 	<div id="logo">
 		<img id="customer_logo" src='/img/logo.png' />
 	</div>
 	<div id="usermenu">
 		<div id="user">
+			<div id="lock" title="Sperren">
+				<form method="post" id="lockForm" onsubmit="callFunction(this,'lock','veil',false,'veiled').then(()=>{ return false; }); return false;">
+					<input type="submit" name="submit" value="lock" id="lockBtn" hidden />
+					<label for="lockBtn"> 
+						<i class="fas fa-lock"></i>
+					</label>
+				</form>
+			</div>
 			<div id="logout" title="Abmelden">
 				<form method="post" id="logoutForm">
 					<input type="submit" name="submit" value="logout" id="logoutBtn" hidden />
@@ -135,7 +151,7 @@ $conn->close(); //2021-02-08 can we close this initial connection?
 				</form>
 			</div>
 			<div id="loggedin">
-				<form method="POST" id="usernameForm" onsubmit="callFunction(this,'changeUserName','',false,'','changeUserName',''); return false;" class="inline">
+				<form method="POST" id="usernameForm" onsubmit="callFunction(this,'changeUserName','',false,'','changeUserName','').then(()=>{ return false; }); return false;" class="inline">
 					<input id="userName" name="userName" type="text" value="<?php echo($_SESSION['os_username']); ?>" title="Benutzernamen ändern">
 				</form>
 				als <b><?php
@@ -263,7 +279,7 @@ $conn->close(); //2021-02-08 can we close this initial connection?
 </div>
 <div hidden id="history"><div hidden id="history_level">1</div></div>
 <div id="results_wrapper" class="popup">
-	<?php includeFunctions('RESULTS',$conn); ?>
+	<?php //includeFunctions('RESULTS',$conn); // $conn is already closed and this part is updated anyway by callFunction(...'applyFilters'...) below! ?>
 <!--	<div class="headline"><h1></h1></div> -->
 </div>
 <div class="popup_wrapper hidden"></div>

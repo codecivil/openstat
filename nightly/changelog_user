@@ -1,3 +1,16 @@
+#v1.5.20
+======
+22.07.2021
+
+* Feature: Statuszeile der Einträge bleibt sichtbar, so lange der Eintrag im Blickfeld ist
+* bessere Stabilität gegenüber SQL-Server-Bugs: Fehler bei Speicherungen von Einträgen sollten so gut wie nicht mehr auftreten
+
+13.07.2021
+
+* Feature: Lockbutton; der bei gesperrtem Bildschirm darunter liegende Inhalt ist mit Hilfe der Entwicklerkonsole weiterhin lesbar (was gerade den Unterschied
+zum Logout macht), aber weitere Abfragen der Datenbank sind in diesem Zustand nicht möglich. Das bedeutet aber auch, dass das Drücken des Reloadbuttons des Browsers bei
+gesperrtem Bildschirm einen Logout zur Folge hat.
+
 #v1.5.19
 ======
 02.07.2021

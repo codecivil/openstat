@@ -72,9 +72,11 @@ function newEntry(array $PARAM,$conn) {
 
 
 	<div class="content section" onclick="_disableClass(this,'noinsert'); this.onclick = ''; ">
+		<div class="right" onclick="_close(this);"><i class="fas fa-times-circle"></i></div>
 		<?php updateTime(); ?>
+		<div class="clear"></div>
 		<?php includeFunctions('DETAILS',$conn); ?>	
-		<h2 class="db_headline"><i class="fas fa-<?php html_echo($iconname); ?>"></i> Neuer Eintrag <span class="db_headline_id"></span></h2>
+		<h2 class="db_headline clear"><i class="fas fa-<?php html_echo($iconname); ?>"></i> Neuer Eintrag <span class="db_headline_id"></span></h2>
 		<div class="message" id="message<?php echo($rnd); ?>"><div class="dbMessage" class="<?php echo($dbMessageGood); ?>"><?php echo($dbMessage); ?></div></div>
 		<form class="db_options" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">
 			<input type="text" hidden value="<?php echo($table[0]); ?>" name="table" class="inputtable" />
@@ -785,4 +787,38 @@ function _parseCriterion(array $resultin, array $_param, array $criterion, array
 		}
 		return array($_resultout,$_param);
 	}
+}
+
+function lock(array $PARAM, ?mysqli $conn) {
+	$lock = new OpenStatAuth('','',$conn);
+	$lock->lock();
+	?>
+	<div>
+		<form id="unlockForm" method="post" onsubmit="if ( document.getElementById('unlock_user').value == '<?php echo($_SESSION['os_username']); ?>' ) { callFunction(this,'unlock','veil',false,'','unlock','').then(() => { return false; }); return false; }">
+		<?php if ( isset($PARAM['error']) ) { ?>
+			<div class="error"><?php echo(substr($PARAM['error'],14)); ?></div>
+		<?php } ?>
+			<label for="unlock_user" title="Benutzername"><i class="fas fa-user"></i></label>
+			<input id="unlock_user" type="text" name="unlock_user" value="<?php echo($_SESSION['os_username']); ?>" readonly required <?php echo($disabled); ?>><br /><br />
+			<label for="unlock_pwd" title="Passwort"><i class="fas fa-key"></i></label>
+			<input id="unlock_pwd" type="password" name="unlock_pwd" required <?php echo($disabled); ?>><br /><br />
+			<input id="unlock_test" type="submit" hidden <?php echo($disabled); ?>><br /><br />
+			<label for="unlock_test" class="labelcenter"><i class="fas fa-arrow-right"></i></label>		
+		</form>
+	</div>
+	<?php
+}
+
+function unlock(array $PARAM, ?mysqli $conn) {
+	// Create connection
+	require('../../core/data/serverdata.php');
+	require('../../core/data/logindata.php');
+	$conn = new mysqli($servername, $username, $password, $dbname) or die ("Connection failed.");
+	mysqli_set_charset($conn,"utf8");
+	// Unlock
+	$unlock = new OpenStatAuth($PARAM['unlock_user'],$PARAM['unlock_pwd'],$conn);
+	$success = $unlock->login();
+	if ( isset($success['error']) ) { $PARAM = array('error' => $success['error']); lock($PARAM,$conn); }
+	$conn->close();
+	unset($servername); unset($username); unset($password); unset($dbname);
 }

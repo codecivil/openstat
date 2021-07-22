@@ -3,17 +3,27 @@
 //logs if $_SESSION['log'] is set and true (in order to avoid changing all execute_stmts), or if parameter $log is set and true
 function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 {
+	global $debugpath, $debugfilename;
 	$stmt = ''; $str_types = ''; $arr_values = ''; $message = '';
 	if (isset($stmt_array['stmt']) ) { $stmt = $stmt_array['stmt']; };
 	if (isset($stmt_array['str_types']) ) { $str_types = $stmt_array['str_types']; };
 	if (isset($stmt_array['arr_values']) ) {  $arr_values = $stmt_array['arr_values']; };
 	if (isset($stmt_array['message']) ) { $message = $stmt_array['message']; }
 	$dbMessage = ''; $dbMessageGood = '';
-	if ( !$statement = $conn->prepare($stmt) ) { $dbMessage = "Verbindung war nicht erfolgreich. "; $dbMessageGood = "false"; }
+	//often saving of new entries is rejected; I think this is due to an overload of the mariadb server; so, cynic who I am, let's try it more often...
+	//this is due to a mariadb crash (caused by RAND probably); waiting for more than 10 seconds actually works... (but need to find a solution for the login,
+	//which takes 2 min in this setting...
+	$tries = 0; $maxtries = 1; //$maxtries is reduced here to 1 because we have now the tries in callFunction.php where it is better controlled.  
+	while( $tries < $maxtries AND !$statement = $conn->prepare($stmt) ) { $tries++; }
+	if ( $tries == $maxtries ) { $dbMessage = "Verbindung war nicht erfolgreich. "; $dbMessageGood = "false"; }
 	else {
-		if ( $str_types != '' AND !$statement->bind_param($str_types, ...$arr_values) ) { $dbMessage = "Übertragung war nicht erfolgreich. "; $dbMessageGood = "false"; }
+		$tries = 0;
+		while ( $tries < $maxtries  AND $str_types != '' AND !$statement->bind_param($str_types, ...$arr_values) ) { $tries++; /*$statement = $conn->prepare($stmt);*/ }
+		if ( $tries == $maxtries ) { $dbMessage = "Übertragung war nicht erfolgreich. "; $dbMessageGood = "false"; }
 		else {
-			if ( !$statement->execute() ) { $dbMessage = "Operation war nicht erfolgreich. "; $dbMessageGood = "false"; }
+			$tries = 0;
+			while ( $tries < $maxtries AND !$statement->execute() ) { $tries++; /* $statement = $conn->prepare($stmt); $statement->bind_param($str_types, ...$arr_values); */ }
+			if ( $tries == $maxtries ) { $dbMessage = "Operation war nicht erfolgreich. "; $dbMessageGood = "false"; }
 			else {
 				$dbMessage = $message; $dbMessageGood = "true";
 				$result = $statement->get_result();
@@ -34,8 +44,12 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 			}
 		}
 	}
+	if ( isset($statement) ) { $statement->close(); } // added 2021-07-22
 	$_return = array();
-	if ( isset($result) ) { $_return['result'] = $result; }; $_return['dbMessage'] = $dbMessage; $_return['dbMessageGood'] = $dbMessageGood; $_return['insert_id'] = $conn->insert_id;
+	if ( isset($result) ) { $_return['result'] = $result; };
+	$_return['dbMessage'] = $dbMessage;
+	$_return['dbMessageGood'] = $dbMessageGood;
+	if ( $conn AND $conn != null ) { $_return['insert_id'] = $conn->insert_id; }
 	return $_return;
 }
 
@@ -145,6 +159,7 @@ function updateCustomConfig(array $config, mysqli $conn)
 //reads config
 function getConfig(mysqli $conn, string $configname = 'Default') 
 {
+	if ( ! isset($_SESSION['os_user']) ) { return; }; // is this really necessary? added 2021-07-14 (see apache error.log for the 10x2s delay at login,logout,chpwd
 	unset($_stmt_array);
 	$_stmt_array = array();
 	$_stmt_array['stmt'] = "SELECT config FROM os_userconfig_".$_SESSION['os_user']." WHERE userid = ? AND configname = ?";
@@ -1269,7 +1284,7 @@ function FILE_Action(array $_PARAMETER, mysqli $conn) {
 }
 
 function logout(string $redirect = 'login.php') { 
-	session_start(); 
+	if ( session_status() === PHP_SESSION_NONE ){ session_start(); } //2021-07-22 seemed not to be necessary, threw Notice: session already started, so we better check
 	// Unset all of the session variables.
 	$_SESSION = array();
 
@@ -2113,13 +2128,15 @@ function getDetails($PARAMETER,$conn)
 		<?php 
 		//only for single edit
 		if ( sizeof($id) == 1 ) { ?>
-			<form method="post" id="reload<?php echo($rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','_close',true).then(()=>{ return false; }); return false;">
-				<input hidden form="reload<?php echo($rnd); ?>" type="text" value="<?php html_echo($id[0]); ?>" name="id_<?php html_echo($table); ?>" />
-				<input form="reload<?php echo($rnd); ?>" id="submitReload<?php echo($rnd); ?>" type="submit" hidden />
-				<label class="unlimitedWidth date" title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
-			</form>
-			<?php updateTime(); updateLastEdit($PARAM['changedat']); ?>
-			<div class="db_headline_wrapper"><h2 class="db_headline"><i class="fas fa-<?php html_echo($iconname); ?>"></i> 
+			<div class="db_headline_wrapper">
+				<div class="right" onclick="_close(this);"><i class="fas fa-times-circle"></i></div>
+				<form method="post" id="reload<?php echo($rnd); ?>" class="left" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','_close',true).then(()=>{ return false; }); return false;">
+					<input hidden form="reload<?php echo($rnd); ?>" type="text" value="<?php html_echo($id[0]); ?>" name="id_<?php html_echo($table); ?>" />
+					<input form="reload<?php echo($rnd); ?>" id="submitReload<?php echo($rnd); ?>" type="submit" hidden />
+					<label class="unlimitedWidth date" title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
+				</form>
+				<?php updateTime(); updateLastEdit($PARAM['changedat']); ?>
+				<h2 class="db_headline clear"><i class="fas fa-<?php html_echo($iconname); ?>"></i> 
 			<?php
 				$_tmp_keys = array_keys($_config['filters']);
 				unset($value); unset($index);
@@ -2129,7 +2146,7 @@ function getDetails($PARAMETER,$conn)
 					else { $_tmp_keys[$index] = substr($value,strlen($table)+2); }
 					//exclude attributions for now:
 					for ( $i = 0; $i < sizeof($_table_result); $i++ ) {
-						if ( $_tmp_keys[$index] == $_table_result[$i]['tablemachine'] ) { unset($_tmp_keys[$index]); }
+						if ( isset($_tmp_keys[$index]) AND $_tmp_keys[$index] == $_table_result[$i]['tablemachine'] ) { unset($_tmp_keys[$index]); }
 					}
 				}
 				$_tmp_keys = array_values($_tmp_keys);
@@ -2145,13 +2162,15 @@ function getDetails($PARAMETER,$conn)
 					$_table_result[$index] = _strip_tags(_cleanup($value),20);
 				}						
 				html_echo(implode(', ',$_table_result)); ?>
-			<span hidden class="db_headline_id"><?php echo($id[0]); ?></span></h2></div>
+				<span hidden class="db_headline_id"><?php echo($id[0]); ?></span></h2></div>
 			<?php includeFunctions('DETAILS',$conn); ?>	
 		<?php }  else { ?>
+			<div class="db_headline_wrapper">
+				<div class="right" onclick="_close(this);"><i class="fas fa-times-circle"></i></div>
 			<?php 
 			// for mass edit
 			updateTime(); ?>
-			<div class="db_headline_wrapper"><h2 class="db_headline"><i class="fas fa-<?php html_echo($iconname); ?>"></i>&nbsp; <?php echo(sizeof($id)); ?> Einträge </h2></div>
+				<h2 class="db_headline clear"><i class="fas fa-<?php html_echo($iconname); ?>"></i>&nbsp; <?php echo(sizeof($id)); ?> Einträge </h2></div>
 		<?php } ?>	
 		<div class="message" id="message<?php echo($table.$id[0]); ?>"><div class="dbMessage" class="<?php echo($dbMessageGood); ?>"><?php echo($dbMessage); ?></div></div>
 		<form class="db_options" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">

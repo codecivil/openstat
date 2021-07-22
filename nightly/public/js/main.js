@@ -99,7 +99,8 @@ function processForm(form,phpscript,id,add,classes) {
 }
 
 //local=true: do not update config
-function _close(el,local) { 
+//response: not used, just formally needed for a callback of callFunction
+function _close(el,local,response) { 
 	var popup_wrapper = el.closest('.popup_wrapper');
 	var key = new Object();
 	if ( ! popup_wrapper ) { popup_wrapper = el.closest('.imp_wrapper'); };
@@ -169,7 +170,7 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			};
 			tinyMCEinit();
 			document.body.style.cursor = 'auto';
-			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) ) { el.closest('.popup_wrapper').scrollIntoView(); }
+			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) && el.id != 'veil' ) { el.closest('.popup_wrapper').scrollIntoView(); }
 			if (callback) { resolve(window[callback](form,arg,_request.responseText)); /*return window[callback](form,arg,_request.responseText);*/ } else { resolve(false); return false; };	
 		}
 	} else {
@@ -386,7 +387,11 @@ function _date2calString(_datetime) {
 function printResults(form,arg,responsetext) {
 	_print = window.open("/html/print.html","print");
 	_print.document.body.onload = function () {
-		el = form.parentNode;
+		if (form.closest('.section')) {
+			el = form.closest('.section');
+		} else {	
+			el = form.parentNode;
+		}
 		el_print = _print.document.importNode(el,true);
 		_print.document.body.appendChild(el_print);
 		_print.tinyMCEinit();

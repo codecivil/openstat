@@ -33,7 +33,7 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 				break;
 		}
 		callFunction(el,fct,div,add,classes,callback,arg).then(()=>{
-			//clode entry on delete:
+			//close entry on delete:
 			if ( val == "delete" ) { _close(el); };
 			//close entry window and open newly created entry if insert was successful:
 			if ( val == "insert" && el.closest('.section').querySelector('.message') && el.closest('.section').querySelector('.message').textContent.indexOf('Eintrag wurde neu hinzugefügt') > -1 ) {
@@ -199,7 +199,7 @@ function updateSelection(el) {
 							if ( match > -1 ) { _disabled[j] = false; }; 
 						}
 					}
-					option[j].disabled = _disabled[j	];
+					option[j].disabled = _disabled[j];
 				}
 			}
 		}
@@ -868,4 +868,13 @@ function sortTable(tableel) {
 		newInnerHTML += '</tr>';
 	})
 	table.innerHTML = newInnerHTML; 
+}
+
+//this a callback for callFunction
+function unlock(form,arg,response) {
+	var veil = document.getElementById('veil')
+	if (veil.innerText == '' ){
+		veil.className = '';
+	}
+//	return false
 }
