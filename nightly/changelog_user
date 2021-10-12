@@ -1,3 +1,14 @@
+#v1.5.22
+======
+12.10.2021
+
+* Bessere Darstellung von Kombifeldern in Anzeigen aus fremden Tabellen
+
+08.10.2021
+
+* Fix: CSV-Import schlug Zuordnungen zu Feldern vor, die vom Benutzer nicht ausgefüllt werden dürfen, was, wenn nicht korrigert, den Import verhinderte; 
+solche Felder werden nun vom Import ausgeschlossen
+
 #v1.5.21
 ======
 22.07.2021

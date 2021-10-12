@@ -2262,7 +2262,16 @@ function getDetails($PARAMETER,$conn)
 									$_stmt_array['arr_values'] = array($PARAM['id_'.$ctable]);
 									$fresult = execute_stmt($_stmt_array,$conn,true);
 									if ( isset($fresult['result']) AND sizeof($fresult['result']) > 0 ) {
-										$value = _cleanup(_strip_tags($fresult['result'][0][$fkey]));
+										$value = json_decode($fresult['result'][0][$fkey],true);
+										if ( $value != null ) {
+											if (is_array($value) AND isset($value[0]) AND is_array($value[0])) {
+												$value = _cleanup($fresult['result'][0][$fkey],' | ');
+											} else {
+												$value = _cleanup(_strip_tags($fresult['result'][0][$fkey]));
+											}
+										} else {
+											$value = _cleanup(_strip_tags($fresult['result'][0][$fkey]));
+										}
 										unset($_stmt_array); $_stmt_array = array();
 										$_stmt_array['stmt'] = 'SELECT keyreadable from '.$ctable . '_permissions WHERE keymachine = ?';
 										$_stmt_array['str_types'] = 's';
@@ -2403,7 +2412,7 @@ function _evalRestrictions(string $restriction, string $generation, string $role
 }
 
 //no variable type: must allow for NULL to be processed without error
-function _cleanup($value)
+function _cleanup($value,$separator = '<br />')
 {
 	if ( is_array($value) ) {
 		$value = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -2420,7 +2429,7 @@ function _cleanup($value)
 					$newvalue .= $komma._cleanup($values[$j][$i]);
 					$komma = ', ';
 				}
-				$komma = '<br />';
+				$komma = $separator;
 			}
 			$values = array($newvalue);
 		}

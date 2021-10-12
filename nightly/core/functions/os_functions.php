@@ -167,7 +167,7 @@ function importCSV(array $PARAM,$conn) {
 		foreach ( $_config["table"] as $_table ) 
 		{
 			unset($_stmt_array); $_stmt_array = array();
-			$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype,referencetag FROM ".$_table."_permissions ORDER BY realid";
+			$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype,referencetag FROM ".$_table."_permissions WHERE ( `role_".$_SESSION['os_role']."` + `role_".$_SESSION['os_parent']."` ) MOD 8 < 4 ORDER BY realid"; //only select fields the user may insert!
 			$_result_array = execute_stmt($_stmt_array,$conn); 
 			if ($_result_array['dbMessageGood']) { $key_array_add = $_result_array['result']; $key_array_add['table'] = array(); };
 			foreach ($key_array_add['keymachine'] as $key)

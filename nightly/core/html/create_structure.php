@@ -26,7 +26,7 @@ require_once('../../core/functions/frontend_functions.php');
 <body>
 <?php 
 //$ENCRYPTED = '';
-$ENCRYPTED = ' ENCRYPTED=NO'; //NO for debug only
+$ENCRYPTED = ' ENCRYPTED=YES'; //NO for debug only
 $PARAMETER = array(); 
 $action = '';
 $_warning = '';
