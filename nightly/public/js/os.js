@@ -41,7 +41,7 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 				var formobj = new Object();
 				formobj.massEdit = JSON.parse(insert_id);
 				document.getElementById('trash').value = JSON.stringify(formobj);
-				setTimeout(function(){callFunction('_','getDetails','_popup_',false,'details').then(()=>{ _close(el); return false; });},500);
+				setTimeout(function(){callFunction('_','getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ _close(el); return false; });},500);
 			}
 //this just changes el to a node outside the document; purpose was to revert the _disable above; solution below?
 //			el = clone_el.cloneNode(true);	
@@ -164,13 +164,14 @@ function updateSelection(el) {
 	}
 	var conditions = JSON.parse(document.getElementById(id+'_conditions').innerText);
 	var conditions_met = 0;
+	var _show_matched = false;
+	var _hide_matched = false;
 	for (i=0; i<conditions.length; i++) {
 		var depends_on_key = conditions[i].depends_on_key.split(';')[0];
 		var depends_local = conditions[i].depends_on_key.split(';')[1];
 		if ( typeof depends_local == 'undefined' ) { depends_local = ''; }
 		var depends_on_value = conditions[i].depends_on_value;
 		var allowed_values = conditions[i].allowed_values;
-		//do not restrict on EXTENSIBLE LISTS: mark in allowed_values with "***"
 		if ( allowed_values.indexOf('\"***\"') > -1 ) { continue; }
 		//
 		if ( depends_local != '' ) { var search_el = el.closest('.searchfield'); } else { var search_el = el.closest('form'); }
@@ -181,6 +182,11 @@ function updateSelection(el) {
 				for (k=0; k<_hits.length; k++) {
 					if ( _hits[k].value == depends_on_value ) {
 						conditions_met++;
+						//to be continued: parse _SHOW_, _HIDE_ as allowed_values; there are no "options" for these values; only works if non-empty conditions are set and met
+						//different parsing: show if there is no _HIDE_ or at least one _SHOW_, hide if there is at least one _HIDE_ and no _SHOW_ (matching)
+						//do not restrict on EXTENSIBLE LISTS: mark in allowed_values with "***"
+						if ( allowed_values.indexOf('_SHOW_') > -1 ) { _show_matched = true; }
+						if ( allowed_values.indexOf('_HIDE_') > -1 ) { _hide_matched = true; }
 						for (j=0; j<option.length; j++) {
 							var match = allowed_values.indexOf(option[j].value);
 							if ( match == -1 ) { option[j].disabled = true; }; 
@@ -195,6 +201,8 @@ function updateSelection(el) {
 					for (k=0; k<_hits.length; k++) {
 						if ( _hits[k].value == depends_on_value ) {
 							conditions_met++;
+							if ( allowed_values.indexOf('_SHOW_') > -1 ) { _show_matched = true; }
+							if ( allowed_values.indexOf('_HIDE_') > -1 ) { _hide_matched = true; }
 							var match = allowed_values.indexOf(option[j].value);
 							if ( match > -1 ) { _disabled[j] = false; }; 
 						}
@@ -214,6 +222,8 @@ function updateSelection(el) {
 			if ( allowed_values.indexOf('\"***\"') > -1 ) { continue; }
 			//
 			if ( !(depends_on_value) && !(depends_on_key) ) {
+				if ( allowed_values.indexOf('_SHOW_') > -1 ) { _show_matched = true; }
+				if ( allowed_values.indexOf('_HIDE_') > -1 ) { _hide_matched = true; }
 				for (j=0; j<option.length; j++) {
 					var match = allowed_values.indexOf(option[j].value);
 					if ( match == -1 ) { option[j].disabled = true; }
@@ -223,6 +233,40 @@ function updateSelection(el) {
 	}
 	if ( el.querySelectorAll('option:checked:disabled').length > 0 ) {
 		el.querySelectorAll('option:checked:disabled')[0].selected = false;
+	}
+	//_SHOW_ and _HIDE_ now acting:
+	let _label = el.parentElement.querySelector('[for="'+el.id+'"]');
+	if ( _hide_matched && ! _show_matched ) {
+		el.style.opacity = 0;
+		_label.style.opacity = 0;
+		setTimeout(function(){
+			el.hidden = true; el.disabled = true;
+			el.parentElement.querySelector('[for="'+el.id+'"]').hidden = true;		
+			}, 700);
+	} else {
+		// is this compatible with mass editing or non-editing permissions?
+		el.hidden = false; el.disabled = false;
+		el.parentElement.querySelector('[for="'+el.id+'"]').hidden = false;
+		setTimeout(function(){
+			el.style.opacity = 1;	
+			_label.style.opacity = 1;	
+			},100)
+	}
+	//now only missing: autoupdateSelection at opening (getDetails)
+}
+
+//update selection of all class members of array of classes given by json_string
+function updateSelectionOfClasses(el) {
+	dependency_divs = el.parentElement.querySelectorAll('.dependencies');
+	for ( let dependency_div of dependency_divs ) {
+		json_string = dependency_div.textContent;
+		var _classes = JSON.parse(json_string);
+		_classes.forEach(function(_class) {
+			_classMembers = document.getElementsByClassName(_class);
+			for ( let member of _classMembers ) {
+				updateSelection(member);
+			}
+		});
 	}
 }
 
@@ -288,8 +332,12 @@ function newEntry(form,arg,response) {
 		key._table_ = el.querySelector('.inputtable').value;
 		key._id_ = 'new';
 	} else {
-		key._table_ = el.querySelector('._table_').innerText;
-		key._id_ = el.querySelector('._id_').innerText;
+		if ( el.querySelector('._table_') ) {
+			key._table_ = el.querySelector('._table_').innerText;
+		}
+		if ( el.querySelector('._id_') ) {
+			key._id_ = el.querySelector('._id_').innerText;
+		}
 	}
 	var _form = el.querySelector('.db_options');
 	if ( sessionStorage.getItem(JSON.stringify(key)) != null && sessionStorage.getItem(JSON.stringify(key)) !== JSON.stringify(_form2obj(_form)) ) {
@@ -483,11 +531,20 @@ function editEntries(form,tablename) {
 	thecheckbox = form.closest('tr').querySelector('td').getElementsByTagName('input')[0];
 	if ( thecheckbox.checked ) {
 		document.getElementById('editTableName').value = tablename;
-		callFunction(document.getElementById('formMassEdit'),'getDetails','_popup_',false,'details').then(()=>{ return false; });
+		callFunction(document.getElementById('formMassEdit'),'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ return false; });
 	} else {
-		callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ newEntry(form,'',''); return false; });
+		callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(form,'',''); return false; });
 	}
 	return false
+}
+
+// callback function for getDetails
+function updateSelectionsOfThis(form,arg,responsetext) {
+	// identify new entry window by reload div
+	_reloadid = responsetext.match(/form=\"(reload[^\"]*)\"/)[1];
+	// updateSelections in the parent edit_wrapper
+	el = document.getElementById(_reloadid).closest('.section');
+	updateSelectionOfClasses(el);
 }
 
 function _scrapeStat(chosencolumn) {

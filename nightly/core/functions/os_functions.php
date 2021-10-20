@@ -636,7 +636,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 					<?php } ?>
 					<td><?php html_echo(implode(' | ',$ids[$idstable][$_item['id_'.$idstable]]['criteria'])); ?></td>
 					<td>
-						<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_item['id_'.$idstable]); ?>" name="id_<?php echo($idstable); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
+						<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_item['id_'.$idstable]); ?>" name="id_<?php echo($idstable); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
 						<label for="ampelSubmit__<?php echo($_rnd); ?>" title="ID: <?php echo($_item['id_'.$idstable]); ?>"><i class="fas fa-<?php echo($icon[$idstable]); ?>"></i></label>
 					</td>
 					<?php
@@ -645,7 +645,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 							$_rnd = rand(0,32767);
 							?>
 							<td>
-								<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_assoc_item['id_'.$table]); ?>" name="id_<?php echo($table); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
+								<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_assoc_item['id_'.$table]); ?>" name="id_<?php echo($table); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
 								<label for="ampelSubmit__<?php echo($_rnd); ?>" title="ID: <?php echo($_assoc_item['id_'.$table]); ?>"><i class="fas fa-<?php echo($icon[$table]); ?>"></i></label>
 							</td>							
 							<?php

@@ -1,3 +1,13 @@
+#v1.5.23
+======
+20.10.2021
+
+* openStatAdmin: Felder können nun in Abhängigkeit von Werten anderer Felder versteckt oder angezeigt werden
+
+14.10.2021
+
+* Feldeinträge können nun gelöscht werden, indem man '_NULL_', oder bei Datumsfeldern '01.01.0001', einträgt. Bei Kombifeldern funktioniert normales Löschen.
+
 #v1.5.22
 ======
 12.10.2021

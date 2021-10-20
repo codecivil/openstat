@@ -1,3 +1,14 @@
+#v1.5.23
+======
+20.10.2021
+
+* Feature: fields can be shown or hidden depending on values of other fields; this
+extends the reference system by protected allowed_values _SHOW_ and _HIDE_
+
+14.10.2021
+
+* Delete entries by values '_NULL_' and '01.01.0001', respectively
+
 #v1.5.22
 ======
 12.10.2021

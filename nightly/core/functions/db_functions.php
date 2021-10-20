@@ -902,11 +902,16 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 				if ( $value != 'none' AND $value != '' AND $key != 'id_'.$PARAMETER['table'] AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
 					$properkey_array = explode('__',$key,2);
 					$properkey = $properkey_array[sizeof($properkey_array)-1];
-					$set .= $komma . "`" . $properkey . "`= ?";
-					$komma = ",";
-					if ( is_array($value) ) { $value = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); } //added on 20190719
-					$arr_values[] = rtrim($value);
-					if ( substr($key,0,3) == 'id_') { $str_types .= "i"; } else { $str_types .= "s"; } //replace by a proper type query...
+					if ( $value == "_NULL_" OR $value == "0001-01-01" ) {
+						$set .= $komma . "`" . $properkey . "`= NULL";						
+					} //added 20211014; enable entry removal by "_NULL_" or "0001-01-01"
+					else {
+						$set .= $komma . "`" . $properkey . "`= ?";
+						$komma = ",";
+						if ( is_array($value) ) { $value = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); } //added on 20190719
+						$arr_values[] = rtrim($value);
+						if ( substr($key,0,3) == 'id_') { $str_types .= "i"; } else { $str_types .= "s"; } //replace by a proper type query...
+					}
 				}
 			}
 			$stmt = "UPDATE `view__" . $PARAMETER['table'] . "__" . $_SESSION['os_role']. "`" . $set . " WHERE id_".$PARAMETER['table']." IN (" . implode(',',json_decode($PARAMETER['id_'.$PARAMETER['table']])) . ");";

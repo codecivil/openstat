@@ -121,6 +121,7 @@ function _close(el,local,response) {
 		sessionStorage.removeItem(JSON.stringify(key));
 	}
 	popup_wrapper.parentNode.removeChild(popup_wrapper);
+	updateSelectionsOfThis(el,false,response);
 	return false;
 }
 
@@ -215,7 +216,7 @@ function removeOpenId(form) {
 }
 
 function openIds(form) {
-	callFunction(form,'getDetails','_popup_',false,'details').then(()=>{ newEntry(form,'',''); return false; });	
+	callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(form,'',''); return false; });	
 	//processForm(form,'../php/getDetails.php','_popup_',false,'details');
 	return false;
 }
@@ -274,7 +275,7 @@ function editTable(form,tablename) {
 	var table = form.getElementsByClassName['inputtable'][0];
 	var old_tablename = table.value;
 	table.value = tablename;
-	callFunction(form,'getDetails','_popup_',false,'details').then(()=>{
+	callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{
 		//processForm(form,'../php/getDetails.php','_popup_',false,'details');
 		newEntry(form,'','');
 		table.value = old_tablename;
