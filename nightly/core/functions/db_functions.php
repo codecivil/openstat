@@ -1392,7 +1392,6 @@ function FILE_Action(array $_PARAMETER, mysqli $conn) {
 			foreach ( $PARAMETER as $key=>$value ) {
 				if ( isset($value['filepath']) ) {
 					$dir = dirname($value['filepath'][0]);
-					print_r($dir);
 					//remove only imported files in $fileroot
 					if ( strpos($dir,$fileroot) == 0 ) {
 						$filelist = scandir($dir);
@@ -1496,7 +1495,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field 
 	if ($_result_array['dbMessageGood']) { $tables_array = $_result_array['result']; } else {
 	?>
-		<div class="section">Fehler bei Zugriff auf Tabellen. Bitte wiederholen Sie die Aktion. <?php print_r($_stmt_array); ?></div>
+		<div class="section">Fehler bei Zugriff auf Tabellen. Bitte wiederholen Sie die Aktion.</div>
 	<?php
 		return;
 	};

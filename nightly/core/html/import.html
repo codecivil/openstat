@@ -117,9 +117,7 @@ if ( ! isset($PARAMETER['table']) ) { $PARAMETER['table'] = ''; };
 		{
 			unset($_stmt_array); $_stmt_array = array(); $key_array = array();
 			$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype FROM ".$_table."_permissions ORDER BY id";
-			print_r($_stmt_array);
 			$_result_array = execute_stmt($_stmt_array,$conn); 
-			print_:r($_result_array);
 			if ($_result_array['dbMessageGood']) { $key_array_add = $_result_array['result']; };
 			$key_array['keymachine'] = array_merge($key_array['keymachine'], $key_array_add['keymachine']);
 			$key_array['keyreadable'] = array_merge($key_array['keyreadable'], $key_array_add['keyreadable']);
