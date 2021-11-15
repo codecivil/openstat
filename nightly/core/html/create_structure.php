@@ -45,6 +45,12 @@ foreach($_POST as $key=>$value)
 	}
 	if ( $key == "pwdhash" AND in_array($_POST['dbAction'],array("delete","insert","edit")) ) {
 		switch($PARAMETER['table']) {
+			case 'os_secrets':
+				//allowed_roles and allowed_users must be parsed before pwdhash; is this deterministically true?
+				$PARAMETER['rolepwds'] = $PARAMETER['allowed_roles'];
+				$PARAMETER['allowed_roles'] = json_encode(array_keys(json_decode($PARAMETER['allowed_roles'],true)));
+				$PARAMETER['userrolepwds'] = $PARAMETER['allowed_users'];				
+				$PARAMETER['allowed_users'] = json_encode(array_keys(json_decode($PARAMETER['allowed_users'],true)));
 			case 'os_users':
 				$PARAMETER['key'] = $PARAMETER['pwdhash'];
 				$PARAMETER['pwdhash'] = sodium_crypto_pwhash_str($PARAMETER['key'],SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
@@ -155,6 +161,7 @@ function readable(string $_string) {
 		"tablemachine" => "interner Tabellenname",
 		"tablereadable" => "angezeigter Tabellenname",
 		"allowed_roles" => "berechtigte Rollen",
+		"allowd_users" => "berechtigte Nutzer",
 		"delete_roles" => "Rollen mit Löschberechtigung",
 		"displayforeign"=> "Anzeigen aus anderen Tabellen",
 		"functionmachine" => "interner Funktionsname",
@@ -174,7 +181,11 @@ function readable(string $_string) {
 		"allowed_values" => "mögliche Werte",
 		"tietotables" => "Binde an Tabellen",
 		"subtablemachine" => "Untertabelle",
-		"parentmachine" => "Elterntabelle"
+		"parentmachine" => "Elterntabelle",
+		"calendarfields" => "Kalenderfelder",
+		"secretreadable" => "lesbarer Geheimnisname",
+		"secretmachine" => "interner Geheimnisname",
+		"pwdhash" => "Geheimnis (Passwort)"
 	);
 	if ( isset($_translate[$_string]) ) { return $_translate[$_string]; } else { return $_string; }
 }
@@ -206,6 +217,91 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 	$_stmt_array = array();
 	$_return = array();
 	switch($PARAMETER['table']) {
+		case 'os_secrets':
+			global $PARAMETER; //allows to change the $PARAMETER for upcoming functions
+			$_warning = "Geben Sie in allowed_roles und allowed_users die jeweiligen IDs zusammen mit den Rollenpasswörtern im JSON Format an.<br />Änderungen des internen Geheimninsnamens sind derzeit nicht möglich; stattdessen wird ein zusätzlicher Eintrag angelegt.";
+			//save secret encrypted with role sql passwd in os_passwords with user = userid(role)
+			switch($PARAMETER['dbAction']) {
+				case 'edit':
+				case 'delete':
+				case 'insert':
+					//construct the array of roles:password pairs
+					$_secretroles = json_decode($PARAMETER['rolepwds'],true); // 'roleid': 'rolepasswd'
+					if ( $_secretroles == null ) { $_secretroles = array(); }
+					$_secretusers = json_decode($PARAMETER['userrolepwds'],true); // 'userid': 'rolepasswd'
+					if ( $_secretusers == null ) { $_secretusers = array(); }
+					if ( sizeof($_secretroles) + sizeof($_secretusers) == 0 ) { break; }
+					unset($PARAMETER['rolepwds']);
+					unset($PARAMETER['userrolepwds']);
+					unset($_stmt_array); unset($_result);
+					$_stmt_array['stmt'] = "SELECT id,roleid FROM os_users WHERE id IN (".implode(',',array_keys($_secretusers)).")";
+					$_secretusers_results = execute_stmt($_stmt_array,$conn)['result'];
+					$_secretusers_roles = array_combine($_secretusers_results['id'],$_secretusers_results['roleid']);
+					$_secretroles_add = array();
+					foreach ( $_secretusers as $_userid => $_secret ) {
+						$_secretroles_add[$_secretusers_roles[$_userid]] = $_secret;
+					}
+					$_secretroles = $_secretroles + $_secretroles_add; //+ is merging with preserving numerical keys!
+					//do not allow changes of secret to be recorded in os_secrets if there is no rolepwd
+					//test if "passwords" are purely numeric (do not allow purely numerical role passwords!) as they would be if they are not given (role ids would be the values of the array!)
+					$_allpwdsaregiven = true;
+					foreach ( $_secretroles as $value ) { $_allpwdsaregiven = ( $_allpwdsaregiven AND ! is_numeric($value) ); };
+					if ( ! $_allpwdsaregiven ) {
+						$PARAMETER['allowed_roles'] = $PARAMETER['rolepwds'];
+						$PARAMETER['allowed_users'] = $PARAMETER['userrolepwds'];
+						unset($PARAMETER['pwdhash']);
+						break;
+					};
+					//
+					unset($_secretusers); unset($_secretusers_results); unset($_secretusers_roles); unset($_secretroles_add);
+					//collect encrypted db info of roles
+					unset($_stmt_array);
+					$_stmt_array['stmt'] = "SELECT userid,roleid,password,nonce,salt FROM os_roles LEFT JOIN ( os_users LEFT JOIN os_passwords AS T2 ON ( os_users.id = userid ) ) ON ( os_roles.id = roleid AND rolename = username) WHERE roleid in (".implode(",",array_keys($_secretroles)).") AND ( secretname IS NULL OR secretname = '' OR secretname LIKE 'role_%' )";
+					$_result_array = execute_stmt($_stmt_array,$conn,true); $_result=$_result_array['result'];
+					if ( isset($_result) ) {
+						foreach ( $_result as $index=>$row ) {
+							foreach ($row as $key=>$value) {
+								if ( in_array($key,array('password','nonce','salt')) ) {
+									$_result[$index][$key] = sodium_hex2bin($value);
+								}
+							}
+						}
+					} else { $_stmt_array['error'] = "Kein Rolleneintrag gefunden. "; break; }
+					foreach ( $_result as $_result_user ) {
+						//encrypt secret by dbpwd
+						$_result_user['key'] = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$_secretroles[$_result_user['roleid']],$_result_user['salt'],SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
+						$dbpwd = sodium_crypto_secretbox_open($_result_user['password'],$_result_user['nonce'],$_result_user['key']);
+						if (! $dbpwd ) { $_stmt_array['error'] = "Rollenpasswort für Rolle ".$_result_user['roleid']." ist falsch."; break; }
+						$salt = random_bytes(SODIUM_CRYPTO_PWHASH_SALTBYTES);
+						$nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+						$PARAMETER['genkey'] = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$dbpwd,$salt,SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
+						unset($dbpwd);
+						$passwd = sodium_crypto_secretbox($PARAMETER['key'],$nonce,$PARAMETER['genkey']);
+						unset($PARAMETER['key']);
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "DELETE FROM os_passwords WHERE userid=? AND secretname = ?";
+						$_stmt_array['str_types'] = "is";
+						$_stmt_array['arr_values'] = array();
+						$_stmt_array['arr_values'][] = $_result_user['userid'];
+						$_stmt_array['arr_values'][] = $PARAMETER['secretmachine'];
+						_execute_stmt($_stmt_array,$conn);
+						if ( $PARAMETER['dbAction'] != "delete" ) {
+							unset($_stmt_array); $_stmt_array = array();
+							$_stmt_array['stmt'] = "INSERT INTO os_passwords (password,salt,nonce,userid,secretname) VALUES (?,?,?,?,?)";
+							$_stmt_array['str_types'] = "sssis";
+							$_stmt_array['arr_values'] = array();
+							$_stmt_array['arr_values'][] = sodium_bin2hex($passwd);
+							$_stmt_array['arr_values'][] = sodium_bin2hex($salt);
+							$_stmt_array['arr_values'][] = sodium_bin2hex($nonce);
+							$_stmt_array['arr_values'][] = $_result_user['userid'];
+							$_stmt_array['arr_values'][] = $PARAMETER['secretmachine'];
+//							_execute_stmt($_stmt_array,$conn);
+						}
+					}
+					unset($_secretroles);
+					break;
+			}
+			break;
 		case 'os_users':
 			switch($PARAMETER['dbAction']) {
 				case 'edit':
@@ -243,6 +339,9 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					//grant permissions on os_-TABLES
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "GRANT SELECT, UPDATE, INSERT, DELETE ON os_userconfig TO ".$PARAMETER['rolename'].";";
+					_execute_stmt($_stmt_array,$conn); 
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "GRANT SELECT, UPDATE, INSERT, DELETE ON os_caldav TO ".$PARAMETER['rolename'].";";
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "GRANT SELECT ON os_functions TO ".$PARAMETER['rolename'].";";
@@ -809,6 +908,14 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 					_adminActionBefore($USERPARAMETER,$conn);
 					_dbAction($USERPARAMETER,$conn);
 					_adminActionAfter($USERPARAMETER,$conn);
+					// insert this info in os_secrets (temporary workaround; in midterm: do not create this new user and create secret directly instead
+					unset($_stmt_array);
+					$_stmt_array['stmt'] = "INSERT INTO `os_secrets` (secretmachine,secretreadable,allowed_roles,secret) SELECT CONCAT('role_',rolename),CONCAT('Rolle ',rolename),CONCAT('[',os_roles.id,']'),password FROM os_roles LEFT JOIN ( os_users LEFT JOIN os_passwords AS T2 ON ( os_users.id = userid ) ) ON ( os_roles.id = roleid AND rolename = username) WHERE rolename = ?";
+					$_stmt_array['str_types'] = "s";
+					$_stmt_array['arr_values'] = array();
+					$_stmt_array['arr_values'][] = $PARAMETER['rolename'];
+					_execute_stmt($_stmt_array,$conn);
+					//
 					unset($USERPARAMETER);
 					collectInfo($conn);
 					unset($_stmt_array); $_stmt_array = array();
@@ -872,7 +979,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 						_execute_stmt($_stmt_array,$conn);
 					} else {
 					//- if not, then look for role entry (with given rolepwd), decrypt that and encrypt with given password.
-						$_stmt_array['stmt'] = "SELECT password,nonce,salt FROM os_passwords WHERE userid = (SELECT id FROM os_users WHERE username = (SELECT rolename FROM os_roles WHERE id = '".$PARAMETER['roleid']."') )";
+						$_stmt_array['stmt'] = "SELECT password,nonce,salt FROM os_passwords WHERE userid = (SELECT id FROM os_users WHERE username = (SELECT rolename FROM os_roles WHERE id = '".$PARAMETER['roleid']."')) AND ( secretname IS NULL OR secretname = '' OR secretname LIKE 'role_%' )";
 						$_result_array = _execute_stmt($_stmt_array,$conn); $_result=$_result_array['result'];
 						$_result_user = array();
 						if ( $_result AND $_result->num_rows > 0 ) {
@@ -958,7 +1065,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 						$_roleid = $_result['roleid'];
 					}
 					unset($_stmt_array);
-					$_stmt_array['stmt'] = "SELECT password,nonce,salt FROM os_passwords WHERE userid = (SELECT id FROM os_users WHERE username = (SELECT rolename FROM os_roles WHERE id = '".$PARAMETER['roleid']."') )";
+					$_stmt_array['stmt'] = "SELECT password,nonce,salt FROM os_passwords WHERE userid = (SELECT id FROM os_users WHERE username = (SELECT rolename FROM os_roles WHERE id = '".$PARAMETER['roleid']."') AND ( secretname IS NULL OR secretname = '' OR secretname LIKE 'role_%' ))";
 					$_result_array = _execute_stmt($_stmt_array,$conn); $_result=$_result_array['result'];
 					$_result_user = array();
 					if ( $_result AND $_result->num_rows > 0 ) {
@@ -977,7 +1084,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 					$PARAMETER['genkey'] = sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$PARAMETER['key'],$salt,SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
 					$passwd = sodium_crypto_secretbox($dbpwd,$nonce,$PARAMETER['genkey']);
 					unset($_stmt_array); $_stmt_array = array();
-					$_stmt_array['stmt'] = "UPDATE os_passwords SET password=?, salt=?, nonce=? WHERE userid=?";
+					$_stmt_array['stmt'] = "UPDATE os_passwords SET password=?, salt=?, nonce=? WHERE userid=? AND ( secretname IS NULL OR secretname = '' OR secretname LIKE 'role_%' )";
 					$_stmt_array['str_types'] = "sssi";
 					$_stmt_array['arr_values'] = array();
 					$_stmt_array['arr_values'][] = sodium_bin2hex($passwd);
@@ -1182,7 +1289,8 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$CREATEVIEW_KOMMA = ',';
 				foreach ( $_TABLES_ALLOW_ARRAY as $_tableid=>$_allowed_roles )
 				{
-					if ( in_array($PARAMETER['roleid'],json_decode($_allowed_roles,true)) ) {
+					//added parentid on 20211109
+					if ( in_array($PARAMETER['roleid'],json_decode($_allowed_roles,true)) OR in_array($PARAMETER['parentid'],json_decode($_allowed_roles,true)) ) {
 						$CREATEVIEW_ID .= 'id_'.$_TABLES_ARRAY[$_tableid].$CREATEVIEW_KOMMA;
 					}	
 				}
@@ -1375,6 +1483,7 @@ $tableel .= "</table>";
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_users"><i class="fas fa-users" title="Benutzer"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_tables"><i class="fas fa-table" title="Nutzertabellen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_functions"><i class="fas fa-briefcase" title="Funktionen"></i></a></li>
+			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_secrets"><i class="fas fa-mask" title="Geheimnisse"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_sql"><i class="fas fa-database" title="SQL Import"></i></a></li>
 			<li class="separate"></li>
 			<li>

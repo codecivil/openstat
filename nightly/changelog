@@ -1,3 +1,27 @@
+#v1.6.0
+======
+10.11.2021
+
+* better error correction when opening entries at login
+
+21.10.-09.11.2021
+
+* secret vault structure added; whenever a secret/password is needed, set up
+  an os_secret in openStatAdmin and link that secret via a secretname column
+  as done in this update for calendars
+* CALDAV calendar plugin fixed and extended
+* new data model "CALENDAR" added, allowing to add an calendar attribution via a
+  form field in the table entry
+* open attributed entry by click on attribution info of the entry (finally!)
+* improved software info button with (vendor dependent) contact info now included
+* new status bar button for display of authorized secrets info (not the secret itself, of course)
+
+#v1.5.99
+======
+09.11.2021
+
+* pure sql update setting up the secret vault and new calendar sql structure used in 1.6 
+
 #v1.5.23
 ======
 20.10.2021

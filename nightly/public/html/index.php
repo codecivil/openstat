@@ -10,6 +10,9 @@ mysqli_report(MYSQLI_REPORT_STRICT);
 
 if ( ! isset($_SESSION['os_user']) OR ! isset($_SESSION['os_dbpwd']) ) { header('Location:/login.php'); exit(); } //redirect to login page if not logged in
 
+// set openids as SESSION variable for bookkeeping
+$_SESSION['os_opennow'] = array();
+
 //load classes, functions and constants
 
 //include system classes
@@ -44,6 +47,13 @@ require_once('../../core/data/info.php');
 require_once('../../core/data/debugdata.php');
 require_once('../../settings.php');
 
+//include vendor info data
+$core = glob('../../vendor/data/*.php');
+
+foreach ( $core as $component )
+{
+	require_once($component);
+}
 /*
 require_once('../../core/auth.php');
 require_once('../../core/edit.php');
@@ -171,6 +181,22 @@ $conn->close(); //2021-07-15
 				</form>				
 			</div>
 		</div>
+		<?php if ( sizeof($_SESSION['os_secret']) > 0 ) { ?> 
+			<div id="authorizations" title="Zusätzliche Berechtigungen">
+				<form id="authInfoForm"></form>
+				<label for="authInfo"><i class="fas fa-id-badge"></i></label>
+				<input form="authInfoForm" type="checkbox" hidden id="authInfo" class="userInfo">
+				<div>
+					<ul>
+					<?php
+						foreach ( $_SESSION['os_secret'] as $_secret ) {
+							echo('<li title="'.$_secret['comment'].'">'.$_secret['name'].'</li>');
+						}
+					?>
+					</ul>
+				</div>
+			</div>
+		<?php } ?>
 		<div id="fontsize">
 			<form method="post" id="fontsizeForm" onchange="callFunction(this,'changeConfig','',false,'','restrictResultWidth'); reloadCSS();">
 				<input type="radio" name="_fontSize" value="10" id="fs10" hidden <?php if ( $_config['_fontSize'] == "10") { ?>checked<?php }?> >
@@ -201,14 +227,22 @@ $conn->close(); //2021-07-15
 				</select>
 			</form>
 		</div>
-		<div id="info" class="<?php echo($whatsnewclass); ?>">
-			<form id="opszInfoForm"></form>
-			<label for="opszInfo">&nbsp;<i class="fas fa-info-circle"></i>&nbsp;</label>
-			<input form="opszInfoForm" type="checkbox" hidden id="opszInfo">
+		<div id="info" class="<?php echo($whatsnewclass); ?>" title="Informationen zur Software">
+			<form id="osInfoForm"></form>
+			<label for="osInfo">&nbsp;<i class="fas fa-info-circle"></i>&nbsp;</label>
+			<input form="osInfoForm" type="checkbox" hidden id="osInfo" class="userInfo">
 			<div>
 				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="document.getElementById('wasistneu_wrapper').scrollIntoView()">Was ist neu?</label><br />
 				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
 				<b>Autor:</b> <?php html_echo($author); ?><br />
+				<?php if ( $contact != '' ) { 
+					$_contactbefore = ''; $_contactafter = '';
+					if ( preg_match('/[a-zA-Z0-9\.-_].*\@[a-zA-Z0-9\.-_].*/',$contact) ) {
+						$_contactbefore = '<a href="mailto:'.$contact.'">'; $_contactafter = '</a>';
+					}
+				?>
+				<b>Kontakt:</b> <?php echo($_contactbefore); html_echo($contact); echo($_contactafter); ?><br />
+				<?php } ?>
 				<b>Lizenz:</b> <?php html_echo($license); ?><br />
 			</div>
 		</div>
@@ -333,11 +367,18 @@ $conn->close(); //2021-07-15
 		<?php 
 			unset($value);
 			if ( isset($_config['_openids']) )
-			{
-				foreach ( $_config['_openids'] as $value ) { 
+			{ ?>
+				alreadyopen = [];
+		<?php	foreach ( $_config['_openids'] as $value ) { 
 					if ( isset($value) ) {
+						foreach( $value as $tablekey => $number ) {
+							$value[$tablekey] = _cleanup($number);
+						}
 					?>
-					callJSFunction('<?php echo(json_encode($value)); ?>',openIds);
+//					if ( ! alreadyopen.includes('<?php echo(json_encode($value)); ?>') ) {
+						callJSFunction('<?php echo(json_encode($value)); ?>',openIds);
+//						alreadyopen.push('<?php echo(json_encode($value)); ?>');
+//					}
 				<?php } 
 				}
 			}  ?>

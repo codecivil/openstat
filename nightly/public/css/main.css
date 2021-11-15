@@ -9,7 +9,8 @@ label[for^="stat"]:hover { cursor: pointer; }
 label[for^="config"]:hover { cursor: pointer; }
 label.not:hover { cursor: pointer; }
 label.shownot:hover { cursor: pointer; }
-label.show:hover { cursor: pointer; }
+label.show:hover,label.openentry:hover { cursor: pointer; }
+label.openentry:hover b { text-decoration: underline; }
 div[id^="showHistory"]:hover { cursor: pointer; }
 
 /*label[class^="submit"]:active { cursor: wait; }
@@ -56,7 +57,7 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #logo img { height: 2.5rem; padding: 0.5rem; }
 #statusbar select { color: var(--color-statusbar); background: var(--background-statusbar); border: 0; padding: 0.5rem }
 #statusbar div { float: left; padding: 0.5rem; }
-#statusbar #usermenu div { margin: 0.2rem; border: 1px var(--color-statusbar) solid; border-radius: 5px; height: 1.5rem; line-height: 1.5rem; }
+#statusbar #usermenu div { margin: 0.2rem; border: 1px var(--color-statusbar) solid; border-radius: 5px; height: 1.5rem; line-height: 1.5rem; height: auto; }
 #statusbar #usermenu div > div { margin: 0rem; padding: 0 0.5rem 0 0.5rem; border: 0; }
 #statusbar #colorsForm { padding: 0; margin: 0; }
 #statusbar #colorsForm select { padding: 0; margin: 0; }
@@ -67,11 +68,12 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #user { border: 1px var(--color-statusbar) solid; border-radius: 5px; }
 #statusbar #info { overflow: hidden; }
 #statusbar #info.changed { box-shadow: 0.1rem 0.1rem 0.1rem var(--background-tables),-0.1rem 0.1rem 0.1rem var(--background-tables),0.1rem -0.1rem 0.1rem var(--background-tables),-0.1rem -0.1rem 0.1rem var(--background-tables); }
-#statusbar #info.changed::after { content: 'NEU'; font-size: 0.7rem; position: relative; top: -0.1rem; color: var(--background-tables); text-shadow: 0.1rem 0.1rem var(--color-statusbar); }
+#statusbar #info.changed::after { content: 'NEU'; position: relative; top: -0.1rem; color: var(--background-tables); text-shadow: 0.1rem 0.1rem var(--color-statusbar); }
 #statusbar label:hover { cursor: pointer; }
-#statusbar #opszInfo + div { display: none; font-size: 0.7rem; overflow-y: scroll; scrollbar-width: none; }
-#statusbar #opszInfo:checked + div { display: block; }
+#statusbar .userInfo + div { display: none; overflow-y: scroll; scrollbar-width: none; float: right; }
+#statusbar .userInfo:checked + div { display: block; }
 #statusbar #loggedin input { border: none; background: transparent; font-weight: bold; color: var(--color-statusbar); }
+#statusbar ul { list-style-type: none; margin: 0; padding: 0; }
 
 div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #444; overflow: hidden; }
 #wasistneu ~ div { display: none; padding: 0.5rem; }

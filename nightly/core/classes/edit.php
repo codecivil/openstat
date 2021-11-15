@@ -149,13 +149,28 @@ class OpenStatEdit {
 					}
 				}
 				break;
+			case 'CALENDAR':
+				unset($_stmt_array); 
+				$options = array(array("id_os_calendars" => "_NULL_","calendarreadable" => "*kein Kalender"));
+				$_stmt_array['stmt'] = 'SELECT id_os_calendars,allowed_roles,allowed_users,calendarreadable FROM `view__os_calendars__'.$_SESSION['os_role'].'`';
+				$preliminary_options = execute_stmt($_stmt_array,$this->connection,true)['result'];
+				foreach ( $preliminary_options as $option ) {
+					//deal with empty result fields
+					if ( ! isset($option['allowed_users']) OR ! json_decode($option['allowed_users']) ) { $option['allowed_users'] = '[]'; }
+					if ( ! isset($option['allowed_roles']) OR ! json_decode($option['allowed_roles']) ) { $option['allowed_roles'] = '[]'; }
+					//
+					if ( in_array($_SESSION['os_user'],json_decode($option['allowed_users'],true)) OR in_array($_SESSION['os_role'],json_decode($option['allowed_roles'],true)) OR in_array($_SESSION['os_parent'],json_decode($option['allowed_roles'],true)) ) {
+						$options[] = $option;
+					}
+				}
+				break;
 			default:
 				unset($_stmt_array); 
 				$_stmt_array['stmt'] = 'SELECT `'.$this->key.'` FROM `view__' . $this->table . '__' . $_SESSION['os_role'].'`';
 				$options = execute_stmt($_stmt_array,$this->connection)['result'][$this->key];
 				break;
 		}
-		if ( is_array($options) AND sizeof($options) > 0 ) {
+		if ( is_array($options) AND sizeof($options) > 0 AND ! is_array($options[0]) ) {
 			$options = array_unique($options);
 			asort($options);
 		}
@@ -263,6 +278,7 @@ class OpenStatEdit {
 				$options = $options_array['options'];
 				$conditions = $options_array['conditions'];
 				$dependencies = $options_array['dependencies'];
+				if ( ! is_array($dependencies) ) { $dependencies = array(); }
 				//look if component is a depends_on_key and designate component of dependent field
 				$_onchange = array();
 				foreach ( $dependencies as $dependency ) {
@@ -270,8 +286,8 @@ class OpenStatEdit {
 //						$_depindex = array_search($dependency['singlereferencetag'],explode(' + ',$dependency['fullreferencetag']));
 						$_depindices = array_keys(explode(' + ',$dependency['fullreferencetag']),$dependency['singlereferencetag']);
 						foreach ( $_depindices as $_depindex ) {
-							$_onchange[] = "db_".$this->key;
-							$_onchange[] = "db_".$this->key.'['.$_depindex.']';
+							$_onchange[] = "db_".$dependency['keymachine'];
+							$_onchange[] = "db_".$dependency['keymachine'].'['.$_depindex.']';
 						}
 					}
 				}
@@ -549,6 +565,20 @@ class OpenStatEdit {
 						<input <?php echo($_disabled.' '.$_onchange_text); ?> type="email" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>"  value="<?php echo($default); ?>">
 						<div class="clear"></div>
 						<?php break;
+					case 'CALENDAR':
+						?>
+						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
+						<select <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox calendar db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value); _setIdCal(this); <?php echo($_onchange_function); ?>">
+							<?php foreach ( $options as $option ) { 
+								$value = $option['id_os_calendars'];
+								$_sel = '';
+								if ( _cleanup($default) == _cleanup($value) ) { $_sel = 'selected'; };
+								?>				
+								<option value="<?php echo($value); ?>" <?php echo($_sel); ?> ><?php echo($option['calendarreadable']); ?></option>
+							<?php } ?>
+						</select>
+						<div class="clear"></div>
+						<?php break;
 					case 'FILES':
 						//work in progress; does not work
 						$default_array = json_decode($default,true);
@@ -812,6 +842,7 @@ class OpenStatEdit {
 					 * DECIMAL
 					 * TABLE (json array  of "table":"keynames" as referencetag) entry has an own table with given subset of "child_"keynames identified with keynames of "table", set up as FOREIGN KEY
 					*/
+					case 'CALENDAR':
 					case 'SECRET':
 					case 'NONE': break;
 					case 'TEXT':
@@ -1098,7 +1129,7 @@ class OpenStatEdit {
 	protected function _input_escape(string $inputstring) { return $inputstring; } //do later
 
 	//special functions for compound structures
-	protected function _len(array $checked) {
+	protected function _len(array $checked,int $indexedit=0) {
 		$_checked_length = 1;
 		if ( isset($checked[6001][0]) ) {
 			$_checked_length = sizeof($checked[6001+$indexedit]);

@@ -1,3 +1,14 @@
+#v1.6.0
+======
+
+* Es gibt nun einen Passwortsafe. Zusätzliche Berechtigungen daraus werden in der Statuszeile mit Klick auf das Ausweissymbol angezeigt.
+* Die Kalenderanbindung ist korrigiert und fertig gestellt worden.
+* Das neue Datenmodell für Kalender erlaubt die Zuordnung eines Eintrags zu einem Kalender per Tabellenfeld. Typischerweise würde man ein solches Kalenderfeld in
+  eine Termintabelle einfügen.
+* Der Infobutton in der Statuszeile zeigt nun alles übersichtlicher und hat nun ein Feld für Kontaktinformationen, die vom Anbieter überschrieben werden können.
+* Zuordnungen in Einträgen können durch Anklicken geöffnet werden.
+* openStatAdmin: neue Funktionen zur Verwaltung des Passwortsafes.
+
 #v1.5.23
 ======
 20.10.2021

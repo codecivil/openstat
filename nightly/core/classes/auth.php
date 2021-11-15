@@ -70,8 +70,9 @@ class OpenStatAuth {
 			$_SESSION['os_rolename'] = $_rolename;
 			$_SESSION['os_parent'] = $_parentid;
 			$_SESSION['os_parentname'] = $_parentname;
+			$_SESSION['os_secret'] = array();
 			unset($_stmt_array); $_stmt_array = array();
-			$_stmt_array['stmt'] = "SELECT password,salt,nonce FROM os_passwords WHERE userid = ?"; 
+			$_stmt_array['stmt'] = "SELECT password,salt,nonce,secretname FROM os_passwords WHERE userid = ?"; 
 			$_stmt_array['str_types'] = "i";
 			$_stmt_array['arr_values'] = array();
 			$_stmt_array['arr_values'][] = $_result_user['id'];
@@ -81,13 +82,56 @@ class OpenStatAuth {
 			if ( $_result AND $_result->num_rows > 0 ) {
 				while ($row=$_result->fetch_assoc()) {
 					foreach ($row as $key=>$value) {
-						$_result_user[$key] = sodium_hex2bin($value);
+						if ( $key != 'secretname' ) {
+							$_result_user[$key] = sodium_hex2bin($value);
+						} else {
+							$_result_user[$key] = $value;
+						}
 					}
-					$_SESSION['os_dbpwd'] = sodium_crypto_secretbox_open($_result_user['password'],$_result_user['nonce'],$this->gen_key($_result_user['salt'])['key']);
+					//this is if the secret is encrypted with user password (not implemented)
+					if ( $_result_user['secretname'] != '' AND $_result_user['secretname'] != 'NULL' ) {
+						$_SESSION['os_secret'][$_result_user['secretname']] = sodium_crypto_secretbox_open($_result_user['password'],$_result_user['nonce'],$this->gen_key($_result_user['salt'],$this->passwd)['key']);
+					//
+					} else {
+						$_SESSION['os_dbpwd'] = sodium_crypto_secretbox_open($_result_user['password'],$_result_user['nonce'],$this->gen_key($_result_user['salt'],$this->passwd)['key']);
+					}
 				}
-				if (! isset($_SESSION['os_dbpwd']) ) { $_return['error'] = "Benutzer oder Passwort ist falsch."; }; //this is not correct; test for NULL?
+				if (! isset($_SESSION['os_dbpwd']) OR ! $_SESSION['os_dbpwd'] ) { $_return['error'] = "Benutzer oder Passwort ist falsch."; }; //test for false!
 			}
 			
+			if ( isset($_SESSION['os_dbpwd']) AND ! $_SESSION['os_dbpwd'] == false ) {
+				unset($_stmt_array); $_stmt_array = array(); unset($_result_array); unset($_result);
+				$_stmt_array['stmt'] = "SELECT password,salt,nonce,secretname,secretreadable,secretcomment,allowed_roles,allowed_users FROM os_secrets LEFT JOIN ( os_roles LEFT JOIN ( os_users LEFT JOIN os_passwords ON ( os_users.id = userid ) ) ON ( os_roles.id = roleid AND rolename = username) ) ON ( secretmachine = secretname ) WHERE roleid = ? AND secretname IS NOT NULL"; 
+				$_stmt_array['str_types'] = "i";
+				$_stmt_array['arr_values'] = array();
+				$_stmt_array['arr_values'][] = $_SESSION['os_role'];
+				$_result_array = _execute_stmt($_stmt_array,$this->connection); $_result=$_result_array['result'];
+				unset($_result_user);
+				$_result_user = array();
+				if ( $_result AND $_result->num_rows > 0 ) {
+					while ($row=$_result->fetch_assoc()) {
+						foreach ($row as $key=>$value) {
+							if ( in_array($key,array('password','salt','nonce')) ) {
+								$_result_user[$key] = sodium_hex2bin($value);
+							} else {
+								$_result_user[$key] = $value;
+							}
+						}
+						//this is if the secret is encrypted with db role password (implemented)
+						//test if user is authorized
+						if ( in_array($_SESSION['os_user'],json_decode($_result_user['allowed_users'],true)) OR in_array($_SESSION['os_role'],json_decode($_result_user['allowed_roles'],true)) OR in_array($_SESSION['os_parentrole'],json_decode($_result_user['allowed_roles'],true)) ) {
+							if ( ! isset($_SESSION['os_secret'][$_result_user['secretname']]) OR ! $_SESSION['os_secret'][$_result_user['secretname']] ) {
+								$_SESSION['os_secret'][$_result_user['secretname']] = array();
+								$_SESSION['os_secret'][$_result_user['secretname']]['name'] = $_result_user['secretreadable'];								
+								$_SESSION['os_secret'][$_result_user['secretname']]['comment'] = $_result_user['secretcomment'];								
+								$_SESSION['os_secret'][$_result_user['secretname']]['secret'] = sodium_crypto_secretbox_open($_result_user['password'],$_result_user['nonce'],$this->gen_key($_result_user['salt'],$_SESSION['os_dbpwd'])['key']);
+								if ( $_SESSION['os_secret'][$_result_user['secretname']] == false ) { unset($_SESSION['os_secret'][$_result_user['secretname']]); }
+							}
+						}
+						//
+					}
+				}
+			}
 		} else {
 			$_return['error'] = "Benutzer oder Passwort ist falsch."; 
 		}
@@ -113,11 +157,11 @@ class OpenStatAuth {
 			return sodium_crypto_pwhash_str($this->passwd,SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE);
 	}
 
-	public function gen_key($salt) {
+	public function gen_key($salt,$_passwd) {
 			if (! isset($salt) ) { $salt=random_bytes(SODIUM_CRYPTO_PWHASH_SALTBYTES); }
 //			$iterations=1024000+random_int(0,512000);
 //			return array( "key" => hash_pbkdf2("sha256sum", $this->passwd, $salt, $iterations), "salt" => $salt, "iterations" => $iterations );
-			return array( "key" => sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$this->passwd,$salt,SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE), "salt" => $salt);
+			return array( "key" => sodium_crypto_pwhash(SODIUM_CRYPTO_SECRETBOX_KEYBYTES,$_passwd,$salt,SODIUM_CRYPTO_PWHASH_OPSLIMIT_INTERACTIVE,SODIUM_CRYPTO_PWHASH_MEMLIMIT_INTERACTIVE), "salt" => $salt);
 	}
 
 	

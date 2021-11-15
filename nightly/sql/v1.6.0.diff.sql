@@ -1,4 +1,3 @@
--- ALTER TABLE os_tables ADD COLUMN IF NOT EXISTS parentmachine VARCHAR(40) DEFAULT NULL;
 -- Add calendar fields JSON
 ALTER TABLE os_tables ADD COLUMN IF NOT EXISTS calendarfields TEXT DEFAULT NULL;
 -- Change icsid from int to 40-char string

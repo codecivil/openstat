@@ -154,6 +154,7 @@ function _oldautoComplete(el,suggest_array,suggest_conditions) {
 	}
 }
 
+//to be continued: how to deal with conditionless CALENDARS (like EXTENSIBLE LISTS, but with restrictibility!)
 function updateSelection(el) {
 	var id = el.id;
 	var option = el.getElementsByTagName('option');
@@ -264,7 +265,12 @@ function updateSelectionOfClasses(el) {
 		_classes.forEach(function(_class) {
 			_classMembers = document.getElementsByClassName(_class);
 			for ( let member of _classMembers ) {
+				//update the selection
 				updateSelection(member);
+				//fire the change event (which otherwise would not fire)
+				ev = document.createEvent('Event');
+				ev.initEvent('change', true, false);
+				member.dispatchEvent(ev);
 			}
 		});
 	}
@@ -302,6 +308,13 @@ function _setValue(el,_value,_position) {
 	} else {
 		setTimeout(function(){callPHPFunction(_form,'newEntry','_popup_','details new');},500);
 	}
+}
+
+//problem here: the inputid classes covers only already existent attributions, so we have to create the input field if not existent...
+function _setIdCal(el) {
+	let form = el.closest('form');
+	if ( ! form.querySelector('.inputid[name="id_os_calendars"]') ) { return; }
+	form.querySelector('.inputid[name="id_os_calendars"]').value = el.value;
 }
 
 function newEntryFromEntry(el,tableto) {
@@ -528,6 +541,9 @@ function _toggleStat(property) {
 
 
 function editEntries(form,tablename) {
+	//also use it outside the result set then w/o mass editing)
+	if ( ! form.closest('tr') ) { callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(form,'',''); return false; }); return false; }
+	//
 	thecheckbox = form.closest('tr').querySelector('td').getElementsByTagName('input')[0];
 	if ( thecheckbox.checked ) {
 		document.getElementById('editTableName').value = tablename;
@@ -541,10 +557,18 @@ function editEntries(form,tablename) {
 // callback function for getDetails
 function updateSelectionsOfThis(form,arg,responsetext) {
 	// identify new entry window by reload div
+	if ( ! responsetext ) { return false; }
 	_reloadid = responsetext.match(/form=\"(reload[^\"]*)\"/)[1];
 	// updateSelections in the parent edit_wrapper
 	el = document.getElementById(_reloadid).closest('.section');
 	updateSelectionOfClasses(el);
+	//show/hide calendar fields
+	if ( ! el.querySelector('.inputid[name="id_os_calendars"]') ) {
+		el.querySelectorAll('.calendar').forEach(function(calendar){
+			let edit_wrapper = calendar.closest('.edit_wrapper');
+			edit_wrapper.remove();
+		});
+	}
 }
 
 function _scrapeStat(chosencolumn) {
