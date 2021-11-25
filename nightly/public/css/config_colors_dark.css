@@ -27,5 +27,10 @@ body {
 	--color-unique: #3e883e;	
 	--color-fontsize-selector: #c4c4c4;
 	--color-sidebar-inactive: #808080;
-	--color-sidebar-changed: #3e883e;	
+	--color-sidebar-changed: #3e883e;
+	--background-slider: var(--color-statusbar);
+	--background-slider-checked: var(--background-goodmessage);
+	--button-slider: var(--color-statusbar);
+	--background-helpmode: var(--background-important);
+	--color-helpmode: var(--color-hits);
 }

@@ -138,13 +138,18 @@ $conn->close(); //2021-07-15
 <body>
 <div hidden id="generator"></div>
 <div id="veil"></div>
+<!-- HelpMode Button must be topmost in content! -->
+<input form="helpModeForm" name="helpmode" value="off" hidden>
+<?php $_helpmode = ''; if ( isset($_config['helpmode']) AND $_config['helpmode'] == "on" ) { $_helpmode = "checked";} ?>
+<input form="helpModeForm" type="checkbox" <?php echo($_helpmode); ?> hidden id="helpModeBtn" name="helpmode" class="helpMode" value="on" onchange="callFunction(document.getElementById('helpModeForm'),'changeConfig').then(()=>{ return false; });" >
+<!-- End HelpModeHack -->
 <div id="statusbar">
 	<div id="logo">
 		<img id="customer_logo" src='/img/logo.png' />
 	</div>
 	<div id="usermenu">
 		<div id="user">
-			<div id="lock" title="Sperren">
+			<div id="lock" data-title="Bildschirm sperren">
 				<form method="post" id="lockForm" onsubmit="callFunction(this,'lock','veil',false,'veiled').then(()=>{ return false; }); return false;">
 					<input type="submit" name="submit" value="lock" id="lockBtn" hidden />
 					<label for="lockBtn"> 
@@ -152,7 +157,7 @@ $conn->close(); //2021-07-15
 					</label>
 				</form>
 			</div>
-			<div id="logout" title="Abmelden">
+			<div id="logout" data-title="Abmelden">
 				<form method="post" id="logoutForm">
 					<input type="submit" name="submit" value="logout" id="logoutBtn" hidden />
 					<label for="logoutBtn"> 
@@ -161,8 +166,8 @@ $conn->close(); //2021-07-15
 				</form>
 			</div>
 			<div id="loggedin">
-				<form method="POST" id="usernameForm" onsubmit="callFunction(this,'changeUserName','',false,'','changeUserName','').then(()=>{ return false; }); return false;" class="inline">
-					<input id="userName" name="userName" type="text" value="<?php echo($_SESSION['os_username']); ?>" title="Benutzernamen ändern">
+				<form  data-title="Klicken, um Benutzernamen zu ändern" method="POST" id="usernameForm" onsubmit="callFunction(this,'changeUserName','',false,'','changeUserName','').then(()=>{ return false; }); return false;" class="inline">
+					<input id="userName" name="userName" type="text" value="<?php echo($_SESSION['os_username']); ?>">
 				</form>
 				als <b><?php
 				if ( $_SESSION['os_parent'] > 0 ) {
@@ -172,7 +177,7 @@ $conn->close(); //2021-07-15
 				} ?>
 				</b>
 			</div>
-			<div id="changePassword" title="Passwort ändern (mit automatischer Abmeldung!)">
+			<div id="changePassword" data-title="Passwort ändern (mit automatischer Abmeldung!)">
 				<form method="post" id="changePasswordForm">
 					<input type="submit" name="submit" value="changePassword" id="changePwdBtn" hidden /> 
 					<label for="changePwdBtn" class="submit">
@@ -182,7 +187,7 @@ $conn->close(); //2021-07-15
 			</div>
 		</div>
 		<?php if ( sizeof($_SESSION['os_secret']) > 0 ) { ?> 
-			<div id="authorizations" title="Zusätzliche Berechtigungen">
+			<div id="authorizations" data-title="Zusätzliche Berechtigungen">
 				<form id="authInfoForm"></form>
 				<label for="authInfo"><i class="fas fa-id-badge"></i></label>
 				<input form="authInfoForm" type="checkbox" hidden id="authInfo" class="userInfo">
@@ -190,15 +195,15 @@ $conn->close(); //2021-07-15
 					<ul>
 					<?php
 						foreach ( $_SESSION['os_secret'] as $_secret ) {
-							echo('<li title="'.$_secret['comment'].'">'.$_secret['name'].'</li>');
+							echo('<li data-title="'.$_secret['comment'].'">'.$_secret['name'].'</li>');
 						}
 					?>
 					</ul>
 				</div>
 			</div>
 		<?php } ?>
-		<div id="fontsize">
-			<form method="post" id="fontsizeForm" onchange="callFunction(this,'changeConfig','',false,'','restrictResultWidth'); reloadCSS();">
+		<div id="fontsize" data-title="Schriftgröße wählen">
+			<form method="post" id="fontsizeForm" onchange="callFunction(this,'changeConfig','',false,'','restrictResultWidth').then(()=>{ reloadCSS(); });">
 				<input type="radio" name="_fontSize" value="10" id="fs10" hidden <?php if ( $_config['_fontSize'] == "10") { ?>checked<?php }?> >
 				<label for="fs10"><i class="fas fa-font" style="font-size: 0.8rem;"></i></label>
 				<input type="radio" name="_fontSize" value="12" id="fs12" hidden <?php if ( $_config['_fontSize'] == "12") { ?>checked<?php }?> >
@@ -211,8 +216,8 @@ $conn->close(); //2021-07-15
 				<label for="fs18"><i class="fas fa-font" style="font-size: 1.2rem;"></i></label>
 			</form>
 		</div>
-		<div id="colors">
-			<form method="post" id="colorsForm" onchange="callFunction(this,'changeConfig'); reloadCSS();">
+		<div id="colors" data-title="Farbschema wählen">
+			<form method="post" id="colorsForm" onchange="callFunction(this,'changeConfig').then(()=>{ reloadCSS(); }); ">
 				<legend><i class="fas fa-palette"></i></legend>
 				<select id="colorsSelect" name="_colors">
 					<?php
@@ -227,9 +232,9 @@ $conn->close(); //2021-07-15
 				</select>
 			</form>
 		</div>
-		<div id="info" class="<?php echo($whatsnewclass); ?>" title="Informationen zur Software">
+		<div id="info" class="<?php echo($whatsnewclass); ?>">
 			<form id="osInfoForm"></form>
-			<label for="osInfo">&nbsp;<i class="fas fa-info-circle"></i>&nbsp;</label>
+			<label for="osInfo">&nbsp;<i class="fas fa-info-circle" data-title="Informationen zur Software"></i>&nbsp;</label>
 			<input form="osInfoForm" type="checkbox" hidden id="osInfo" class="userInfo">
 			<div>
 				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="document.getElementById('wasistneu_wrapper').scrollIntoView()">Was ist neu?</label><br />
@@ -245,6 +250,56 @@ $conn->close(); //2021-07-15
 				<?php } ?>
 				<b>Lizenz:</b> <?php html_echo($license); ?><br />
 			</div>
+		</div>
+		<div id="helpmode" data-title="Nun erscheinen Hilfetexte">
+			<form method="post" id="helpModeForm"></form>
+			<label for="helpModeBtn" class="unlimitedWith">
+				&nbsp;
+				<i class="fas fa-question-circle"></i>
+				<svg
+				   xmlns="http://www.w3.org/2000/svg"
+				   class="slider"
+				   viewBox="0 0 129.5 69.779755"
+				   version="1.1"
+				  <metadata
+					 id="metadata822">
+					<rdf:RDF>
+					  <cc:Work
+						 rdf:about="">
+						<dc:format>image/svg+xml</dc:format>
+						<dc:type
+						   rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+						<dc:title></dc:title>
+					  </cc:Work>
+					</rdf:RDF>
+				  </metadata>
+				  <defs
+					 id="defs2" />
+				  <g
+					 inkscape:label="Ebene 1"
+					 inkscape:groupmode="layer"
+					 id="layer1"
+					 transform="translate(-47.130955,-87.863091)">
+					<rect
+					   style="opacity:0.5;vector-effect:none;fill-opacity:0.5;stroke-width:2.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+					   class="sliderframe"
+					   width="127"
+					   height="67.279755"
+					   x="48.380955"
+					   y="89.113091"
+					   ry="33.639877" />
+					<ellipse
+					   style="opacity:1;vector-effect:none;fill-opacity:1;stroke:none;stroke-width:0.03527778;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+					   class="sliderbutton"
+					   cy="122.95308"
+					   rx="31.75"
+					   ry="28.726189"
+					/>
+				  </g>
+				</svg>
+			</label>
+			<div>
+			</div>	
 		</div>
 	</div> 
 </div>
@@ -262,9 +317,9 @@ $conn->close(); //2021-07-15
 	</form>
 </div>
 <div id="wrapper">
-		<div id="showHistory" title="Chronik">
+		<div id="showHistory" data-title="Chronik">
 		<div class="inline"><i class="fas fa-history"></i></div>
-		<div id="showHistoryBack" class="inline disabled" hidden onclick="restoreHistory(-1);" title="zurück"><i class="fas fa-chevron-left"></i></div>				
+		<div id="showHistoryBack" class="inline disabled" hidden onclick="restoreHistory(-1);" data-title="zurück"><i class="fas fa-chevron-left"></i></div>				
 		<div id="showHistory11" class="hidden" hidden onclick="restoreHistory(11);">&bull;</div>	
 		<div id="showHistory10" class="hidden" hidden onclick="restoreHistory(10);">&bull;</div>	
 		<div id="showHistory9" class="hidden" hidden onclick="restoreHistory(9);">&bull;</div>	
@@ -276,17 +331,17 @@ $conn->close(); //2021-07-15
 		<div id="showHistory3" class="hidden" hidden onclick="restoreHistory(3);">&bull;</div>	
 		<div id="showHistory2" class="hidden" hidden onclick="restoreHistory(2);">&bull;</div>	
 		<div id="showHistory1" class="hidden" hidden onclick="restoreHistory(1);">&bull;</div>	
-		<div id="showHistoryForward" class="inline disabled" hidden onclick="restoreHistory(0);" title="vor"><i class="fas fa-chevron-right"></i></div>				
+		<div id="showHistoryForward" class="inline disabled" hidden onclick="restoreHistory(0);" data-title="vor"><i class="fas fa-chevron-right"></i></div>				
 		</div>
 <div id="sidebar">
 	<div id="config" class="section">
 		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });" >
 		<?php //save button and load input like in openStat.plan explained ?>
-			<label for="config_save" class="disabled" title="Konfiguration speichern"><i class="fas fa-save"></i></label>
+			<label for="config_save" class="disabled" data-title="Konfiguration speichern"><i class="fas fa-save"></i></label>
 			<input hidden type="submit" id="config_save">
-			<label for="config_load" title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
+			<label for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
 			<input hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
-			<label for="config_remove" title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
+			<label for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
 			<input hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
 			<div class="unite">
 				<label for="db__config__list"></label>
@@ -295,7 +350,7 @@ $conn->close(); //2021-07-15
 					<option value="none"></option>
 				</select>
 				<label class="toggler" for="minus_config">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
-				<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+				<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 			</div>
 			<div class="clear"></div>
 		</form>
@@ -367,19 +422,21 @@ $conn->close(); //2021-07-15
 		<?php 
 			unset($value);
 			if ( isset($_config['_openids']) )
-			{ ?>
-				alreadyopen = [];
+			{
+				$alreadyopen = array();
+		?>
 		<?php	foreach ( $_config['_openids'] as $value ) { 
 					if ( isset($value) ) {
 						foreach( $value as $tablekey => $number ) {
 							$value[$tablekey] = _cleanup($number);
 						}
-					?>
-//					if ( ! alreadyopen.includes('<?php echo(json_encode($value)); ?>') ) {
-						callJSFunction('<?php echo(json_encode($value)); ?>',openIds);
-//						alreadyopen.push('<?php echo(json_encode($value)); ?>');
-//					}
-				<?php } 
+						if ( ! in_array(json_encode($value),$alreadyopen) ) {
+							?>
+							callJSFunction('<?php echo(json_encode($value)); ?>',openIds);
+						<?php
+							array_push($alreadyopen,json_encode($value));
+						} 
+					}
 				}
 			}  ?>
 		})

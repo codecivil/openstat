@@ -424,7 +424,7 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 	unset($table);
 	unset($oldvalue);
 	$oldvalue = array();
-	$table_results = "<form id=\"formMassEdit\" method=\"POST\" class=\"noreset\"></form>";
+	$table_results = "<form id=\"formMassEdit\" method=\"POST\" class=\"noreset function\"></form>";
 	$table_results .= "<table id=\"db_results\">";
 	$rcount = 0;
 	if ( $result->num_rows > 0 ) {
@@ -463,7 +463,7 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 							$keyreadable = explode(': ',execute_stmt($_stmt_array,$conn)['result']['keyreadable'][0])[0];
 						}
 						if ( in_array($tablekey,$HIDDEN) ) { $_hidden = 'hidecolumn'; } else { $_hidden = ''; }
-						$table_results .= "<th class=\"disabled\" title=\"".$keyreadable."\" onclick=\"_toggleColumn(this,'". $tablekey ."');\"><i class=\"fas fa-angle-down\"></i></th><th class=\"tableheader " . $tablekey . " " . $_hidden . "\" onclick=\"_toggleColumn(this,'". $tablekey ."');\">" . $keyreadable . "</th>";
+						$table_results .= "<th class=\"disabled\" data-title=\"".$keyreadable."\" onclick=\"_toggleColumn(this,'". $tablekey ."');\"><i class=\"fas fa-angle-down\"></i></th><th class=\"tableheader " . $tablekey . " " . $_hidden . "\" onclick=\"_toggleColumn(this,'". $tablekey ."');\">" . $keyreadable . "</th>";
 					}
 					$table_results .= "</tr><tr>";
 				}
@@ -496,7 +496,7 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 				foreach ( $TABLES as $table ) 
 				{
 					if ( isset($row[$table.'__'.'id_'.$table]) ) {
-						$table_results .= "<td title=\"ID: ".$row[$table.'__'.'id_'.$table]."\" id=\"detailsTd_". $table . $row[$table.'__'.'id_'.$table] . "\" draggable=\"true\" ondragover=\"allowDrop(event)\" ondrop=\"dropOnDetails(event,this)\" ondragstart=\"dragOnDetails(event)\" ondragenter=\"dragenter(event)\" ondragleave=\"dragleave(event)\" ondragend=\"dragend(event)\"><form method=\"post\" id=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\" class=\"inline\" action=\"\" onsubmit=\"editEntries(this,'".$table."'); return false\"><input hidden form=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\"type=\"text\" value=\"". $row[$table.'__'.'id_'.$table] . "\" name=\"id_".$table."\" /><input form=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\" id=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\" type=\"submit\" hidden /></form>";
+						$table_results .= "<td data-title=\"ID: ".$row[$table.'__'.'id_'.$table]."\" id=\"detailsTd_". $table . $row[$table.'__'.'id_'.$table] . "\" draggable=\"true\" ondragover=\"allowDrop(event)\" ondrop=\"dropOnDetails(event,this)\" ondragstart=\"dragOnDetails(event)\" ondragenter=\"dragenter(event)\" ondragleave=\"dragleave(event)\" ondragend=\"dragend(event)\"><form method=\"post\" id=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\" class=\"inline\" action=\"\" onsubmit=\"editEntries(this,'".$table."'); return false\"><input hidden form=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\"type=\"text\" value=\"". $row[$table.'__'.'id_'.$table] . "\" name=\"id_".$table."\" /><input form=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\" id=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\" type=\"submit\" hidden /></form>";
 						if ( isset($oldvalue[$table]) AND $row[$table.'__'.'id_'.$table] == $oldvalue[$table] ) {
 							$table_results .= "<label for=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\"><i class=\"disabled fas fa-".$ICON[$table]."\"></i></label></td>";
 						} else {
@@ -1528,13 +1528,13 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			<label 
 				for="config_save" 
 				class="<?php echo($config_save_class); ?>" 
-				title="Konfiguration speichern"
+				data-title="Konfiguration speichern"
 				<?php if ( $config_save_class == "disabled" ) { ?>onclick="return false;"<?php } ?>
 			><i class="fas fa-save"></i></label>
 			<input hidden type="submit" id="config_save">
-			<label class="load <?php echo($config_save_class); ?>" for="config_load" title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
+			<label class="load <?php echo($config_save_class); ?>" for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
 			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ return result; });">
-			<label class="<?php echo($config_remove_class); ?> " for="config_remove" title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
+			<label class="<?php echo($config_remove_class); ?> " for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
 			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;">
 			<div class="unite">
 				<label for="db__config__list"></label>
@@ -1550,7 +1550,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					<?php } ?>
 				</select>
 				<label class="toggler" for="minus_config">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
-				<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+				<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 			</div>
 			<div class="clear"></div>
 		</form>
@@ -1559,7 +1559,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<?php updateTime(); includeFunctions('TABLES',$conn); ?>
 		<label for="notoggleTables"><h1 class="center"><i class="fas fa-table"></i></h1></label>
 		<input type="checkbox" hidden id="notoggleTables" class="notoggle">
-		<form id="formChooseTables" class="noform" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ return false; });return false;" >
+		<form id="formChooseTables" class="noform function" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ return false; });return false;" >
 			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
 			<?php
 				unset($_stmt_array); $_stmt_array = array();
@@ -1678,7 +1678,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			</form>
 		</div>
 		<hr>
-		<form id="formFilters" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); return false; }); return false; ">
+		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); return false; }); return false; ">
 			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>
@@ -2152,7 +2152,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 	$stat_results = generateStatTable($_main_stmt_array,$conn);
 	?>
 	<?php updateTime(); includeFunctions('RESULTS',$conn); ?>
-	<form class="hidden"></form>
+	<form class="hidden function"></form>
 	<div id="filter_wrapper">
 		<h2>Filter</h2>
 		<?php echo($filters); ?>
@@ -2303,10 +2303,10 @@ function getDetails($PARAMETER,$conn)
 			?>
 			<div class="db_headline_wrapper">
 				<div class="right" onclick="_close(this);"><i class="fas fa-times-circle"></i></div>
-				<form method="post" id="reload<?php echo($rnd); ?>" class="left" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','_close',true).then(()=>{ return false; }); return false;">
+				<form method="post" id="reload<?php echo($rnd); ?>" class="left function" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','_close',true).then(()=>{ return false; }); return false;">
 					<input hidden form="reload<?php echo($rnd); ?>" type="text" value="<?php html_echo($id[0]); ?>" name="id_<?php html_echo($table); ?>" />
 					<input form="reload<?php echo($rnd); ?>" id="submitReload<?php echo($rnd); ?>" type="submit" hidden />
-					<label class="unlimitedWidth date" title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
+					<label class="unlimitedWidth date" data-title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
 				</form>
 				<?php updateTime(); updateLastEdit($PARAM['changedat']); ?>
 				<h2 class="db_headline clear"><i class="fas fa-<?php html_echo($iconname); ?>"></i> 
@@ -2359,7 +2359,7 @@ function getDetails($PARAMETER,$conn)
 		-->
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table.$id[0]); ?>_sticky" class="action">Aktion</label>
-					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); }; return false; }); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); }; return false; }); return false;" data-title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="" selected>[Bitte erst nach Bearbeitung wählen]</option>
 						<?php if ( isset($PARAM['id_'.$table]) ) { ?>
 							<option value="edit">Eintrag ändern</option>
@@ -2504,7 +2504,8 @@ function includeFunctions(string $scope, mysqli $conn)
 			$_stmt_array['arr_values'][] = $scope;
 			$_result_array = execute_stmt($_stmt_array,$conn,true);
 			//which form is the relevant:
-			if ( $scope == "FILTERS" ) { $index = 1; } else { $index = 0; };
+			//obsolete: they are now the ones with class "function"
+			//if ( $scope == "FILTERS" ) { $index = 1; } else { $index = 0; };
 			// 
 			if ($_result_array['dbMessageGood']) 
 			{ ?>
@@ -2517,8 +2518,8 @@ function includeFunctions(string $scope, mysqli $conn)
 					if ( in_array($_SESSION['os_role'],json_decode($_function['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_function['allowed_roles'])) ) { ?>
 					<li><label 
 						class="unlimitedWidth"
-						onclick="callPHPFunction(this.closest('.functions').parentNode.getElementsByTagName('form')[<?php echo($index); ?>],'<?php echo($_function['functionmachine']); ?>','<?php echo($_function['functiontarget']); ?>','<?php echo($_function['functionclasses']); ?>')"
-						title="<?php echo($_function['functionreadable']); ?>"
+						onclick="callPHPFunction(this.closest('.functions').parentNode.querySelector('form.function'),'<?php echo($_function['functionmachine']); ?>','<?php echo($_function['functiontarget']); ?>','<?php echo($_function['functionclasses']); ?>')"
+						data-title="<?php echo($_function['functionreadable']); ?>"
 						><i class="fas fa-<?php echo($_function['iconname']); ?>"></i></label></li>
 					<?php } 
 				}				
@@ -2532,14 +2533,14 @@ function includeFunctions(string $scope, mysqli $conn)
 function updateTime()
 {
 	?>
-	<div class="time" title="zuletzt geladen"><i class="fas fa-clock"></i> <?php echo(date("H:i:s")); ?></div>
+	<div class="time" data-title="zuletzt geladen"><i class="fas fa-clock"></i> <?php echo(date("H:i:s")); ?></div>
 	<?php
 }
 
 function updateLastEdit(string $datetime)
 {
 	?>
-	<div class="time" title="zuletzt gespeichert"><i class="fas fa-pencil-alt"></i> <?php echo(DateTime::createFromFormat('Y-m-d H:i:s', $datetime)->format('d.m.Y H:i')); ?></div>
+	<div class="time" data-title="zuletzt gespeichert"><i class="fas fa-pencil-alt"></i> <?php echo(DateTime::createFromFormat('Y-m-d H:i:s', $datetime)->format('d.m.Y H:i')); ?></div>
 	<?php
 }
 

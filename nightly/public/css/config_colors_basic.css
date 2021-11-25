@@ -28,4 +28,9 @@ body {
 	--color-fontsize-selector: #ffff00;
 	--color-sidebar-inactive: #808080;
 	--color-sidebar-changed: #0000c0;	
+	--background-slider: var(--color-statusbar);
+	--background-slider-checked: var(--background-goodmessage);
+	--button-slider: var(--color-statusbar);
+	--background-helpmode: var(--background-important);
+	--color-helpmode: var(--color-hits);
 }

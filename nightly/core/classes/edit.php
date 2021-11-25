@@ -260,7 +260,7 @@ class OpenStatEdit {
 			if ( $_result['multiple'] ) {
 			?>
 				<div class="searchfield">
-					<label  <?php echo($_disabled); ?> class="unlimitedWidth right" onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+					<label  <?php echo($_disabled); ?> class="unlimitedWidth right" onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 			<?php
 			}
 			if ( ! $_single AND $_result['edittype'] != 'NONE') {
@@ -438,8 +438,8 @@ class OpenStatEdit {
 							<div class="left">
 								<input <?php echo($_disabled.' '.$_onchange_text); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
 								<div class="suggestions"></div>
-								<label class="toggler" for="minus<?php echo($rnd); ?>">&nbsp;<i class="fas fa-plus"></i></label>
-								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+								<label class="toggler" for="minus<?php echo($rnd); ?>" data-title="Zwischen Auswahl und Eingabe wechseln">&nbsp;<i class="fas fa-plus"></i></label>
+								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 							</div>
 						</div>
 						<div class="clear"></div>
@@ -458,8 +458,8 @@ class OpenStatEdit {
 								<option value="<?php echo($value); ?>" <?php echo($_sel); ?> ><?php echo($value); ?></option>
 							<?php } ?>
 						</select>
-						<label class="toggler" for="minus<?php echo($rnd); ?>">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
-						<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+						<label class="toggler" for="minus<?php echo($rnd); ?>" data-title="Zwischen Auswahl und Eingabe wechseln">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
+						<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 						<div class="clear"></div>
 						<?php break;
 					case 'MULTIPLE EXTENSIBLE LIST':
@@ -468,7 +468,7 @@ class OpenStatEdit {
 						$_hidden = "";
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>_plus" class="onlyone"><?php echo($keyreadable); ?></label>
-						<label id="db_<?php echo($key.$rnd); ?>_plus" onclick="addSearchfield(this,<?php echo($rnd); ?>);" title="Zusätzlicher Eintrag"><i class="fas fa-plus"></i></label>
+						<label id="db_<?php echo($key.$rnd); ?>_plus" onclick="addSearchfield(this,<?php echo($rnd); ?>);" data-title="Zusätzlicher Eintrag"><i class="fas fa-plus"></i></label>
 						<div class="clear"></div>
 						<?php foreach ( $_default_array as $default ) {
 						?>
@@ -487,8 +487,8 @@ class OpenStatEdit {
 										$_hidden = "hidden";
 									?>
 								</select>
-								<label class="toggler" for="minus<?php echo($rnd); ?>">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
-								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+								<label class="toggler" for="minus<?php echo($rnd); ?>" data-title="Zwischen Auswahl und Eingabe wechseln">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
+								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 								<div class="clear"></div>
 							</div>
 						<?php 
@@ -509,8 +509,8 @@ class OpenStatEdit {
 								<option value="<?php echo($value); ?>" <?php echo($_sel); ?> ><?php echo($value); ?></option>
 							<?php } ?>
 						</select>
-						<label class="toggler" for="minus<?php echo($rnd); ?>">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
-						<input <?php echo($_disabled); ?> id="minus<?php echo($rnd); ?>"class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+						<label class="toggler" for="minus<?php echo($rnd); ?>" data-title="Zwischen Auswahl und Eingabe wechseln">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
+						<input <?php echo($_disabled); ?> id="minus<?php echo($rnd); ?>"class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 						<div class="clear"></div>
 						<?php break;
 					case 'DATE':
@@ -592,7 +592,7 @@ class OpenStatEdit {
 							{ ?>
 								<div onclick="document.getElementById('trash').value = '<?php echo($default_array['filepath'][$i]); ?>'; callFunction('_','openFile','_popup_'); document.getElementById('trash').value = '';">
 									<label><?php echo($default['filepath'][$i]); ?>)</label>
-									<label onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+									<label onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 									<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['filedescription'][]" id="db_<?php echo($key.$rnd); ?>_filedescription_<?php echo($i); ?>" type="text" value="<?php echo($default['filedescription'][$i]); ?>" class="db_<?php echo($key); ?>" />
 									<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['filepath'][]" id="db_<?php echo($key.$rnd); ?>_filepath_<?php echo($i); ?>" type="text" value="<?php echo($default['filepath'][$i]); ?>" class="db_<?php echo($key); ?>" />
 								</div>
@@ -631,7 +631,7 @@ class OpenStatEdit {
 											$_files = scandir($fileroot.'/'.$default_array[4002][$i]);
 											?>
 											<label class="unlimitedWidth nofloat hover"><?php echo($default_array[4002][$i]); ?></label>
-											<label class="unlimitedWidth nofloat" onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+											<label class="unlimitedWidth nofloat" onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 											<ul class="hover nostyle">
 											<?php
 											foreach ( $_files as $_file )
@@ -653,7 +653,7 @@ class OpenStatEdit {
 											<?php } else { ?>
 												<label class="unlimitedWidth disabled nofloat hover"><?php echo($default_array[4002][$i]); ?></label>
 											<?php } ?>
-											<label  <?php echo($_disabled); ?> class="unlimitedWidth nofloat" onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+											<label  <?php echo($_disabled); ?> class="unlimitedWidth nofloat" onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 										<?php } ?>
 										</label>
 										<input hidden name="<?php echo($this->table.'__'.$this->key); ?>[4001][]" id="db_<?php echo($key.$rnd); ?>_filedescription_<?php echo($i); ?>" type="text" value="<?php echo($default_array[4001][$i]); ?>" class="db_<?php echo($key); ?>" />
@@ -676,8 +676,8 @@ class OpenStatEdit {
 										</iframe>
 									</div>
 								</div>
-								<label class="toggler unlimitedWidth" for="minus<?php echo($rnd); ?>">&nbsp;<i class="fas fa-plus"></i></label>
-								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+								<label class="toggler unlimitedWidth" for="minus<?php echo($rnd); ?>" data-title="Zwischen Auswahl und Eingabe wechseln">&nbsp;<i class="fas fa-plus"></i></label>
+								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
 							</div>
 						</div>
 						<div class="clear"></div>
@@ -703,7 +703,7 @@ class OpenStatEdit {
 		}
 		if ( $_result['multiple'] ) { ?>
 			<label for="db_<?php echo($key.$firstrnd); ?>_plus" style="opacity: 0"><?php echo($keyreadable); ?></label>
-			<label class="unlimitedWidth" id="db_<?php echo($key.$firstrnd); ?>_plus" onclick="addSearchfield(this,<?php echo($firstrnd); ?>);" title="Zusätzlicher Eintrag"><i class="fas fa-plus"></i></label>
+			<label class="unlimitedWidth" id="db_<?php echo($key.$firstrnd); ?>_plus" onclick="addSearchfield(this,<?php echo($firstrnd); ?>);" data-title="Zusätzlicher Eintrag"><i class="fas fa-plus"></i></label>
 			<div class="clear"></div>
 		<?php }
 		if ( $_result['edittype'] != 'NONE') {
@@ -797,7 +797,7 @@ class OpenStatEdit {
 		if ( $_result['compound'] ) {
 			$_result['keyreadable_array'] = explode(' + ',explode(': ',$_result['keyreadable'])[1]);
 			?>
-			<label onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
+			<label onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 			<?php
 			//determine length of checked
 			$_len = $this->_len($tmpchecked);
@@ -852,7 +852,7 @@ class OpenStatEdit {
 					case 'EDITOR':
 					case 'FILESPATH':
 						?>
-							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
+							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 							<?php foreach ( $checked as $searchterm ) {
 								if ( sizeof($checked) > 1 AND ( $searchterm == "_not" OR $searchterm == "_all" OR $searchterm == "-500" OR $searchterm == "-499" ) ) { continue; }
 								?>
@@ -863,7 +863,7 @@ class OpenStatEdit {
 										type="text" 
 										value="<?php if ( $searchterm != "_all" ) { html_echo($searchterm); } ?>"
 									/>
-									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 									<br />
 								</div>
 							<?php }
@@ -872,7 +872,7 @@ class OpenStatEdit {
 					case 'DATE':
 						//use index 1001,1002,1003 for date and datetime values
 						?>
-							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
+							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 
 							<?php 
 		// before 20200525:						if ( ! is_array($checked) OR sizeof($checked) <= 1) {
@@ -900,7 +900,7 @@ class OpenStatEdit {
 										type="date" 
 										value=""
 										/>
-									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 									<br />
 									<br />
 								</div>					
@@ -928,7 +928,7 @@ class OpenStatEdit {
 											type="date" 
 											value="<?php html_echo($checked[1002][$i]); ?>"
 										/>
-										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 										<br />
 										<br />
 									</div>					
@@ -938,7 +938,7 @@ class OpenStatEdit {
 					case 'INTEGER':
 						//use index 5001,5002,5003 for decimal range values
 						?>
-							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
+							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 
 							<?php 
 								if ( ! is_array($checked) OR sizeof($checked) <= 1) {
@@ -968,7 +968,7 @@ class OpenStatEdit {
 										placeholder="0" 
 										value="<?php html_echo($checked[5002][$i]); ?>"
 										/>
-									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 									<br />
 									<br />
 								</div>					
@@ -1000,7 +1000,7 @@ class OpenStatEdit {
 											placeholder="0" 
 											value="<?php html_echo($checked[5002][$i]); ?>"
 										/>
-										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 										<br />
 										<br />
 									</div>					
@@ -1010,7 +1010,7 @@ class OpenStatEdit {
 					case 'DECIMAL':
 						//use index 5001,5002,5003 for decimal range values
 						?>
-							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
+							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 
 							<?php 
 								if ( ! is_array($checked) OR sizeof($checked) <= 1) {
@@ -1040,7 +1040,7 @@ class OpenStatEdit {
 										placeholder="0.00" 
 										value="<?php html_echo($checked[5002][$i]); ?>"
 										/>
-									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 									<br />
 									<br />
 								</div>					
@@ -1072,7 +1072,7 @@ class OpenStatEdit {
 											placeholder="0.00" 
 											value="<?php html_echo($checked[5002][$i]); ?>"
 										/>
-										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 										<br />
 										<br />
 									</div>					
@@ -1116,7 +1116,7 @@ class OpenStatEdit {
 				}
 			}
 			if ( $_result['compound'] ) { ?>
-					<label onclick="removeContainingDiv(this);"><i class="fas fa-minus"></i></label>
+					<label onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 				</div> <!-- end of exterior searchfield -->
 			<?php }
 		}

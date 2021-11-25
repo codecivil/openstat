@@ -78,7 +78,7 @@ function newEntry(array $PARAM,$conn) {
 		<?php includeFunctions('DETAILS',$conn); ?>	
 		<h2 class="db_headline clear"><i class="fas fa-<?php html_echo($iconname); ?>"></i> Neuer Eintrag <span class="db_headline_id"></span></h2>
 		<div class="message" id="message<?php echo($rnd); ?>"><div class="dbMessage" class="<?php echo($dbMessageGood); ?>"><?php echo($dbMessage); ?></div></div>
-		<form class="db_options" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">
+		<form class="db_options function" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">
 			<input type="text" hidden value="<?php echo($table[0]); ?>" name="table" class="inputtable" />
 			<input type="text" hidden value="<?php echo($_SESSION['os_user']); ?>" name="changedby" class="inputid" />
 			<div class="fieldset">
@@ -89,7 +89,7 @@ function newEntry(array $PARAM,$conn) {
 		-->
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table.$id[0].$rnd); ?>_sticky" class="action">Aktion</label>
-					<select id="_action<?php echo($table.$id[0].$rnd); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($rnd); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); return false; });" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+					<select id="_action<?php echo($table.$id[0].$rnd); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($rnd); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); return false; });" data-title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="pleasechoose" selected>[Bitte erst nach Bearbeitung wählen]</option> <!-- pleasechoose: arbitrary non-empty value, so that the message is returned and not an array-->
 						<option value="insert">als neuen Eintrag anlegen</option>
 					</select>
@@ -273,8 +273,8 @@ function importCSV(array $PARAM,$conn) {
 	</div>
 	<div class="functions headersubmitlabel" hidden>
 		<ul>
-			<li><label for="headersubmit<?php echo($rnd); ?>" title="Header zuordnen" class="unlimitedWidth"><i class="fas fa-equals"></i></label></li>
-			<li><label for="submitImport<?php echo($rnd); ?>" title="Jetzt importieren" class="submitimportlabel disabled unlimitedWidth"><i class="fas fa-file-import"></i></label></li>
+			<li><label for="headersubmit<?php echo($rnd); ?>" data-title="Header zuordnen" class="unlimitedWidth"><i class="fas fa-equals"></i></label></li>
+			<li><label for="submitImport<?php echo($rnd); ?>" data-title="Jetzt importieren" class="submitimportlabel disabled unlimitedWidth"><i class="fas fa-file-import"></i></label></li>
 		</ul>
 	</div>
 	<div class="headermatch" hidden>
@@ -535,7 +535,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 		<div class="imp_close"><i class="fas fa-times-circle" onclick="_close(this,true);"></i></div>
 		<form method="post" id="reload<?php echo($rnd); ?>" class="inline tools" action="" onsubmit="callPHPFunction(document.getElementById('formChooseTables'),'trafficLight','important',''); return false;">
 			<input form="reload<?php echo($rnd); ?>" id="submitReload<?php echo($rnd); ?>" type="submit" hidden />
-			<label class="unlimitedWidth date" title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
+			<label class="unlimitedWidth date" data-title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
 		</form>
 		<div class="inline tools"><label for="toggleTrafficLight__config"><i class="fas fa-tools"></i></label></div>
 		<input class="toggle" type="checkbox" id="toggleTrafficLight__config" hidden>
@@ -615,11 +615,11 @@ function trafficLight(array $PARAM, mysqli $conn)
 						<?php
 						foreach ( $_config['identifiers'][$idstable] as $identifier ) {
 						?>
-							<th onclick="sortTable(this);" title="sortieren"><?php echo($_identifiers_readable[$identifier]); ?></th>
+							<th onclick="sortTable(this);" data-title="sortieren"><?php echo($_identifiers_readable[$identifier]); ?></th>
 						<?php
 						}
 						?>
-						<th onclick="sortTable(this);" title="sortieren">Kriterien</th>
+						<th onclick="sortTable(this);" data-title="sortieren">Kriterien</th>
 					</tr>
 			<?php
 			foreach ( $_table_result as $_item ) {
@@ -637,7 +637,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 					<td><?php html_echo(implode(' | ',$ids[$idstable][$_item['id_'.$idstable]]['criteria'])); ?></td>
 					<td>
 						<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_item['id_'.$idstable]); ?>" name="id_<?php echo($idstable); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
-						<label for="ampelSubmit__<?php echo($_rnd); ?>" title="ID: <?php echo($_item['id_'.$idstable]); ?>"><i class="fas fa-<?php echo($icon[$idstable]); ?>"></i></label>
+						<label for="ampelSubmit__<?php echo($_rnd); ?>" data-title="ID: <?php echo($_item['id_'.$idstable]); ?>"><i class="fas fa-<?php echo($icon[$idstable]); ?>"></i></label>
 					</td>
 					<?php
 					foreach ( $_assoc_table_result as $_assoc_item ) {
@@ -646,7 +646,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 							?>
 							<td>
 								<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_assoc_item['id_'.$table]); ?>" name="id_<?php echo($table); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
-								<label for="ampelSubmit__<?php echo($_rnd); ?>" title="ID: <?php echo($_assoc_item['id_'.$table]); ?>"><i class="fas fa-<?php echo($icon[$table]); ?>"></i></label>
+								<label for="ampelSubmit__<?php echo($_rnd); ?>" data-title="ID: <?php echo($_assoc_item['id_'.$table]); ?>"><i class="fas fa-<?php echo($icon[$table]); ?>"></i></label>
 							</td>							
 							<?php
 						}
@@ -798,9 +798,9 @@ function lock(array $PARAM, ?mysqli $conn) {
 		<?php if ( isset($PARAM['error']) ) { ?>
 			<div class="error"><?php echo(substr($PARAM['error'],14)); ?></div>
 		<?php } ?>
-			<label for="unlock_user" title="Benutzername"><i class="fas fa-user"></i></label>
+			<label for="unlock_user" data-title="Benutzername"><i class="fas fa-user"></i></label>
 			<input id="unlock_user" type="text" name="unlock_user" value="<?php echo($_SESSION['os_username']); ?>" readonly required <?php echo($disabled); ?>><br /><br />
-			<label for="unlock_pwd" title="Passwort"><i class="fas fa-key"></i></label>
+			<label for="unlock_pwd" data-title="Passwort"><i class="fas fa-key"></i></label>
 			<input id="unlock_pwd" type="password" name="unlock_pwd" required <?php echo($disabled); ?>><br /><br />
 			<input id="unlock_test" type="submit" hidden <?php echo($disabled); ?>><br /><br />
 			<label for="unlock_test" class="labelcenter"><i class="fas fa-arrow-right"></i></label>		

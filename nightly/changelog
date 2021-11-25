@@ -1,9 +1,20 @@
-#v1.6.0
+#v1.6.1
 ======
-10.11.2021
+25.11.2021
+
+* help mode: user can toggle to have help texts
+
+22.11.2021
+
+* designated forms for input for functions; implemented by class "function" (instead of first or second form in scope)
+
+19.11.2021
 
 * better error correction when opening entries at login
 
+
+#v1.6.0
+======
 21.10.-09.11.2021
 
 * secret vault structure added; whenever a secret/password is needed, set up

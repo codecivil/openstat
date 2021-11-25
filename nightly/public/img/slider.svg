@@ -1,0 +1,29 @@
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   viewBox="0 0 127 67.279755"
+   id="svg8"
+  >
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-48.380955,-89.113091)">
+    <rect
+       style="opacity:0.5;vector-effect:none;fill:var(--color-statusbar);fill-opacity:0.5;stroke:none;stroke-width:0.03527778;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect815"
+       width="127"
+       height="67.279755"
+       x="48.380955"
+       y="89.113091"
+       ry="33.639877" />
+    <ellipse
+       style="opacity:1;vector-effect:none;fill:var(--color-statusbar);fill-opacity:1;stroke:none;stroke-width:0.03527778;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path825"
+       cx="83.910721"
+       cy="123.13095"
+       rx="31.75"
+       ry="28.726189" />
+  </g>
+</svg>

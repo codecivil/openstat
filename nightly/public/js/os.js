@@ -657,13 +657,13 @@ function showBarGraph(y_max,y_total,type,statObj,element) {
 	var _RangeWidth = 24+Math.floor(Math.log(y_total)/Math.log(10))*12;
 	el_innerhtml = '<table>';
 	if ( statData.median ) {
-		el_innerhtml += '<tr onclick="_toggleStat(\'median\');"><th title="Zeigt den Median">Median</th><td>'+statData.median+'</td></tr>';
+		el_innerhtml += '<tr onclick="_toggleStat(\'median\');"><th data-title="Zeigt den Median">Median</th><td>'+statData.median+'</td></tr>';
 	}
 	if ( statData.mean ) {
-		el_innerhtml += '<tr onclick="_toggleStat(\'mean\');"><th title="Zeigt den Mittelwert">Mittelwert</th><td>'+statData.mean+'</td></tr>';
+		el_innerhtml += '<tr onclick="_toggleStat(\'mean\');"><th data-title="Zeigt den Mittelwert">Mittelwert</th><td>'+statData.mean+'</td></tr>';
 	}
 	if ( statData.mean ) {
-		el_innerhtml += '<tr onclick="_toggleStat(\'sd\');"><th title="Zeigt die 1- und 2-SD-Intervalle um den Mittelwert">Standardabweichung</th><td>'+statData.sd+'</td></tr>';
+		el_innerhtml += '<tr onclick="_toggleStat(\'sd\');"><th data-title="Zeigt die 1- und 2-SD-Intervalle um den Mittelwert">Standardabweichung</th><td>'+statData.sd+'</td></tr>';
 	}
 	el_innerhtml += '</table><div id="rangeBottom" hidden></div><div id="rangeTop" hidden></div>';
 	/*if ( statArray.length > 20 ) {

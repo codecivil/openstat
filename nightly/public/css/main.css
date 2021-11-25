@@ -57,12 +57,13 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #logo img { height: 2.5rem; padding: 0.5rem; }
 #statusbar select { color: var(--color-statusbar); background: var(--background-statusbar); border: 0; padding: 0.5rem }
 #statusbar div { float: left; padding: 0.5rem; }
-#statusbar #usermenu div { margin: 0.2rem; border: 1px var(--color-statusbar) solid; border-radius: 5px; height: 1.5rem; line-height: 1.5rem; height: auto; }
+#statusbar #usermenu > div { border-radius: 5px; }
+#statusbar #usermenu div { margin: 0.2rem; border: 1px var(--color-statusbar) solid; height: 1.5rem; line-height: 1.5rem; height: auto; }
 #statusbar #usermenu div > div { margin: 0rem; padding: 0 0.5rem 0 0.5rem; border: 0; }
 #statusbar #colorsForm { padding: 0; margin: 0; }
 #statusbar #colorsForm select { padding: 0; margin: 0; }
 #statusbar #colorsForm legend { display: inline; }
-#statusbar :checked + label { color: var(--color-fontsize-selector); }
+#statusbar #fontsize :checked + label { color: var(--color-fontsize-selector); }
 #statusbar #usermenu #logout { font-size: 1.2rem; border-right: 1px var(--color-statusbar) dashed; }
 #statusbar #usermenu #loggedin { border-right: 1px var(--color-statusbar) dashed; }
 #statusbar #user { border: 1px var(--color-statusbar) solid; border-radius: 5px; }
@@ -74,6 +75,53 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar .userInfo:checked + div { display: block; }
 #statusbar #loggedin input { border: none; background: transparent; font-weight: bold; color: var(--color-statusbar); }
 #statusbar ul { list-style-type: none; margin: 0; padding: 0; }
+#statusbar a { color: var(--color-statusbar); }
+#statusbar .slider { height: 1.5rem; float: left; }
+#statusbar .sliderbutton { cx: 66%; fill: var(--button-slider); }
+#statusbar .sliderframe { fill: var(--background-slider); stroke: var(--button-slider); }
+#statusbar label[for="helpModeBtn"] { top: 0; }
+
+/* HelpMode specifics */
+#helpModeBtn:checked ~ div .sliderframe {
+	fill: var(--background-slider-checked);
+}
+
+#helpModeBtn:checked ~ div .sliderbutton {
+	cx: 110%;
+}
+
+/*This does not work for db_headlinewrappers: they have z-index 501 but need at least 1001 but then they scroll over statusbar; how to remedy?*/
+#helpModeBtn:checked ~ div [data-title]::after {
+	content: attr(data-title);
+	position: fixed;
+	display: inline-block;
+	margin: 0;
+	padding: 0.5rem;
+	top: -100vh;
+	right: -100vw; 
+	opacity: 0;
+	background: var(--background-helpmode);
+	color: var(--color-helpmode);
+	max-width: 8rem;
+	border: 1px solid var(--color-sidebar-changed);
+	border-radius: 5px;
+	font: 1rem sans-serif;
+	padding: 0.5rem;
+	transition: 1s ease;
+	hyphens: auto;
+	box-shadow: 0 2px 5px #444;
+}
+
+#helpModeBtn:checked ~ div [data-title]:hover::after {
+	position: sticky;
+	float: right;
+	top: 1.2rem;
+	right: 0;
+	opacity: 1;
+}
+
+/* #helpModeBtn:checked ~ div .details .db_headline_wrapper:hover { z-index: 1500; } */
+/**/
 
 div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #444; overflow: hidden; }
 #wasistneu ~ div { display: none; padding: 0.5rem; }
