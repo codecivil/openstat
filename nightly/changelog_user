@@ -1,3 +1,9 @@
+#v1.6.2
+======
+
+* Passwortwechsel brach seit v1.6.0 und geht nun wieder
+* Masseneditierung hinterlässt keine Spuren mehr bei offenen Einträgen (passierte seit v1.6.0)
+
 #v1.6.1
 ======
 

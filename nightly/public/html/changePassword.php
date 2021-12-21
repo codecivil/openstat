@@ -2,6 +2,7 @@
 //error_reporting(0); //just in case the webserver does not comply...
 session_start();
 require_once('../../core/functions/db_functions.php');
+require_once('../../core/functions/os_functions.php');
 require_once('../../core/classes/auth.php');
 require_once('../../core/data/serverdata.php');
 require_once('../../core/data/chpwddata.php');

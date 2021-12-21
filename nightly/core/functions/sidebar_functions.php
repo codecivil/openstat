@@ -1,0 +1,736 @@
+<?php
+function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '') 
+{
+	if ( ! isset($PARAMETER['table']) ) { $PARAMETER['table'] = array('os_all'); };
+	$table = $PARAMETER['table'][0];
+
+	//get user config
+	$_config_array = getConfig($conn);
+	unset($_stmt_array); $_stmt_array = array();
+	$config_save_class = "saved";
+	$config_remove_class = "";
+	if ( isset($_config_array['configname']) ) {
+		$_config_custom = getConfig($conn,$_config_array['configname']);
+		if ( $custom != '' ) { $_config_array = $_config_custom; }
+		$_compare1 = array(); $_compare2 = array();
+		//compare filters, tables and hierarchy
+		$_compare1['filters'] = $_config_array['filters']; $_compare2['filters'] = $_config_custom['filters'];
+		$_compare1['table'] = $_config_array['table']; $_compare2['table'] = $_config_custom['table'];
+		$_compare1['table_hierarchy'] = $_config_array['table_hierarchy']; $_compare2['table_hierarchy'] = $_config_custom['table_hierarchy'];
+//		unset($_compare1['configname']); unset($_compare2['configname']);
+		if ( $_compare1 == $_compare2 ) { $config_save_class = "disabled"; } else { $config_save_class = "unsaved"; }
+		unset($_compare1); unset($_compare2);
+		if ( $_config_array['configname'] == 'Default') { $config_remove_class = 'disabled'; } 
+	}
+	$_config = $_config_array['filters'];
+	$_config_tables = $_config_array['table'];
+	$_config_hierarchy = $_config_array['table_hierarchy'];
+	$_stmt_array['stmt'] = "SELECT configname FROM os_userconfig_".$_SESSION['os_user'];
+	$options = execute_stmt($_stmt_array,$conn)['result']['configname'];
+//determine table hierarchy structure and table data
+	unset($_stmt_array); $_stmt_array = array(); $table_array = array();
+	$_stmt_array['stmt'] = "SELECT iconname,tablemachine,tablereadable,allowed_roles FROM os_tables WHERE tablemachine IN ('".implode("','",$_config_tables)."') ORDER BY FIELD (tablemachine,'".implode("','",$_config_tables)."') ";
+	$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field 
+	if ($_result_array['dbMessageGood']) { $tables_array = $_result_array['result']; } else {
+	?>
+		<div class="section">Fehler bei Zugriff auf Tabellen. Bitte wiederholen Sie die Aktion.</div>
+	<?php
+		return;
+	};
+	//array of children of a table
+	$_children_table = array(); unset($tindex);
+	$_oldhier = -1;
+	foreach ( $_config_tables as $tindex => $table )
+	{
+		if ( ! isset($_config_hierarchy[$tindex]) ) { $_config_hierarchy[$tindex] = min($tindex,1); }
+		$_config_hierarchy[$tindex] = max(min($tindex,1),min($_config_hierarchy[$tindex],$_oldhier+1));
+		$_oldhier = $_config_hierarchy[$tindex];
+	}
+	$_parent_table = array(); unset($tindex);
+	
+	foreach ( $_config_tables as $tindex => $table )
+	{
+		$_parent_table[$_config_hierarchy[$tindex]] = $table;
+		if ( $_config_hierarchy[$tindex] >= 1 ) { 
+			if ( isset($_parent_table[$_config_hierarchy[$tindex]-1]) AND isset($_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]]) ) {
+				array_push($_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]],$table); 
+			} else {
+				$_children_table[$_parent_table[$_config_hierarchy[$tindex]-1]] = array($table);
+			}
+		}
+	}
+	?>
+	<div id="config" class="section">
+		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;" >
+		<?php //save button and load input like in openStat.plan explained ?>
+			<label 
+				for="config_save" 
+				class="<?php echo($config_save_class); ?>" 
+				data-title="Konfiguration speichern"
+				<?php if ( $config_save_class == "disabled" ) { ?>onclick="return false;"<?php } ?>
+			><i class="fas fa-save"></i></label>
+			<input hidden type="submit" id="config_save">
+			<label class="load <?php echo($config_save_class); ?>" for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
+			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ return result; });">
+			<label class="<?php echo($config_remove_class); ?> " for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
+			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;">
+			<div class="unite">
+				<label for="db__config__list"></label>
+				<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
+				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ return result; });">
+<!--				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig'); callFunction('_','updateSidebarCustom','sidebar'); setTimeout(function(){callFunction(document.querySelector('form#formChooseTables'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');},500);"> -->
+				<!--	<option value="none"></option> -->
+					<?php foreach ( $options as $value ) { 
+						$_sel = '';
+						if ( isset($_config_array['configname']) AND $_config_array['configname'] == $value ) { $_sel = 'selected'; };
+						?>				
+						<option value="<?php echo($value); ?>" <?php echo($_sel); ?> ><?php echo($value); ?></option>
+					<?php } ?>
+				</select>
+				<label class="toggler" for="minus_config">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
+				<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+			</div>
+			<div class="clear"></div>
+		</form>
+	</div>
+	<div id="tables" class="section">
+		<?php updateTime(); includeFunctions('TABLES',$conn); ?>
+		<label for="notoggleTables"><h1 class="center"><i class="fas fa-table"></i></h1></label>
+		<input type="checkbox" hidden id="notoggleTables" class="notoggle">
+		<form id="formChooseTables" class="noform function" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ return false; });return false;" >
+			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
+			<?php
+				unset($_stmt_array); $_stmt_array = array();
+				$_stmt_array['stmt'] = "SELECT iconname,tablemachine,tablereadable,allowed_roles FROM os_tables";
+				$_result_array = execute_stmt($_stmt_array,$conn,true); 
+				$_result_array_normal = execute_stmt($_stmt_array,$conn); //first keynames then rows 
+				if ($_result_array['dbMessageGood']) 
+				{
+					unset($_result);
+					$_result = $_result_array['result'];
+					$_result_normal = $_result_array_normal['result'];
+					foreach ( $_config_tables as $table_index => $checked_tablemachine )
+					{
+						$_table = $_result[array_search($checked_tablemachine,$_result_normal['tablemachine'])];
+						if ( ! isset($_config_hierarchy[$table_index]) ) {
+							if ( $table_index == 0 ) { $_config_hierarchy[$table_index] = 0; } else { $_config_hierarchy[$table_index] = 1; }
+						}
+						if ( in_array($_SESSION['os_role'],json_decode($_table['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_table['allowed_roles'])) ) { ?>
+							<div id="table_<?php html_echo($_table['tablemachine']); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragstart="drag(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)">
+								<?php if ( $table_index > 0 ) { ?>
+									<span style="display: inline-block; width: <?php echo($_config_hierarchy[$table_index]); ?>em">&nbsp;</span><span class="hier_up" onclick="hierarchy(this,-1);">&nbsp;</span><span>&rdsh;</span><span class="hier_down" onclick="hierarchy(this,1);">&nbsp;</span>
+								<?php } ?>
+								<input class="hierarchy" name="table_hierarchy[]" hidden type="number" value="<?php echo($_config_hierarchy[$table_index]); ?>">
+								<input 
+									name="table[]" 
+									id="add_<?php html_echo($_table['tablemachine']); ?>" 
+									type="checkbox" 
+									value="<?php html_echo($_table['tablemachine']); ?>"
+									onchange="updateTime(this);"
+									<?php if ( in_array($_table['tablemachine'],$_config_tables) ) { ?>checked<?php }; ?>
+								/>
+								<label for="add_<?php html_echo($_table['tablemachine']); ?>"><i class="fas fa-<?php html_echo($_table['iconname']); ?>"></i> <?php html_echo($_table['tablereadable']); ?></label><br>
+							</div>
+						<?php }			
+					}
+					unset($_table);
+					foreach ( $_result as $_table )
+					{
+						if ( in_array($_table['tablemachine'],$_config_tables) ) { continue; }
+						if ( in_array($_SESSION['os_role'],json_decode($_table['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_table['allowed_roles'])) ) { ?>
+							<div id="table_<?php html_echo($_table['tablemachine']); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragstart="drag(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)"> 
+								<input 
+									name="table[]" 
+									id="add_<?php html_echo($_table['tablemachine']); ?>" 
+									type="checkbox" 
+									value="<?php html_echo($_table['tablemachine']); ?>"
+									onchange="updateTime(this);"
+									<?php if ( in_array($_table['tablemachine'],$_config_tables) ) { ?>checked<?php }; ?>
+								/>
+								<label for="add_<?php html_echo($_table['tablemachine']); ?>"><i class="fas fa-<?php html_echo($_table['iconname']); ?>"></i> <?php html_echo($_table['tablereadable']); ?></label><br>
+							</div>
+							<?php }
+					}
+					
+				} 			
+			?>
+			<hr>
+			<label for="formTablesSubmit" class="submitAddFilters" ><h2 class="center"><i class="fas fa-arrow-circle-down"></i></h2></label>
+			<input hidden id="formTablesSubmit" type="submit" value="Aktualisieren">
+		</form>
+	</div>
+	<div id="filters">
+		<?php updateTime(); includeFunctions('FILTERS',$conn); ?>		
+		<div id="addfilters">
+			<label for="toggleAddFilter"><h2 class="center"><i class="fas fa-filter"></i><i class="fas fa-plus"></i></h2></label>
+			<input type="checkbox" hidden id="toggleAddFilter" class="toggle">
+			<form id="formAddFilters" class="form" method="post" action="../php/addFilters.php" onsubmit="addFilters(this); return false;">
+					<label class="submitAddFilters" for="submitAddFilters"><h2 class="center"><i class="fas fa-exchange-alt"></i></h2></label>
+					<input hidden id="submitAddFilters" type="submit" value="Auswählen" ><br />
+				<?php
+					unset($table); unset($tindex); //added 2019-09-03
+					foreach ( $_config_tables as $tindex => $table )
+					{
+						$table_array = $tables_array[$tindex];
+						?>
+						<h2><i class="fas fa-<?php html_echo($table_array['iconname']); ?>"></i><?php html_echo($table_array['tablereadable']); ?></h2>
+						<?php 
+						unset($_stmt_array); $_stmt_array = array(); $key_array = array();
+						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype FROM ".$table."_permissions ORDER BY realid";
+						$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field
+						if ($_result_array['dbMessageGood']) { $key_array = $_result_array['result']; };
+						if ( isset($_children_table[$table]) ) {
+							foreach ( $_children_table[$table] as $_child ) {
+								if ( ! array_key_exists($table.'__'.$_child,$_config) ) 
+								{ ?> 
+								<input 
+									name="<?php html_echo($table.'__'.$_child); ?>" 
+									id="add_<?php html_echo($table.'__'.$_child); ?>" 
+									type="checkbox" 
+									value="add"
+								/>
+								<label for="add_<?php html_echo($table.'__'.$_child); ?>"># <i class="fas fa-<?php html_echo($tables_array[array_search($_child,$_config_tables)]['iconname']); ?>"></i> <strong><?php html_echo($tables_array[array_search($_child,$_config_tables)]['tablereadable']); ?></strong></label><br>
+								<?php }							
+							}
+						}
+						?>
+						<?php
+						foreach ( $key_array as $key ) 
+						{ 
+							if ( $key['edittype'] == 'NONE' ) { continue; }
+							if ( ! array_key_exists($table.'__'.$key['keymachine'],$_config) ) 
+							{ ?> 
+							<input 
+								name="<?php html_echo($table.'__'.$key['keymachine']); ?>" 
+								id="add_<?php html_echo($table.'__'.$key['keymachine']); ?>" 
+								type="checkbox" 
+								value="add"
+							/>
+							<label for="add_<?php html_echo($table.'__'.$key['keymachine']); ?>"><?php html_echo(explode(': ',$key['keyreadable'])[0]); ?></label><br>
+							<?php }
+						}
+						unset($key);
+					}
+					unset ($table); unset($_child);
+				?>
+			</form>
+		</div>
+		<hr>
+		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); return false; }); return false; ">
+			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
+			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
+			<hr>
+			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
+			<!-- draggable="true"; reihenfolge von oben nach unten definiert pivotansicht in results -->
+			<div id="filterlist">
+				<?php foreach ( $_config as $tabledotkeymachine => $checked ) {
+					if ( ! is_array($checked) OR ! in_array('_all',$checked) ) { continue; } // ignore config settings that do not concern filters				 
+					$tablemachinearray = explode("__",$tabledotkeymachine,2);
+					$table =  $tablemachinearray[0];
+					$keymachine = $tablemachinearray[1];
+					unset($_stmt_array); $_stmt_array = array(); $table_array = array();
+					$_stmt_array['stmt'] = "SELECT iconname FROM os_tables WHERE tablemachine = ?";
+					$_stmt_array['str_types'] = "s";
+					$_stmt_array['arr_values'] = array();
+					$_stmt_array['arr_values'][] = $table;
+					unset($_result_array);
+					$_result_array = execute_stmt($_stmt_array,$conn); 
+					if ($_result_array['dbMessageGood']) { $table_icon = $_result_array['result']['iconname'][0]; };
+
+					//first look for attributions, then for normal keys
+					if ( isset($_children_table[$table]) AND in_array($keymachine,$_children_table[$table]) ) {
+						$keyreadable = '#'.$tables_array[array_search($keymachine,$_config_tables)]['tablereadable'];
+					} else {
+						unset($_stmt_array); $_stmt_array = array();
+						$_stmt_array['stmt'] = "SELECT keyreadable FROM ".$table."_permissions WHERE keymachine = ?";
+						$_stmt_array['str_types'] = "s";
+						$_stmt_array['arr_values'] = array();
+						$_stmt_array['arr_values'][] = $keymachine;
+						unset($_result_array);
+						$_result_array = execute_stmt($_stmt_array,$conn); 
+						if ($_result_array['dbMessageGood']) { $keyreadable = explode(': ',$_result_array['result']['keyreadable'][0])[0]; } else { continue; }; //serializes as associative array			
+					}
+				?>
+					<div 
+						id="<?php html_echo($keymachine); ?>" 
+						class="section" 
+						draggable="true" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragstart="drag(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)"
+						<?php if ( ! in_array($table,$_config_tables ) ) { ?> hidden<?php } ?>
+					>
+						<input 
+							class="shownot"
+							hidden
+							name="<?php html_echo($table.'__'.$keymachine); ?>[-1]"
+							id="<?php html_echo($table.'__'.$keymachine); ?>shownot"
+							type="checkbox"
+							value="_shownot"
+							<?php if ( isset($checked[-1]) ) { ?> checked <?php } ?>
+						/>
+						<input type="checkbox" hidden id="toggle<?php html_echo($tabledotkeymachine); ?>" class="toggle">
+						<label for="toggle<?php html_echo($tabledotkeymachine); ?>">
+							<h2>
+								<i class="open fas fa-angle-down"></i>
+								<i class="closed fas fa-angle-right"></i> 
+								<i class="fas fa-<?php html_echo($table_icon); ?>"></i>
+								<?php html_echo($keyreadable); ?>
+								<label for="trash" onclick="return trash('<?php html_echo($tabledotkeymachine); ?>')">
+									<i class="remove fas fa-trash-alt"></i>
+								</label>
+								<label class="show" for="<?php html_echo($table.'__'.$keymachine); ?>shownot">
+									<i class="remove fas fa-eye">&nbsp;</i>
+								</label>
+								<label class="shownot" for="<?php html_echo($table.'__'.$keymachine); ?>shownot">
+									<i class="remove fas fa-eye-slash">&nbsp;</i>
+								</label>
+							</h2>
+						</label>
+						<?php
+							$edit = new OpenStatEdit($table,$keymachine,$conn);
+							$edit->choose($checked);
+							unset($edit);
+						?>
+					</div>
+				<?php }; ?>
+			</div> <!-- end of 'filterlist' -->
+			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
+		</form>
+	</div>
+	<?php
+}
+
+function updateSidebarCustom(array $PARAMETER, mysqli $conn)
+{
+	updateSidebar($PARAMETER,$conn,'custom');
+} 
+
+// display=false: only return the mysql statement
+function applyFilters(array $parameter, mysqli $conn, bool $complement = false, bool $display = true, bool $changeconf = true)
+{
+	if ( isset($parameter) AND $changeconf ) {
+		$config = array('filters'=>$parameter);
+		$_wait = changeConfig($config,$conn); //give name so that php waits for return before continuing to read the config
+	}
+
+	//use config instead of parameters (since for several tables you do not want to send several forms simultaneously...)
+	
+	//get config;
+	$_config = getConfig($conn);
+	if ( $changeconf ) {
+		$PARAMETER = $_config['filters'];
+	} else {
+		$PARAMETER = $parameter;
+	}
+	$TABLES = $_config['table'];
+	$HIERARCHY = $_config['table_hierarchy'];
+	$maintable = $TABLES[0];
+	
+	//get edittypes (for strict or weak matches of values)
+	$_edittypes = array();
+	foreach ( $TABLES as $table ) {
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = "SELECT keymachine,edittype FROM ".$table."_permissions";
+		$_tmp_result = execute_stmt($_stmt_array,$conn)['result'];
+		$_edittypes[$table] = array_combine($_tmp_result['keymachine'],$_tmp_result['edittype']);
+	}	
+//	if ( ! isset($PARAMETER['table']) ) { $PARAMETER['table'] = array('os_all'); };
+//	$table = $PARAMETER['table'][0];
+	//construct query from parameters
+	unset($value); unset($tindex);
+	$_SELECT = '';
+	$komma = '';
+	$_FROM = ' FROM '; $_JOIN = ''; $_USING = ''; // table will be viewROLE in live version
+	foreach ( $TABLES as $tindex => $table )
+	{
+		if ( ! isset($HIERARCHY[$tindex]) ) { $HIERARCHY[$tindex] = min($tindex,1); }
+	}
+	$HIERARCHY[-1] = 0;
+	$HIERARCHY[sizeof($TABLES)] = 1;
+	$JOINSRC = array();
+	$SHOWME = array(); //array of fields to be displayed in results
+	unset($tindex);
+	foreach ( $TABLES as $tindex => $table )
+	{
+		//add table to showme (customer request); here for economic reasons...
+		array_push($SHOWME,$table.'__id_'.$table);
+		//
+		$JOINSRC[$HIERARCHY[$tindex]] = $table;
+		$_JOIN = '';
+		if ( $tindex > 0 AND $HIERARCHY[$tindex] >= $HIERARCHY[$tindex-1] ) {
+			$_JOIN = ' LEFT JOIN ';				
+		}
+		if ( $tindex > 0 AND $HIERARCHY[$tindex+1] > $HIERARCHY[$tindex] ) {
+			$_JOIN .= '(';				
+		}
+		$_FROM .= $_JOIN . '`view__' . $table . '__' . $_SESSION['os_role'].'`';
+		$_USING = ''; $HBRKT = '';
+		if ( $HIERARCHY[$tindex+1] <= $HIERARCHY[$tindex] ) {
+			for ( $hindex = $HIERARCHY[$tindex+1]; $hindex <= $HIERARCHY[$tindex]; $hindex++ ) {
+				$_USING = ' ON `view__' . $JOINSRC[$hindex] . '__' . $_SESSION['os_role'].'`.id_'.$JOINSRC[$hindex-1].' = `view__' . $JOINSRC[$hindex-1] . '__' . $_SESSION['os_role'].'`.id_'.$JOINSRC[$hindex-1]. $HBRKT . $_USING;
+				$HBRKT = ')';
+			}
+		}		
+		$_FROM .= $_USING;
+		$_SELECT .= '`view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' AS '.$table.'__'.'id_'.$table.',';
+/*		$_FROM .= $_JOIN . '`view__' . $table . '__' . $_SESSION['os_role'].'`' . $_USING;
+		$_JOIN = ' LEFT JOIN ';
+		$_USING = ' USING (id_'.$maintable.') ';
+		$_SELECT .= '`view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' AS '.$table.'__'.'id_'.$table.',';
+		previous working! version (w/o hierarchies)*/ 
+	}
+	$_WHERE = '';
+	$komma2 = ' WHERE (';
+	$bracket = '';
+	$_ORDER_BY = ' ORDER BY ';
+	$_komma_cmp = ' AND '; //conditions for different compounds in one key filter have all to be satisfied
+	$_komma_cmp_entry = ' OR '; //a certain index has to match every compound
+	$SHOWNOTALL = false;
+	$EXT_ORDER_BY = array(); //order in case not all fields are going to be displayed
+	foreach ($PARAMETER as $key=>$values) 
+	{
+		if ( in_array($key,array('table')) ) { continue; };
+		//check for checked tables;
+		$table = explode('__',$key,2)[0];
+		$key = explode('__',$key,2)[1];
+		if ( ! in_array($table,$TABLES) ) { continue; };
+		//only filter/also select selection
+		if ( array_key_exists(-1,$values) )
+		{
+			$SHOWNOTALL = true;
+		} else {
+			if ( ! in_array($table.'__id_'.$table,$SHOWME) ) { array_push($SHOWME,$table.'__id_'.$table); };
+			array_push($EXT_ORDER_BY,$table.'__'.$key);
+			array_push($SHOWME,$table.'__'.$key);
+		}
+		unset($values[-1]);
+		//attribution counts are given by key: <tablemachine attributed,lower hierarchy value>__<tablemachine holding attribution,higher hierarchy value>, values: 5001:[min],5002:[max]
+		//implement here
+		$ATTR_WHERE = ''; $ATTR_OR = '';
+		if ( in_array($key,$TABLES) ) {
+			$ATTR_SELECT = $komma . 'tmp__' . $table . '__' . $key . '.' . $key . ' AS ' . $table . '__' . $key;
+			$ATTR_FROM = ' INNER JOIN ( SELECT `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.',COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') AS ' . $key . $_FROM.$_WHERE.$bracket.' GROUP BY `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' HAVING ';
+			for ( $i = 0; $i < sizeof($values[5003]); $i++ ) {
+				if ( $values[5001][$i] == '' ) { $values[5001][$i] = 0; }
+				if ( $values[5002][$i] == '' ) { $values[5002][$i] = 1000000000; }
+				$ATTR_FROM .= $ATTR_OR.'( COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') >= '.$values[5001][$i].' AND COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') <= '.$values[5002][$i].')';
+				$ATTR_OR=" OR ";
+			}
+			$ATTR_FROM .= ' ) AS tmp__' . $table . '__' . $key. ' ON tmp__' . $table . '__' . $key . '.id_' . $table . ' = `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table;	
+//			$ATTR_WHERE = $komma2.'`view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' IN ( SELECT `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.$_FROM.$_WHERE.$bracket.' GROUP BY `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' HAVING COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') >= '.$values[5001][0].' AND COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') <= '.$values[5002][0].' )';
+//			$_WHERE .= $ATTR_WHERE;
+			$_SELECT .= $ATTR_SELECT;
+			$_FROM .= $ATTR_FROM;
+			$_ORDER_BY .= $komma.$table.'__'.$key;
+			$komma = ',';
+//			$komma2 = ') AND (';
+			continue;
+		}
+		//set strong or weak match strings
+		switch($_edittypes[$table][$key]) {
+/*	MULTIPLE cases do not yet work, since the values ar JSONized...
+ * 			case 'EXTENSIBLE LIST; MULTIPLE':
+			case 'LIST; MULTIPLE':
+			case 'SUGGEST; MULTIPLE':
+			case 'SUGGEST BEFORE LIST; MULTIPLE':
+*/
+//			case 'CHECKBOX':
+//			case 'EXTENSIBLE CHECKBOX':
+			case 'SUGGEST':
+			case 'LIST':
+			case 'SUGGEST BEFORE LIST':
+			case 'EXTENSIBLE LIST':				
+				$_MATCHSTART = "= '";
+				$_MATCHEND = "'";
+				$_NOT = "!";
+				break;
+			default:
+				$_MATCHSTART = "LIKE CONCAT('%','";
+				$_MATCHEND = "','%')";
+				$_NOT = " NOT ";
+				break;
+		}
+		//replace the __ by . (HTML5 replaces inner white space by _, so no . possible)
+		//$key = str_replace('__','.',$key);
+		$_SELECT .= $komma.'`view__' . $table . '__' . $_SESSION['os_role'].'`.'.$key.' AS `'.$table.'__'.$key.'`';
+		$_ORDER_BY .= $komma.$table.'__'.$key;
+		$komma = ',';
+		$_orand = 0;
+		if ( sizeof($values) > 1 ) {
+	//		array_shift($values); //does a renumbering which destroys the indices 1001 and 1002 (probably also key names for that matter)
+			unset($values[0]);
+			if ( array_key_exists(2001,$values) AND $values[2001] == "-499" )
+			{
+				$_orand = 1; //" AND ";
+			}
+			else
+			{
+				$_orand = 0; //" OR ";
+			}
+			unset($values[2001]);
+			//negation
+			if ( array_key_exists(3001,$values) )
+			{
+				$_orand = 1 - $_orand;
+				$_negation = $_NOT;
+				$_ge = "<";
+				$_le = ">";
+				$_komma_date_multiple = " AND ";
+				$_komma_date_multiple_inner = " OR ";
+				$_komma_cmp = " OR ";
+				$_komma_cmp_entry = " AND ";
+			}
+			else
+			{
+				$_negation = "";
+				$_ge = ">=";
+				$_le = "<=";
+				$_komma_date_multiple = " OR ";
+				$_komma_date_multiple_inner = " AND ";
+				$_komma_cmp = " AND ";
+				$_komma_cmp_entry = " OR ";
+			}			
+			unset($values[3001]);
+			switch($_orand) {
+				case 0:
+					$_komma_date_inner = " AND ";
+					$_komma_outer = " OR ";
+					break;
+				case 1:
+					$_komma_date_inner = " OR ";
+					$_komma_outer = " AND ";
+					break;
+			}
+			if ( array_key_exists(1001,$values) )
+			//20200525: how to adapt for multiple dates?
+			// would need a JSON_TABLE construct for comparison, but this does not (yet) exist in MariaDB, seems to come in 10.6
+			// sth like this: select JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') from os_userconfig; have to test for date intervals for all array entries (not just 0)....
+			// or better: select config from os_userconfig where JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') IS NOT NULL;
+			{
+				unset($_stmt_tmp); $_stmt_tmp = array();
+				$_stmt_tmp['stmt'] = "SELECT MAX(JSON_LENGTH(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`)) AS jsonlength FROM `view__" . $table . "__" . $_SESSION['os_role']."`";
+				unset($_jsonlength);
+				$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0]; 				
+				for ( $i = 0; $i < sizeof($values[1001]); $i++ )
+	//			foreach ($values[1001] as $index=>$value)
+				{
+		//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
+					$_WHERE .= $komma2.' (';
+					$komma3 = '';
+					for ( $j = 0; $j < $_jsonlength; $j++ ) {
+						if ( ! isset($values[1001][$i]) OR $values[1001][$i] == '' ) { $values[1001][$i] = '1970-01-01'; }
+						$_WHERE .= $komma3."(((`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` NOT LIKE '[%' AND `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` ".$_ge." '".$values[1001][$i]."')";
+						$_WHERE .= " OR (`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') ".$_ge." \"".$values[1001][$i]."\")";
+						$_WHERE .= ')';
+						$komma2 = $_komma_date_multiple_inner;
+//						$komma2 = $_komma_date_inner;
+						$bracket = ')';
+						if ( ! isset($values[1002][$i]) OR  $values[1002][$i] == '' ) { $values[1002][$i] = '2070-01-01'; }
+						$_WHERE .= $komma2."((`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` NOT LIKE '[%' AND `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` ".$_le." '".$values[1002][$i]."')";
+						$_WHERE .= " OR (`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') ".$_le." \"".$values[1002][$i]."\")";
+						$_WHERE .= '))';
+						$komma2 = $_komma_outer;
+						$komma3 = $_komma_date_multiple;
+					$bracket = ')';
+					}
+					$_WHERE .= ') ';
+				}
+			} elseif ( array_key_exists(5001,$values) )
+			{
+				for ( $i = 0; $i < sizeof($values[5001]); $i++ )
+	//			foreach ($values[1001] as $index=>$value)
+				{
+		//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
+					if ( ! isset($values[5001][$i]) OR $values[5001][$i] == '' ) { $values[5001][$i] = '0'; }
+					$_WHERE .= $komma2.'(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."` ".$_ge." '".$values[5001][$i]."'";
+					$komma2 = $_komma_date_inner;
+					$bracket = ')';
+					if ( ! isset($values[5002][$i]) OR  $values[5002][$i] == '' ) { $values[5002][$i] = '1000000000'; }
+					$_WHERE .= $komma2.'`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."` ".$_le." '".$values[5002][$i]."')";
+					$komma2 = $_komma_outer;
+					$bracket = ')';
+				}
+			} elseif ( array_key_exists(6001,$values) )
+			{
+			// sorry, no better idea: construct compound filters: repeat everything else with apt JSON_QUERY and JSON_VALUE queries...
+				//redefine $values: $cmp_values is normally a JSON of an array, but may also contain JSONS of arrays in keys 1001-1003,4001,4002
+				$cmp_index = 0;
+				$cmp_values = array();
+				while ( array_key_exists(6001+$cmp_index,$values) ) {
+					array_push($cmp_values,$values[6001+$cmp_index]);
+					$cmp_index++;					
+				}
+				//get maximal multiplicity of entries
+				unset($_stmt_tmp); $_stmt_tmp = array();
+				$_stmt_tmp['stmt'] = "SELECT MAX(JSON_LENGTH(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[0]'))) AS jsonlength FROM `view__" . $table . "__" . $_SESSION['os_role']."`";
+				unset($_jsonlength);
+				$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0];
+				//compound means: outer iteration: index of $cmp_values[0]; middle iteration: index of multiple entries (0...$jsonlength-1); inner iteration: compounds
+				$_WHERE .= $komma2.' ('; $komma2 = '';
+				for ( $i = 0; $i < _len($cmp_values); $i++ ) { // $i is conditionnumber;	
+					$_WHERE .= $komma2.' ('; $komma2 = '';
+					for ( $j = 0; $j < $_jsonlength; $j++ ) { // $j is entrynumber
+						$_WHERE .= $komma2.' ('; $komma2 = '';
+						for ( $compoundnumber = 0; $compoundnumber < $cmp_index; $compoundnumber++ ) {
+							$_WHERE .= $komma2.' ('; // was: $_komma_cmp
+							//to be continued here...; todo: check AND/OR logic; probably need another inner AND/komma4
+							if ( array_key_exists(1001,$cmp_values[$compoundnumber]) )
+							//20200525: how to adapt for multiple dates?
+							// would need a JSON_TABLE construct for comparison, but this does not (yet) exist in MariaDB, seems to come in 10.6
+							// sth like this: select JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') from os_userconfig; have to test for date intervals for all array entries (not just 0)....
+							// or better: select config from os_userconfig where JSON_VALUE(JSON_QUERY(JSON_QUERY(config,'$.filters'),'$.opsz_evaluation__evalbado'),'$.1003[0]') IS NOT NULL;
+							{
+					//			foreach ($cmp_values[$compoundnumber][1001] as $index=>$value)
+					//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
+					//			$komma3 = '';
+								if ( ! isset($cmp_values[$compoundnumber][1001][$i]) OR $cmp_values[$compoundnumber][1001][$i] == '' ) { $cmp_values[$compoundnumber][1001][$i] = '1970-01-01'; }
+					//			$_WHERE .= $komma3."((";
+					//			$_WHERE .= "((";
+								$_WHERE .= "(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." \"".$cmp_values[$compoundnumber][1001][$i]."\")";
+					//			$_WHERE .= ')';
+								$komma2 = $_komma_date_multiple_inner;
+		//						$komma2 = $_komma_date_inner;
+								$bracket = ')';
+								if ( ! isset($cmp_values[$compoundnumber][1002][$i]) OR  $cmp_values[$compoundnumber][1002][$i] == '' ) { $cmp_values[$compoundnumber][1002][$i] = '2070-01-01'; }
+					//			$_WHERE .= $komma2."(";
+								$_WHERE .= $komma2;
+								$_WHERE .= "(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." \"".$cmp_values[$compoundnumber][1002][$i]."\")";
+					//			$_WHERE .= '))';
+								$komma2 = $_komma_cmp;
+								$bracket = ')';
+					//			$_WHERE .= ') ';
+							} elseif ( array_key_exists(5001,$cmp_values[$compoundnumber]) )
+							{
+					//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";	
+								if ( ! isset($cmp_values[$compoundnumber][5001][$i]) OR $cmp_values[$compoundnumber][5001][$i] == '' ) { $cmp_values[$compoundnumber][5001][$i] = '0'; }
+								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." '".$cmp_values[$compoundnumber][5001][$i]."'";
+								$komma2 = $_komma_date_inner;
+								$bracket = ')';
+								if ( ! isset($cmp_values[$compoundnumber][5002][$i]) OR  $cmp_values[$compoundnumber][5002][$i] == '' ) { $cmp_values[$compoundnumber][5002][$i] = '1000000000'; }
+								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." '".$cmp_values[$compoundnumber][5002][$i]."')";
+								$komma2 = $_komma_cmp;
+								$bracket = ')';
+							}			
+							if ( ! array_key_exists(1001,$cmp_values[$compoundnumber]) AND ! array_key_exists(5001,$cmp_values[$compoundnumber]) )
+							{
+								//no: just search json entry for searchterm, so no index 4001...
+								//FILESPATH searchable by filedescription field (4001)
+								//if ( array_key_exists(4001,$cmp_values[$compoundnumber]) ) { $cmp_values[$compoundnumber] = $cmp_values[$compoundnumber][4001]; }
+					//			$_WHERE .= $komma2.'`'.$key."` = '".$value."'";
+//								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_negation."LIKE CONCAT('%','".$cmp_values[$compoundnumber][$i]."','%')) ";
+								$_WHERE .= '(IFNULL(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]'),'') ".$_negation.$_MATCHSTART.$cmp_values[$compoundnumber][$i].$_MATCHEND.") ";
+			//					$komma2 = " OR ";	
+								$komma2 = $_komma_cmp;
+								$bracket = ')';
+							}
+							//do not change $komma2 if no condition was set
+							if ( $komma2 != ' WHERE (' ) { $komma2 = ') '.$_komma_cmp.' ('; }
+							$_WHERE .= ')';
+						}
+						//do not change $komma2 if no condition was set
+						if ( $komma2 != ' WHERE (' ) { $komma2 = ') '.$_komma_cmp_entry.' ('; }
+						$_WHERE .= ')';			
+					} 				
+					//do not change $komma2 if no condition was set
+					if ( $komma2 != ' WHERE (' ) { $komma2 = ') '.$_komma_outer.' ('; }
+					$_WHERE .= ')';
+				} 				
+				$_WHERE .= ') ';
+			} // end of compound extra tests
+			if ( ! array_key_exists(1001,$values) AND ! array_key_exists(5001,$values) AND ! array_key_exists(6001,$values) )
+			{
+				//no: just search json entry for searchterm, so no index 4001...
+				//FILESPATH searchable by filedescription field (4001)
+				//if ( array_key_exists(4001,$values) ) { $values = $values[4001]; }
+				foreach ($values as $index=>$value)
+				{
+		//			$_WHERE .= $komma2.'`'.$key."` = '".$value."'";
+					$_WHERE .= $komma2.'`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."` ".$_negation.$_MATCHSTART.$value.$_MATCHEND;
+//					$komma2 = " OR ";
+					$komma2 = $_komma_outer;
+					$bracket = ')';
+				}
+			}
+			//do not change $komma2 if no condition was set
+			if ( $komma2 != ' WHERE (' ) { $komma2 = ') AND ('; }
+		}
+	}
+	$_WHERE .= $bracket;
+	$_main_stmt_array = array();
+	$_main_stmt_array['stmt'] = 'SELECT '.$_SELECT.$_FROM.$_WHERE.$_ORDER_BY; //do not order by id!
+//	if ( $SHOWNOTALL ) {
+		$_main_stmt_array['stmt'] = 'SELECT DISTINCT '.implode(',',$SHOWME).' FROM ('.$_main_stmt_array['stmt'].') AS T ORDER BY '.implode(',',$EXT_ORDER_BY);
+//	}
+	//generate complementary statement if desired
+	//complementary means: find all ids of main table not occuring in stmt result and display maintable filters
+	if ( $complement ) {
+		$_SELECT = 'SELECT id_'.$maintable.' AS '.$maintable.'__id_'.$maintable.',';
+		$komma = '';
+		$_FROM = ' FROM `view__' . $maintable . '__' . $_SESSION['os_role'].'` '; 
+		$_WHERE = 'WHERE id_'.$maintable.' NOT IN ( SELECT '.$maintable.'__id_'.$maintable.' FROM (';
+		$bracket = ') AS T ) ';
+		$_ORDER_BY = ' ORDER BY ';
+		foreach ($PARAMETER as $key=>$values) 
+		{
+			if ( in_array($key,array('table')) ) { continue; };
+			//check for checked tables;
+			$table = explode('__',$key,2)[0];
+			$key = explode('__',$key,2)[1];
+			if ( $table != $maintable ) { continue; };
+			//replace the __ by . (HTML5 replaces inner white space by _, so no . possible)
+			//$key = str_replace('__','.',$key);
+			$_SELECT .= $komma.'`view__' . $table . '__' . $_SESSION['os_role'].'`.'.$key.' AS `'.$table.'__'.$key.'`';
+			$_ORDER_BY .= $komma.$table.'__'.$key;
+			$komma = ',';
+		}
+		$_main_stmt_array['stmt'] = $_SELECT.$_FROM.$_WHERE.$_main_stmt_array['stmt'].$bracket.$_ORDER_BY;
+	}
+	if ( isset($display) AND !$display ) { return $_main_stmt_array; }
+	//print_r($_main_stmt_array); //for debug only
+	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement);
+	$table_results = generateResultTable($_main_stmt_array,$conn);
+	$stat_results = generateStatTable($_main_stmt_array,$conn);
+	?>
+	<?php updateTime(); includeFunctions('RESULTS',$conn); ?>
+	<form class="hidden function"></form>
+	<div id="filter_wrapper">
+		<h2>Filter</h2>
+		<?php echo($filters); ?>
+	</div>
+	<div id="stat_wrapper">
+		<h2>Statistik</h2>
+		<div class="comment">
+			<p><span class="hits">Anzahl/Summe der Treffer in der Datenbank</span></p>
+			<p><span class="unique">Anzahl der verschiedenen Einträge in der Kategorie</span></p>
+		</div>
+		<div id="statGraphics_wrapper">
+			<div id="statGraphics_settings">
+				<label class="left unlimitedWidth barchart none" onclick="_toggleGraphs(this,'barchart')"><i class="fas fa-chart-bar"></i>&nbsp;</label> 
+				<label class="left unlimitedWidth piechart none" onclick="_toggleGraphs(this,'piechart')"><i class="fas fa-chart-pie"></i>&nbsp;</label> 
+			</div>
+			<div class="clear"></div>
+			<div id="statGraphics">
+				<div class="barchart hits" id="statGraphicsBarChartHits" hidden style="visibility: hidden;"></div>
+				<div class="barchart unique" id="statGraphicsBarChartUnique" hidden style="visibility: hidden;"></div>
+				<div class="piechart hits" id="statGraphicsPieChartHits" hidden style="visibility: hidden;"></div>
+				<div class="piechart unique" id="statGraphicsPieChartUnique" hidden style="visibility: hidden;"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="statTable">
+			<?php echo($stat_results); ?>
+		</div>
+	</div>
+	<div id="details_wrapper">
+		<?php includeFunctions('RESULTDETAILS',$conn); ?>
+		<h2>Details</h2>
+		<div class="resultTable">
+			<?php echo($table_results); ?>
+		</div>
+	</div>
+<?php
+}
+
+function applyFiltersOnlyChangeConfig(array $parameter, mysqli $conn)
+{
+	applyFilters($parameter,$conn,false,false,true);
+}
+?>

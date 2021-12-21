@@ -1,3 +1,16 @@
+21.12.2021
+======
+
+* openIDs: no massEdits ever in config
+
+20.12.2021
+
+* changePassword: fix grants for OS_CHPWD and required functions
+
+25.11.2021
+
+* data-title back to title in generateResultTable (down chevrons should display the hidden column name at hover even when not in help mode!)
+
 #v1.6.1
 ======
 25.11.2021
