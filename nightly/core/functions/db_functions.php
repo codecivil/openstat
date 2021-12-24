@@ -383,6 +383,7 @@ function getDetails($PARAMETER,$conn)
 			?>
 			<div class="db_headline_wrapper">
 				<div class="right" onclick="_close(this);"><i class="fas fa-times-circle"></i></div>
+				<!-- Is the following class function always correct? -->
 				<form method="post" id="reload<?php echo($rnd); ?>" class="left function" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','_close',true).then(()=>{ return false; }); return false;">
 					<input hidden form="reload<?php echo($rnd); ?>" type="text" value="<?php html_echo($id[0]); ?>" name="id_<?php html_echo($table); ?>" />
 					<input form="reload<?php echo($rnd); ?>" id="submitReload<?php echo($rnd); ?>" type="submit" hidden />
@@ -427,7 +428,7 @@ function getDetails($PARAMETER,$conn)
 		<?php } 
 		?>	
 		<div class="message" id="message<?php echo($table.$id[0]); ?>"><div class="dbMessage" class="<?php echo($dbMessageGood); ?>"><?php echo($dbMessage); ?></div></div>
-		<form class="db_options" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">
+		<form class="db_options function" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">
 			<input type="text" hidden value="<?php echo($table); ?>" name="table" class="inputtable" />
 			<input type="text" hidden value="<?php html_echo(json_encode($id)); ?>" name="id_<?php echo($table); ?>" class="inputid" />
 			<input type="text" hidden value="<?php echo($_SESSION['os_user']); ?>" name="changedby" class="inputid" />

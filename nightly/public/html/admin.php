@@ -1,5 +1,6 @@
 <?php
 require_once('../../core/functions/db_functions.php');
+require_once('../../core/functions/os_functions.php');
 require_once('../../core/classes/auth.php');
 require_once('../../core/data/info.php');
 $PARAMETER = array(); 
