@@ -1,2 +1,2 @@
-GRANT SELECT ON os_secrets TO OS_CHPWD;
+GRANT SELECT (secretname) ON os_passwords TO OS_CHPWD;
 FLUSH PRIVILEGES;
