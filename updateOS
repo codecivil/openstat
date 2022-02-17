@@ -55,7 +55,7 @@ VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/l
 # make new dir if new version is available
 mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
 	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O openStat.tgz
-	tar xzf - openStat.tgz | tar cjf openStat.tar.bz2 -
+	gunzip -c openStat.tgz | bzip2 -c - > openStat.tar.bz2
 	#get and verify signature
 	curl --silent "https://www2.codecivil.de/signatures/$REPO/$REPO-$VERSION.sig" --output "$REPO-$VERSION.sig"
 	gpg --verify "$REPO-$VERSION.sig" openStat.tar.bz2 || { echo "Update cannot be verified."; rm openStat.tgz openStat.tar.bz2; rmdir "$WEBDIR/$VERSION"; exit 1; }
@@ -104,7 +104,7 @@ cp -a "$WEBDIR/$OPENSTAT_VERSION/$INSTANCE.tgz" "$WEBDIR/latest/"
 VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/latest | grep 'tag_name' | sed 's/.*\": //;s/,//;s/\"//g' )"
 if [[ "$VERSION" != "$INSTANCE_VERSION" ]]; then
 	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O $INSTANCE.tgz
-	tar xzf - $INSTANCE.tgz | tar cjf $INSTANCE.tar.bz2 -
+	gunzip -c $INSTANCE.tgz | bzip2 -c - > $INSTANCE.tar.bz2
 	#get and verify signature of deterministic bzip2 file
 	curl --silent "https://www2.codecivil.de/signatures/$REPO/$REPO-$VERSION.sig" --output "$REPO-$VERSION.sig"
 	gpg --verify "$REPO-$VERSION.sig" $INSTANCE.tar.bz2 || { echo "Update for $REPO cannot be verified."; rm $INSTANCE.tgz $INSTANCE.tar.bz2; exit 1; }
