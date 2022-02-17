@@ -55,9 +55,11 @@ VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/l
 # make new dir if new version is available
 mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
 	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O openStat.tgz
+	tar xzf - openStat.tgz | tar cjf openStat.tar.bz2 -
 	#get and verify signature
 	curl --silent "https://www2.codecivil.de/signatures/$REPO/$REPO-$VERSION.sig" --output "$REPO-$VERSION.sig"
-	gpg --verify "$REPO-$VERSION.sig" openStat.tgz || { echo "Update cannot be verified."; rm openStat.tgz; exit 1; }
+	gpg --verify "$REPO-$VERSION.sig" openStat.tar.bz2 || { echo "Update cannot be verified."; rm openStat.tgz openStat.tar.bz2; rmdir "$WEBDIR/$VERSION"; exit 1; }
+	rm openStat.tar.bz2
 	# extract and install...
 	mv openStat.tgz "$WEBDIR/$VERSION"
 	cd "$WEBDIR/$VERSION"
@@ -91,19 +93,23 @@ mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
 cd
 ## continue if instance or opsz option is set
 if [[ "$INSTANCE" == "" ]]; then exit 0; fi
+# save openStat version
+OS_VERSION="$VERSION"
 # get latest $INSTANCE release
 REPO="$INSTANCE"
-read OLDVERSION < "$WEBDIR/$INSTANCE.version"
-#make old version available; !!!this only works if the INSTANCE release number equals the current openStat release number at the time of release
-cp -a "$WEBDIR/$OLDVERSION/$INSTANCE.tgz" "$WEBDIR/latest/"
+. "$WEBDIR/$INSTANCE.version" || { read OPENSTAT_VERSION < . "$WEBDIR/$INSTANCE.version"; INSTANCE_VERSION="$OPENSTAT_VERSION"; } #for smooth transition of $INSTANCE.version syntax
+#make old version available
+cp -a "$WEBDIR/$OPENSTAT_VERSION/$INSTANCE.tgz" "$WEBDIR/latest/"
 #check for new version
 VERSION="$(curl --silent https://api.github.com/repos/codecivil/$REPO/releases/latest | grep 'tag_name' | sed 's/.*\": //;s/,//;s/\"//g' )"
-if [[ "$VERSION" != "$OLDVERSION" ]]; then
+if [[ "$VERSION" != "$INSTANCE_VERSION" ]]; then
 	curl --silent "https://api.github.com/repos/codecivil/$REPO/releases/latest" | grep 'tarball_url' | sed 's/.*\": //;s/,//' | xargs wget -O $INSTANCE.tgz
-	#get and verify signature
+	tar xzf - $INSTANCE.tgz | tar cjf $INSTANCE.tar.bz2 -
+	#get and verify signature of deterministic bzip2 file
 	curl --silent "https://www2.codecivil.de/signatures/$REPO/$REPO-$VERSION.sig" --output "$REPO-$VERSION.sig"
-	gpg --verify "$REPO-$VERSION.sig" $INSTANCE.tgz || { echo "Update for $REPO cannot be verified."; rm $INSTANCE.tgz; exit 1; }
+	gpg --verify "$REPO-$VERSION.sig" $INSTANCE.tar.bz2 || { echo "Update for $REPO cannot be verified."; rm $INSTANCE.tgz $INSTANCE.tar.bz2; exit 1; }
 	##
+	rm $INSTANCE.tar.bz2
 	mv $INSTANCE.tgz "$WEBDIR/latest/"
 fi
 # make new dir if new version is available
@@ -133,7 +139,8 @@ tar xzf $INSTANCE.tgz && {
 	chown -R www-data:www-data "$WEBDIR/latest/"
 } && {
 	echo "$(date): $INSTANCE updated to version $VERSION"
-	echo "$VERSION" > "$WEBDIR/$INSTANCE.version"
+	echo "INSTANCE_VERSION=$VERSION" > "$WEBDIR/$INSTANCE.version"
+	echo "OPENSTAT_VERSION=$OS_VERSION" >> "$WEBDIR/$INSTANCE.version"
 }
 #rm $INSTANCE.tgz
 php_no_error_reporting

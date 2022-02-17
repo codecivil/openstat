@@ -174,25 +174,40 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			}
 			break;
 		case 'delete':
-			//delete in all tables if selected table is current main table
+			//delete on tables hanging under PARAMETER['table']
+			//shouldnt we delete on all tables where an attribution is detected? Or, should we have a cleanong function removing orphaned entries?
 			$config = getConfig($conn);
-			if ( $PARAMETER['table'] == $config['table'][0] )
-			{
+			function _deleteEntriesOfNextLevel(array $config, mysqli $conn, string $deletefromtable, array $idstobedeleted) {
+				// get position and rank of table in config
+				$thistable_key = array_search($deletefromtable,$config['table']);
+				if ( isset($config['table_hierarchy']) ) {
+					$thistable_rank = $config['table_hierarchy'][$thistable_key];
+				} else {
+					$thistable_rank = min(1,$thistable_key);
+				}
 				unset($_stmt_array); unset($_result_array); $_stmt_array = array();
 				$_stmt_array['stmt'] = "SELECT tablemachine FROM os_tables";
 				$tablesmachine = execute_stmt($_stmt_array,$conn)['result']['tablemachine']; //keynames as last array field 
-				foreach ($tablesmachine as $tablemachine)
+				//remove if table index and rank are greater
+				foreach( array_slice($config['table'],$thistable_key+1,null,true) as $index=>$tablemachine )
 				{
-					if ( $tablemachine == $PARAMETER['table'] ) { continue; }
-					$_stmt_array['stmt'] = 'DELETE FROM `view__'.$tablemachine.'__'.$_SESSION['os_role'].'` WHERE `id_'.$PARAMETER['table'].'` = ?';
-					$_stmt_array['str_types'] = "i";
-					$_stmt_array['arr_values'] = array();
-					$_stmt_array['arr_values'][] = $PARAMETER['id_'.$PARAMETER['table']];
-					$message = "Eintrag ". $PARAMETER['id_'.$PARAMETER['table']] . " wurde gelöscht. ";
-					execute_stmt($_stmt_array,$conn);
+					$table_rank = 1;
+					if ( isset($config['table_hierarchy']) ) {
+						$table_rank = $config['table_hierarchy'][$index];
+					}
+					if ( $table_rank > $thistable_rank ) {
+						$_idstobedeletednext = array();
+						unset($_stmt_array);
+						$_stmt_array['stmt'] = 'SELECT id_'.$tablemachine.' AS id FROM `view__'.$tablemachine.'__'.$_SESSION['os_role'].'` WHERE id_'.$deletefromtable.' IN (' . implode(',',$idstobedeleted) . ');';
+						$_idstobedeletednext = execute_stmt($_stmt_array,$conn)['result']['id'];
+						unset($_stmt_array);
+						$_stmt_array['stmt'] = 'DELETE FROM `view__'.$tablemachine.'__'.$_SESSION['os_role'].'` WHERE id_'.$deletefromtable.' IN (' . implode(',',$idstobedeleted) . ');';
+						execute_stmt($_stmt_array,$conn);
+						if ( sizeof($_idstobedeletednext) > 0 ) { _deleteEntriesOfNextLevel($config,$conn,$tablemachine,$_idstobedeletednext); }
+					}
 				}
-				
 			}
+			_deleteEntriesOfNextLevel($config,$conn,$PARAMETER['table'],json_decode($PARAMETER['id_'.$PARAMETER['table']]));
 			//
 			$stmt = "DELETE FROM `view__" . $PARAMETER['table'] . "__" . $_SESSION['os_role']. "` WHERE id_".$PARAMETER['table']." IN (" . implode(',',json_decode($PARAMETER['id_'.$PARAMETER['table']])) . ");";
 //			$arr_values = array();
@@ -440,7 +455,7 @@ function getDetails($PARAMETER,$conn)
 		-->
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table.$id[0]); ?>_sticky" class="action">Aktion</label>
-					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); }; return false; }); return false;" data-title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); }; return false; }); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="" selected>[Bitte erst nach Bearbeitung wählen]</option>
 						<?php if ( isset($PARAM['id_'.$table]) ) { ?>
 							<option value="edit">Eintrag ändern</option>

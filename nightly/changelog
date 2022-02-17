@@ -1,10 +1,20 @@
+#v1.6.4
+======
+
+17.02.2022
+
+* bugfixes: helpmode prevented actions on entries;
+  new entries lost focus afer saving;
+  delete did not delete the whole dependency tree any more
+* changed updateOS to reflect the new fully deterministic signing procedure
+
 #v1.6.3
 ======
 
 24.12. 2021
 
 * fixes for the redesign of v1.6.0: 
-" * "function" form in non-entries
+* * "function" form in non-entries
 * *  os_functions.php required in admin.php
 
 #v1.6.2

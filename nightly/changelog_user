@@ -1,3 +1,9 @@
+#v1.6.4
+======
+
+* Speichern/ Löschen/ Ändern wieder in Helpmode möglich
+* Löschen löscht wieder alle abhängigen Einträge gemäß Tabellenauswahl
+
 #v1.6.3
 ======
 
