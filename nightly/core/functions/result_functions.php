@@ -217,9 +217,9 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 					if ( isset($row[$table.'__'.'id_'.$table]) ) {
 						$table_results .= "<td title=\"ID: ".$row[$table.'__'.'id_'.$table]."\" id=\"detailsTd_". $table . $row[$table.'__'.'id_'.$table] . "\" draggable=\"true\" ondragover=\"allowDrop(event)\" ondrop=\"dropOnDetails(event,this)\" ondragstart=\"dragOnDetails(event)\" ondragenter=\"dragenter(event)\" ondragleave=\"dragleave(event)\" ondragend=\"dragend(event)\"><form method=\"post\" id=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\" class=\"inline\" action=\"\" onsubmit=\"editEntries(this,'".$table."'); return false\"><input hidden form=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\"type=\"text\" value=\"". $row[$table.'__'.'id_'.$table] . "\" name=\"id_".$table."\" /><input form=\"detailsForm". $table . $row[$table.'__'.'id_'.$table] . "\" id=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\" type=\"submit\" hidden /></form>";
 						if ( isset($oldvalue[$table]) AND $row[$table.'__'.'id_'.$table] == $oldvalue[$table] ) {
-							$table_results .= "<label for=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\"><i class=\"disabled fas fa-".$ICON[$table]."\"></i></label></td>";
+							$table_results .= "<label for=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\"><i oncontextmenu=\"return transportAttribution(this)\" class=\"disabled fas fa-".$ICON[$table]."\"></i></label></td>";
 						} else {
-							$table_results .= "<label for=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\"><i class=\"fas fa-".$ICON[$table]."\"></i></label></td>";
+							$table_results .= "<label for=\"detail". $table . $row[$table.'__'.'id_'.$table] . "\"><i oncontextmenu=\"return transportAttribution(this)\" class=\"fas fa-".$ICON[$table]."\"></i></label></td>";
 						}
 						$oldvalue[$table] = $row[$table.'__'.'id_'.$table];
 					} else {

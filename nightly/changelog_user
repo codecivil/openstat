@@ -1,8 +1,42 @@
-#v1.6.5
+#v1.7.0
+======
+
+* Automatisches Ausführen von Funktionen ist nun implementiert (Konfguration in openStatAdmin)
+* die Ampelfunktion wird nun automatisch ausgeführt
+* neue Aufräumfunktion in der Statuszeile:
+  Löschen löscht alle abhängigen Einträge gemäß der Tabellenauswahl des Nutzers.
+  Dadurch kann es passieren, dass es noch abhängige Einträge in anderen Tabellen gibt, 
+  die dann nicht gelöscht wurden; deren Zuordnung ist dann gebrochen und die Aufräumfunktion
+  findet diese und schlägt deren Löschung vor. Der Nutzer kann die Auswahl modifizieren und
+  und diese dann löschen lassen.
+  Die Brechung von Zuordnungen passiert auch - ohne, dass ein Nutzer oder das Programm einen Fehler
+  gemacht hätte -, wenn der Nutzer keine Löschberechtigung auf Tabellen
+  hat, die Einträge mit Zuordnungen zum zu löschenden Eintrag besitzen. Die Aufräumfunktion muss 
+  in diesem Fall von einem Nutzer ausgeführt werden, der diese Löschberechtigung besitzt.
+* neue Funktion "leere Felder anzeigen":
+  Der nach unten zeigende Finger in der Funktionsleiste schaltet zwíschen der Anzeige bisher nicht
+  ausgefüllter Felder hin und her. Dabei werden die Felder namentlich aufgeführt und mit der Warnfarbe
+  orange versehen; ein Klick darauf führt direkt zum fraglichen Feld. 
+* neue Funktion 'Zuordnung per Zwischenablage':
+  In der Statuszeile erscheint nun ein "Clipboard", das bei Login erst mal leer ist. Rechtsklickt man das 
+  Tabellenicon eines Eintrags, egal ob im Eintrag selbst, der Ergebnisliste oder in der Ampelfunktion, so wird
+  der entsprechende Eintrag mit seiner (internen) ID im Clipboard vermerkt. Wiederum durch Rechtsklick auf das Zuordnungsicon
+  eines Eintrags wird der im Clipboard hinterlegte Eintrag als Zuordnung eingetragen (wie üblich, muss die Änderung erst noch
+  gespeichert werden; ist kein Eintrag im Clipboard hinterlegt, so wird eine existente Zuordnung ins Clipboard kopiert).
+  Das Clipboard wird durch Klicken auf das Clipboardicon geleert.
+* neue Funktion 'offene Einträge':
+  In der Statuszeile erscheint ein Icon für eine nummerierte Liste. Die danebenstehende Auswahl zeigt die Liste offener Einträge.
+  Bei Auswahl eines Eintrags scrollt dieser in den sichtbaren Bereich. Dies ist ein Zwischenschritt auf dem Weg zu einer tabulierteren Ansicht.
+* Fix: Erweiterbare Listen werden nun korrekt angezeigt und lassen ergänzte Werte stehen
+* Bei dynamischer Auswahl in einer Liste werden nicht-auswählbare Optionen nicht mehr nur ausgegraut, sondern
+  gar nicht mehr angezeigt
+  
+v1.6.5
 ======
 
 * technische Vorbereitung für v1.7.0
 
+  
 #v1.6.4
 ======
 

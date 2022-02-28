@@ -1,6 +1,8 @@
 <?php
 //returns raw result
 //logs if $_SESSION['log'] is set and true (in order to avoid changing all execute_stmts), or if parameter $log is set and true
+$debugpath = "/var/www/test/openStat/v1.0/";
+$debugfilename = "openPSZ-debug-".date('d.m.Y H:i:s');
 function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 {
 	global $debugpath, $debugfilename;
@@ -198,10 +200,13 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 					if ( $table_rank > $thistable_rank ) {
 						$_idstobedeletednext = array();
 						unset($_stmt_array);
-						$_stmt_array['stmt'] = 'SELECT id_'.$tablemachine.' AS id FROM `view__'.$tablemachine.'__'.$_SESSION['os_role'].'` WHERE id_'.$deletefromtable.' IN (' . implode(',',$idstobedeleted) . ');';
+						$_prep = substr(str_repeat(',?',sizeof($idstobedeleted)),1);
+						$_types = str_repeat('i',sizeof($idstobedeleted));
+						$_stmt_array['stmt'] = 'SELECT id_'.$tablemachine.' AS id FROM `view__'.$tablemachine.'__'.$_SESSION['os_role'].'` WHERE id_'.$deletefromtable.' IN (' . $_prep . ');';
+						$_stmt_array['str_types'] = $_types;
+						$_stmt_array['arr_values'] = $idstobedeleted;						
 						$_idstobedeletednext = execute_stmt($_stmt_array,$conn)['result']['id'];
-						unset($_stmt_array);
-						$_stmt_array['stmt'] = 'DELETE FROM `view__'.$tablemachine.'__'.$_SESSION['os_role'].'` WHERE id_'.$deletefromtable.' IN (' . implode(',',$idstobedeleted) . ');';
+						$_stmt_array['stmt'] = 'DELETE FROM `view__'.$tablemachine.'__'.$_SESSION['os_role'].'` WHERE id_'.$deletefromtable.' IN (' . $_prep . ');';
 						execute_stmt($_stmt_array,$conn);
 						if ( sizeof($_idstobedeletednext) > 0 ) { _deleteEntriesOfNextLevel($config,$conn,$tablemachine,$_idstobedeletednext); }
 					}
@@ -209,10 +214,11 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			}
 			_deleteEntriesOfNextLevel($config,$conn,$PARAMETER['table'],json_decode($PARAMETER['id_'.$PARAMETER['table']]));
 			//
-			$stmt = "DELETE FROM `view__" . $PARAMETER['table'] . "__" . $_SESSION['os_role']. "` WHERE id_".$PARAMETER['table']." IN (" . implode(',',json_decode($PARAMETER['id_'.$PARAMETER['table']])) . ");";
-//			$arr_values = array();
-//			$arr_values[] = $PARAMETER['id_'.$PARAMETER['table']];
-//			$str_types = "i";
+			$_mainidstobedeleted = json_decode($PARAMETER['id_'.$PARAMETER['table']]);
+			$_prep = substr(str_repeat(',?',sizeof($_mainidstobedeleted)),1);
+			$stmt = "DELETE FROM `view__" . $PARAMETER['table'] . "__" . $_SESSION['os_role']. "` WHERE id_".$PARAMETER['table']." IN (" . $_prep . ");";
+			$arr_values = $_mainidstobedeleted;
+			$str_types = str_repeat('i',sizeof($_mainidstobedeleted));
 			if ( sizeof(json_decode($PARAMETER['id_'.$PARAMETER['table']],true)) > 1 ) {
 				$message = "Einträge ". implode(',',json_decode($PARAMETER['id_'.$PARAMETER['table']],true)) . " wurden gelöscht.";
 			} else {
@@ -405,7 +411,7 @@ function getDetails($PARAMETER,$conn)
 					<label class="unlimitedWidth date" data-title="neu laden" for="submitReload<?php echo($rnd); ?>"><i class="fas fa-redo-alt"></i></label>
 				</form>
 				<?php updateTime(); updateLastEdit($PARAM['changedat']); ?>
-				<h2 class="db_headline clear"><i class="fas fa-<?php html_echo($iconname); ?>"></i> 
+				<h2 class="db_headline clear" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php html_echo($iconname); ?>"></i> 
 			<?php
 				$_tmp_keys = array_keys($_config['filters']);
 				unset($value); unset($index);
@@ -455,7 +461,7 @@ function getDetails($PARAMETER,$conn)
 		-->
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table.$id[0]); ?>_sticky" class="action">Aktion</label>
-					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; this.scrollIntoView(); }; return false; }); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; myScrollIntoView(this); }; return false; }); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="" selected>[Bitte erst nach Bearbeitung wählen]</option>
 						<?php if ( isset($PARAM['id_'.$table]) ) { ?>
 							<option value="edit">Eintrag ändern</option>
@@ -480,7 +486,7 @@ function getDetails($PARAMETER,$conn)
 							$_tmp_table = substr($key,3);
 							if ( ! isset($default) OR $default == '' ) { ?>
 								<div class='ID_<?php echo($_tmp_table); ?>' id="NeedIDForDrag_<?php echo(rand(0,2147483647)); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="dropOnDetails(event,this)" ondragstart="dragOnDetails(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)">
-									<label class="unlimitedWidth"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> (keine Zuordnung)</label>
+									<label class="unlimitedWidth" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> (keine Zuordnung)</label>
 									<input type="text" hidden value="<?php echo($default); ?>" name="<?php echo($key); ?>" class="inputid" />
 									<span class="newEntryFromEntry" onclick="newEntryFromEntry(this,'<?php echo($_tmp_table); ?>')"><i class="fas fa-plus"></i> <i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i></span>
 								</div>
@@ -512,7 +518,7 @@ function getDetails($PARAMETER,$conn)
 							}						
 							?>
 							<div class='ID_<?php echo($_tmp_table); ?>' id="NeedIDForDrag_<?php echo(rand(0,2147483647)); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="dropOnDetails(event,this)" ondragstart="dragOnDetails(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)">
-								<label class="unlimitedWidth openentry" for="attributionSubmit_<?php echo($_tmp_table.$rnd); ?>">
+								<label class="unlimitedWidth openentry" oncontextmenu="return transportAttribution(this)" for="attributionSubmit_<?php echo($_tmp_table.$rnd); ?>">
 									<i class="fas fa-<?php html_echo($icon[$_tmp_table]); ?>"></i> 
 									<b><?php html_echo(implode(', ',$_table_result)); ?></b>
 									<i class="remove fas fa-trash-alt" onclick="return trashMapping(this);"></i>
@@ -594,7 +600,7 @@ function includeFunctions(string $scope, mysqli $conn)
 	<div class="functions">
 		<?php
 			unset($_stmt_array); $_stmt_array = array();
-			$_stmt_array['stmt'] = "SELECT iconname,functionmachine,functionreadable,functionclasses,functiontarget,allowed_roles FROM os_functions where functionscope = ?";
+			$_stmt_array['stmt'] = "SELECT iconname,functionmachine,functionreadable,functionclasses,functiontarget,functionflags,allowed_roles FROM os_functions where functionscope = ?";
 			$_stmt_array['str_types'] = "s";
 			$_stmt_array['arr_values'] = array();
 			$_stmt_array['arr_values'][] = $scope;
@@ -611,11 +617,15 @@ function includeFunctions(string $scope, mysqli $conn)
 				$_result = $_result_array['result'];
 				foreach ( $_result as $_function )
 				{
-					if ( in_array($_SESSION['os_role'],json_decode($_function['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_function['allowed_roles'])) ) { ?>
+					if ( in_array($_SESSION['os_role'],json_decode($_function['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_function['allowed_roles'])) ) { 
+						if ( $_function['functionflags'] == '' OR $_function['functionflags'] == null ) { $_function['functionflags'] = '[]'; } ?>
 					<li><label 
 						class="unlimitedWidth"
 						onclick="callPHPFunction(this.closest('.functions').parentNode.querySelector('form.function'),'<?php echo($_function['functionmachine']); ?>','<?php echo($_function['functiontarget']); ?>','<?php echo($_function['functionclasses']); ?>')"
 						data-title="<?php echo($_function['functionreadable']); ?>"
+						data-name="<?php echo($_function['functionmachine']); ?>"
+						data-flags="<?php html_echo($_function['functionflags']); ?>"
+						<?php if ( in_array('HIDDEN',json_decode($_function['functionflags'],true)) ) { ?>hidden<?php } ?>
 						><i class="fas fa-<?php echo($_function['iconname']); ?>"></i></label></li>
 					<?php } 
 				}				
@@ -640,4 +650,102 @@ function updateLastEdit(string $datetime)
 	<?php
 }
 
+//$PARAM is not used, just there for function conformity to registration
+function cleanDB(array $PARAM, mysqli $conn) {
+	global $debugpath, $debugfilename;
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "SELECT id,iconname,tablemachine,allowed_roles,delete_roles FROM `os_tables`";
+	$_tables_array = execute_stmt($_stmt_array,$conn)['result'];
+	$_TABLES = $_tables_array['tablemachine'];
+	$_TABLES_ID = $_tables_array['id'];
+	$_TABLES_ALLOW = $_tables_array['allowed_roles'];
+	$_TABLES_DELETE = $_tables_array['delete_roles'];
+	$_TABLES_ARRAY = array_combine($_TABLES_ID,$_TABLES);
+	$_TABLES_ICON = array_combine($_TABLES_ID,$_tables_array['iconname']);
+	$_TABLES_DELETE_ARRAY = array_combine($_TABLES_ID,$_TABLES_DELETE);
+	$_TABLES_ALLOW_ARRAY = array_combine($_TABLES_ID,$_TABLES_ALLOW);
+	//determine all entries of delete-permitted tables with non-existing attributions in allowed-permitted tables
+	$_markedfordeletion = array();
+	foreach ( $_TABLES_ID as $_id ) {
+		$_markedfordeletion[$_id] = array(0);
+	}
+	$_oldmarkedfordeletion = array();	
+	while ( json_encode($_markedfordeletion) != json_encode($_oldmarkedfordeletion) ) {
+		$_oldmarkedfordeletion = json_decode(json_encode($_markedfordeletion));
+		foreach ( $_TABLES_ID as $_deleteid ) {
+			if ( ! in_array($_SESSION['os_role'],json_decode($_TABLES_DELETE_ARRAY[$_deleteid])) AND ! in_array($_SESSION['os_parent'],json_decode($_TABLES_DELETE_ARRAY[$_deleteid])) ) { continue; }
+			foreach ( $_TABLES_ID as $_allowid ) {
+				if ( ! in_array($_SESSION['os_role'],json_decode($_TABLES_ALLOW_ARRAY[$_allowid])) AND ! in_array($_SESSION['os_parent'],json_decode($_TABLES_ALLOW_ARRAY[$_allowid])) ) { continue; }
+				unset($_stmt_array); $_stmt_array = array(); unset($_result_raw);
+				// ... > 0 ...: entries with removed attributions get id 0
+				$_stmt_array['stmt'] = "SELECT `view__".$_TABLES_ARRAY[$_deleteid]."__".$_SESSION["os_role"]."`.id_".$_TABLES_ARRAY[$_deleteid]." AS `id` FROM `view__".$_TABLES_ARRAY[$_deleteid]."__".$_SESSION["os_role"]."` LEFT JOIN `view__".$_TABLES_ARRAY[$_allowid]."__".$_SESSION["os_role"]."` USING (id_".$_TABLES_ARRAY[$_allowid].") WHERE `view__".$_TABLES_ARRAY[$_allowid]."__".$_SESSION["os_role"]."`.id_".$_TABLES_ARRAY[$_allowid]." IS NULL AND `view__".$_TABLES_ARRAY[$_deleteid]."__".$_SESSION["os_role"]."`.id_".$_TABLES_ARRAY[$_allowid]." > 0  OR `view__".$_TABLES_ARRAY[$_deleteid]."__".$_SESSION["os_role"]."`.id_".$_TABLES_ARRAY[$_deleteid]." IN ('".implode("','",$_markedfordeletion[$_deleteid])."')";
+				$_result_raw = execute_stmt($_stmt_array,$conn);
+				if ( isset($_result_raw['result']) ) {
+					$_markedfordeletion[$_deleteid] = array_unique(array_merge($_markedfordeletion[$_deleteid],$_result_raw['result']['id']));
+					sort($_markedfordeletion[$_deleteid]);
+				}
+			}
+		}
+	}
+	//present an editable form with entries marked for deletion (maybe with correcting attributions by id?)
+	$_maxentries = 0;
+	foreach ( $_TABLES_ID as $_id ) {
+		$_maxentries = max($_maxentries,sizeof($_markedfordeletion[$_id])-1);
+	}
+	if ( $_maxentries == 0 ) { ?>
+	<div>
+		<h3><i class="fas fa-broom"></i> Datenbank bereinigen</h3>
+		<p>Die Datenbank ist sauber.</p>
+	</div>
+	<?php 
+		return;	
+	}
+	?>
+	<form method="POST" id="formCleanDB" onsubmit="if ( confirm('Wollen Sie die ausgewählten Einträge wirklich löschen?') ) { callFunction(this,'cleanDBdelete','_popup_',false,'cleanup').then(()=>{ _close(this); return false; }) }; return false;"></form>
+	<div>
+		<h3><i class="fas fa-broom"></i> Datenbank bereinigen</h3>
+		<p>Die folgenden Einträge haben gebrochene Zuordnungen</p>
+	</div>
+	<?php
+	foreach ( $_TABLES_ID as $_id ) {
+		array_shift($_markedfordeletion[$_id]); //removes the auxiliary '0' entry
+		if ( sizeof($_markedfordeletion[$_id]) > 0 ) {
+		?>
+			<form>
+				<div class="tableicon">
+					<input id="delete_<?php echo($_id); ?>" type="checkbox" checked onclick="_toggleEditAll('formCleanDB','delete_<?php echo($_id); ?>','.delete_<?php echo($_id); ?>')">
+					<label for="toggleCleanDB_<?php echo($_TABLES_ARRAY[$_id]); ?>"><i class="fas fa-<?php html_echo($_TABLES_ICON[$_id]); ?>"></i></label>
+				</div>
+			</form>
+			<div>
+		<?php
+		foreach ( $_markedfordeletion[$_id] as $tobedeleted) { 
+			$_rnd = rand(0,2147483647); ?>
+			<input form="formCleanDB" class="delete_<?php echo($_id); ?>" type="checkbox" name="<?php echo($_TABLES_ARRAY[$_id]); ?>[]" id="cleanDB_<?php echo($_id.'_'.$tobedeleted); ?>" value="<?php echo($tobedeleted); ?>" checked>
+			<form method="post" id="deleteOpenForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(this,'',''); return false; }); return false;">
+				<input form="deleteOpenForm_<?php echo($_rnd); ?>" value="<?php echo($tobedeleted); ?>" name="id_<?php echo($_TABLES_ARRAY[$_id]); ?>" hidden="" type="text"><input form="deleteOpenForm_<?php echo($_rnd); ?>" id="deleteOpenSubmit__<?php echo($_rnd); ?>" hidden="" type="submit">
+			</form>
+			<label for="deleteOpenSubmit__<?php echo($_rnd); ?>" class="link" title="Öffnen"><?php echo($tobedeleted); ?></label>
+		<?php }
+		?> </div><?php
+		}
+	} ?>
+		<label class="cleanDBsubmit" for="cleanDBsubmit"><i class="fas fa-broom"></i> Auswahl löschen</label>
+		<input form="formCleanDB" id="cleanDBsubmit" type="submit" hidden>
+	<?php
+	//todo: cp and attribute ids by contextmenu event!
+}
+
+function cleanDBdelete(array $PARAM, mysqli $conn) {
+	foreach ( $PARAM as $deletefromtable => $deleteentries) {
+		$_prep = substr(str_repeat(',?',sizeof($deleteentries)),1);
+		$_types = str_repeat('i',sizeof($deleteentries));
+		unset($_stmt_array);
+		$_stmt_array['stmt'] = 'DELETE FROM view__'.$deletefromtable.'__'.$_SESSION['os_role'].' WHERE id_'.$deletefromtable.'  IN ('.$_prep.')';
+		$_stmt_array['str_types'] = $_types;
+		$_stmt_array['arr_values'] = $deleteentries;
+		$_result_raw = execute_stmt($_stmt_array,$conn);
+	}
+	cleanDB(array(),$conn);
+}
 ?>

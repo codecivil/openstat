@@ -154,7 +154,7 @@ function checkHeaders(_importel,_form,_targetdiv) {
 	el.querySelector('.submitimportlabel').classList.remove('disabled');
 	el.querySelector('.headermatch').removeAttribute('hidden');
 	el.querySelector('.importnow').setAttribute('hidden',true);
-	//document.getElementById('importnow').scrollIntoView();
+	//myScrollIntoView(document.getElementById('importnow'));
 	el.querySelector('.submitImport').removeAttribute('disabled');
 }
 

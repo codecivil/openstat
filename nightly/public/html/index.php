@@ -108,10 +108,23 @@ if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 	$changelog_array = explode('======',file_get_contents('../../changelog_user'),3);
 	$changelog = $changelog_array[0]."======".$changelog_array[1];
 	$olderchangelog = $changelog_array[2];
+}
+
+//get login functions 2022-02-18
+unset($_stmt_array); $_stmt_array = array();
+$_stmt_array['stmt'] = "SELECT functionmachine,functionscope,allowed_roles FROM os_functions WHERE functionflags LIKE '%LOGIN%'";
+$_result_array = execute_stmt($_stmt_array,$conn,true);
+unset($_result);
+$_result = $_result_array['result'];
+$_loginfunctions = array();
+foreach ( $_result as $_function )
+{
+	if ( in_array($_SESSION['os_role'],json_decode($_function['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_function['allowed_roles'])) ) { 
+		$_loginfunctions[] = array($_function['functionmachine'] => $_function['functionscope']);
+	}
 }	
 //get timestamp for forcing fresh ressource loading
 $_v = time();
-$conn->close(); //2021-07-15
 ?>
 
 <!DOCTYPE html>
@@ -143,6 +156,9 @@ $conn->close(); //2021-07-15
 <?php $_helpmode = ''; if ( isset($_config['helpmode']) AND $_config['helpmode'] == "on" ) { $_helpmode = "checked";} ?>
 <input form="helpModeForm" type="checkbox" <?php echo($_helpmode); ?> hidden id="helpModeBtn" name="helpmode" class="helpMode" value="on" onchange="callFunction(document.getElementById('helpModeForm'),'changeConfig').then(()=>{ return false; });" >
 <!-- End HelpModeHack -->
+<div id="loginfunctions" hidden>
+	<?php html_echo(json_encode($_loginfunctions)); ?>
+</div>
 <div id="statusbar">
 	<div id="logo">
 		<img id="customer_logo" src='/img/logo.png' />
@@ -217,7 +233,7 @@ $conn->close(); //2021-07-15
 			</form>
 		</div>
 		<div id="colors" data-title="Farbschema wählen">
-			<form method="post" id="colorsForm" onchange="callFunction(this,'changeConfig').then(()=>{ reloadCSS(); }); ">
+			<form method="post" class="statusForm" onchange="callFunction(this,'changeConfig').then(()=>{ reloadCSS(); }); ">
 				<legend><i class="fas fa-palette"></i></legend>
 				<select id="colorsSelect" name="_colors">
 					<?php
@@ -237,7 +253,7 @@ $conn->close(); //2021-07-15
 			<label for="osInfo">&nbsp;<i class="fas fa-info-circle" data-title="Informationen zur Software"></i>&nbsp;</label>
 			<input form="osInfoForm" type="checkbox" hidden id="osInfo" class="userInfo">
 			<div>
-				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="document.getElementById('wasistneu_wrapper').scrollIntoView()">Was ist neu?</label><br />
+				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="myScrollIntoView(document.getElementById('wasistneu_wrapper'))">Was ist neu?</label><br />
 				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
 				<b>Autor:</b> <?php html_echo($author); ?><br />
 				<?php if ( $contact != '' ) { 
@@ -301,6 +317,15 @@ $conn->close(); //2021-07-15
 			<div>
 			</div>	
 		</div>
+		<div id="clipboard" data-title="Status der Zwischenablage (Leeren durch Anklicken)" onclick="emptyClipboard()"><i class="fas fa-clipboard"></i></div>
+		<div id="openEntries">
+			<form class="statusForm" onclick="showOpenEntries(this.closest('div'))" onchange="myScrollIntoView(document.getElementById(this.querySelector('select').value))">
+				<legend><i class="fas fa-list-ol" data-title="offene Einträge"></i></legend>
+				<select></select>
+			</form>
+		</div>		
+		<?php includeFunctions('GLOBAL',$conn); $conn->close(); //2021-07-15 ?>
+		<form method="POST" class="function" hidden></form> <!--only for technical purposes: so that includeFunctions has a form to refer to -->
 	</div> 
 </div>
 <div class="clear"></div>
@@ -311,7 +336,7 @@ $conn->close(); //2021-07-15
 		<input type="checkbox" id="wasistneu" hidden>
 		<div id="wasistneudiv"><h1>Was ist neu in...</h1><pre><?php html_echo($changelog); ?>...</pre></div>
 		<input type="checkbox" id="waswarneu" hidden>
-		<label for="waswarneu" onclick="setTimeout(function(){document.getElementById('wasistneu_wrapper').scrollIntoView();},100)"><i class="fas fa-chevron-right"></i></label>
+		<label for="waswarneu" onclick="setTimeout(function(){myScrollIntoView(document.getElementById('wasistneu_wrapper'));},100)"><i class="fas fa-chevron-right"></i></label>
 		<label for="waswarneu"><i class="fas fa-chevron-down"></i></label>
 		<div id="waswarneudiv"><pre><?php html_echo($olderchangelog); ?></pre></div>
 	</form>
@@ -417,7 +442,7 @@ $conn->close(); //2021-07-15
 	},st500);
 	setTimeout(function () {
 		callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth').then(()=>{
-			callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ return false; });
+			callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ executeLoginFunctions(); return false; });
 	//	processForm(document.getElementById('formAddFilters'),'../php/updateSidebar.php','sidebar');
 		<?php 
 			unset($value);
@@ -442,6 +467,7 @@ $conn->close(); //2021-07-15
 		})
 	},2*st500);
 	_saveStateInterval = setInterval(_saveState,300000);
+	const pxperrem = document.querySelector('#logo img').height/2.5;  //CSS sets logo image to 2.5rem
 </script> 
 </body>
 </html>

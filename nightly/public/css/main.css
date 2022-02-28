@@ -60,9 +60,9 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar #usermenu > div { border-radius: 5px; }
 #statusbar #usermenu div { margin: 0.2rem; border: 1px var(--color-statusbar) solid; height: 1.5rem; line-height: 1.5rem; height: auto; }
 #statusbar #usermenu div > div { margin: 0rem; padding: 0 0.5rem 0 0.5rem; border: 0; }
-#statusbar #colorsForm { padding: 0; margin: 0; }
-#statusbar #colorsForm select { padding: 0; margin: 0; }
-#statusbar #colorsForm legend { display: inline; }
+#statusbar .statusForm { padding: 0; margin: 0; }
+#statusbar .statusForm select { padding: 0; margin: 0; }
+#statusbar .statusForm legend { display: inline; }
 #statusbar #fontsize :checked + label { color: var(--color-fontsize-selector); }
 #statusbar #usermenu #logout { font-size: 1.2rem; border-right: 1px var(--color-statusbar) dashed; }
 #statusbar #usermenu #loggedin { border-right: 1px var(--color-statusbar) dashed; }
@@ -80,6 +80,7 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar .sliderbutton { cx: 66%; fill: var(--button-slider); }
 #statusbar .sliderframe { fill: var(--background-slider); stroke: var(--button-slider); }
 #statusbar label[for="helpModeBtn"] { top: 0; }
+#statusbar .functions { background: initial; }
 
 /* HelpMode specifics */
 #helpModeBtn:checked ~ div .sliderframe {
@@ -382,6 +383,33 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 	border-bottom: 1px solid black;
 	box-shadow: 0 0.1rem 0.1rem -0.1rem #0e0e0e;
 }
+.details ul.emptyfields {
+	list-style-type: none;
+	padding: 0.5rem;
+}
+.details ul.emptyfields::before {
+	content: 'Leere Felder';
+	color: black;
+	text-shadow: 1px 1px var(--background-warning), -1px 1px var(--background-warning), 1px -1px var(--background-warning), -1px -1px var(--background-warning);
+	display: block;
+}
+
+.details ul.emptyfields li {
+	display: inline;
+	padding: 0.5rem;
+	border: 1px solid var(--background-warning);
+	margin: 0.2rem;
+	line-height: 3rem;
+}
+
+.details ul.emptyfields li:hover { cursor: pointer; }
+
+.cleanup { background: var(--background-cleanup); }
+.cleanup .tableicon { font-size: 1.5rem; text-align: left; margin-top: 1rem; }
+.cleanup .cleanDBsubmit { background: var(--background-functions); position: relative; left: calc(100% - 12.7rem); bottom: 0.5rem; font-size: 1.2rem; padding: 0.5rem; border-radius: 5px; }
+.cleanup .cleanDBsubmit:hover { background: var(--background-marked); }
+.cleanup label.link:hover { text-decoration: underline; }
+.cleanup div { margin: 0.2rem; padding: 0.5rem; }
 
 .message .true { background: var(--background-goodmessage); }
 .message .false { background: var(--background-badmessage); font-weight: bold; }

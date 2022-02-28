@@ -6,6 +6,7 @@ if ( ! isset($_SESSION['user']) ) { header('Location:/html/admin.php'); exit(); 
 require_once('../../core/classes/auth.php');
 require_once('../../core/functions/db_functions.php');
 require_once('../../core/functions/frontend_functions.php');
+require_once('../../core/functions/display_functions.php');
 
 ?>
 
@@ -169,6 +170,8 @@ function readable(string $_string) {
 		"functionscope" => "Anwendungsfeld",
 		"functionclasses" => "CSS Klassen",
 		"functiontarget" => "Zielbereich der Funktion",
+		"functionconfig" => "Konfiguration der Funktion",
+		"functionflags" => "Verhalten der Funktion",
 		"keymachine" => "interner Feldname",
 		"keyreadable" => "angezeigter Feldname",
 		"realid" => "Reihenfolge",

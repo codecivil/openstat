@@ -110,7 +110,7 @@ function newEntry(array $PARAM,$conn) {
 		-->
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table[0].$id[0].$rnd); ?>_sticky" class="action">Aktion</label>
-					<select id="_action<?php echo($table[0].$id[0].$rnd); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($rnd); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ document.getElementById('_action<?php echo($table[0].$id[0].$rnd); ?>_sticky').value = 'pleasechoose'; this.scrollIntoView(); return false; });" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+					<select id="_action<?php echo($table[0].$id[0].$rnd); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($rnd); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ document.getElementById('_action<?php echo($table[0].$id[0].$rnd); ?>_sticky').value = 'pleasechoose'; myScrollIntoView(this); return false; });" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="pleasechoose" selected>[Bitte erst nach Bearbeitung wählen]</option> <!-- pleasechoose: arbitrary non-empty value, so that the message is returned and not an array-->
 						<option value="insert">als neuen Eintrag anlegen</option>
 					</select>
@@ -126,14 +126,14 @@ function newEntry(array $PARAM,$conn) {
 						<div class='ID_<?php echo($_tmp_table); ?>' ondragover="allowDrop(event)" ondrop="dropOnDetails(event,this)" ondragstart="drag(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)">
 							<?php
 							if ( $key == 'id_'.$maintable ) { ?>
-									<label class="unlimitedWidth"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> <?php html_echo(sizeof($id)); ?> Einträge (Änderung muss noch gespeichert werden)</label>
+									<label class="unlimitedWidth" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> <?php html_echo(sizeof($id)); ?> Einträge (Änderung muss noch gespeichert werden)</label>
 									<input type="text" hidden value="<?php html_echo(json_encode($id)); ?>" name="<?php echo($key); ?>" class="inputid" />								
 							<?php } else {
 								if ( isset($PARAM[$key]) ) { ?>
-									<label class="unlimitedWidth"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> ID: <?php echo($PARAM[$key]); ?> (Änderung muss noch gespeichert werden)</label>
+									<label class="unlimitedWidth" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> ID: <?php echo($PARAM[$key]); ?> (Änderung muss noch gespeichert werden)</label>
 									<input type="text" hidden value="<?php echo($PARAM[$key]); ?>" name="<?php echo($key); ?>" class="inputid" />
 								<?php } else { ?>
-									<label class="unlimitedWidth"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> (keine Zuordnung)</label>
+									<label class="unlimitedWidth" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> (keine Zuordnung)</label>
 									<input type="text" hidden value="<?php echo($default); ?>" name="<?php echo($key); ?>" class="inputid" />
 								<?php } 
 							} ?>
@@ -609,7 +609,10 @@ function trafficLight(array $PARAM, mysqli $conn)
 		}
 		if ( sizeof($ids) > 0 ) {
 			$result_size = 0;
-			foreach ( $ids as $ids_in_table ) { $result_size += sizeof($ids_in_table); }
+			foreach ( $ids as $ids_in_table ) { 
+				unset($ids_in_table[0]);	
+				$result_size += sizeof($ids_in_table);
+			}
 		?>
 			<div class="tableicon"><label for="toggleTrafficLight_<?php echo($table); ?>"><i class="fas fa-<?php html_echo($icon[$table]); ?>"></i></label>&nbsp; <?php echo($result_size); ?></div>
 			<input class="toggle" type="checkbox" id="toggleTrafficLight_<?php echo($table); ?>" hidden>
@@ -658,7 +661,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 					<td><?php html_echo(implode(' | ',$ids[$idstable][$_item['id_'.$idstable]]['criteria'])); ?></td>
 					<td>
 						<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_item['id_'.$idstable]); ?>" name="id_<?php echo($idstable); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
-						<label for="ampelSubmit__<?php echo($_rnd); ?>" data-title="ID: <?php echo($_item['id_'.$idstable]); ?>"><i class="fas fa-<?php echo($icon[$idstable]); ?>"></i></label>
+						<label for="ampelSubmit__<?php echo($_rnd); ?>" data-title="ID: <?php echo($_item['id_'.$idstable]); ?>" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php echo($icon[$idstable]); ?>"></i></label>
 					</td>
 					<?php
 					foreach ( $_assoc_table_result as $_assoc_item ) {
@@ -667,7 +670,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 							?>
 							<td>
 								<form method="post" id="ampelForm_<?php echo($_rnd); ?>" class="inline" action="" onsubmit="callFunction(this,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(this,'',''); return false; }); return false;"><input form="ampelForm_<?php echo($_rnd); ?>" value="<?php echo($_assoc_item['id_'.$table]); ?>" name="id_<?php echo($table); ?>" hidden="" type="text"><input form="ampelForm_<?php echo($_rnd); ?>" id="ampelSubmit__<?php echo($_rnd); ?>" hidden="" type="submit"></form>
-								<label for="ampelSubmit__<?php echo($_rnd); ?>" data-title="ID: <?php echo($_assoc_item['id_'.$table]); ?>"><i class="fas fa-<?php echo($icon[$table]); ?>"></i></label>
+								<label for="ampelSubmit__<?php echo($_rnd); ?>" data-title="ID: <?php echo($_assoc_item['id_'.$table]); ?>" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php echo($icon[$table]); ?>"></i></label>
 							</td>							
 							<?php
 						}
@@ -850,4 +853,9 @@ function uuid() {
 	$data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
 	$data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
 	return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+}
+
+//nothing to do on server side; this is just there to obey the function formalism
+function showEmptyFields($PARAM,$conn) {
+	return;
 }

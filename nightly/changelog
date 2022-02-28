@@ -1,3 +1,38 @@
+#v1.7.0
+======
+
+28.02.2022
+
+* fix: updateSelection did not correctly hide and show for EXTENSIBLE data models
+* updateSelection now allows current value to be chosen independent of other restrictions
+* updateSelection does not show unavailable options any more
+* tinyMCE-plugin: improve size (and by that, position) of editing box (possible since 
+  introducution of CSS min() and max() in Firefox 75)
+* fix: createStructure was missing display_functions
+* new function 'jump to open entries' in status bar
+
+25.02.2022
+
+* new function: showEmptyFields; toggles showing field that have not been filled in
+
+22.02.2022
+
+* new function scope: GLOBAL (in statusbar)
+* new function cleanDB: clean entries with broken attributions
+* new feature 'attribute by clipboard': 
+    right-click any entry icon to copy to clipboard
+    right-click attribution to paste if clipboard is filled and to copy otherwise
+    clipboard has a display in statusbar; click to empty
+
+
+19.02.2022
+
+* new feature: functionflags; flags governing behaviour
+  implemented: 
+    ** AUTO: autoexecute at scope creation
+    ** LOGIN: execute at login (also at reload, at the moment)
+    ** HIDDEN: do not show to user
+
 #v1.6.5
 ======
 

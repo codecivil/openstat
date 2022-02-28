@@ -97,7 +97,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<?php updateTime(); includeFunctions('TABLES',$conn); ?>
 		<label for="notoggleTables"><h1 class="center"><i class="fas fa-table"></i></h1></label>
 		<input type="checkbox" hidden id="notoggleTables" class="notoggle">
-		<form id="formChooseTables" class="noform function" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ return false; });return false;" >
+		<form id="formChooseTables" class="noform function" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ processFunctionFlags(this.closest('.section')); return false; });return false;" >
 			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
 			<?php
 				unset($_stmt_array); $_stmt_array = array();
@@ -159,7 +159,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			<input hidden id="formTablesSubmit" type="submit" value="Aktualisieren">
 		</form>
 	</div>
-	<div id="filters">
+	<div id="filters" class="section"> <!-- class 'section' added on 20220218-->
 		<?php updateTime(); includeFunctions('FILTERS',$conn); ?>		
 		<div id="addfilters">
 			<label for="toggleAddFilter"><h2 class="center"><i class="fas fa-filter"></i><i class="fas fa-plus"></i></h2></label>
@@ -216,7 +216,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			</form>
 		</div>
 		<hr>
-		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); return false; }); return false; ">
+		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); return false; }); return false; ">
 			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>

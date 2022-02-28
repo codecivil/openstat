@@ -58,6 +58,7 @@ function trashMapping(el) {
 	var _parent = el.closest('div');
 	_parent.getElementsByTagName('input')[0].value = undefined;
 	_parent.getElementsByTagName('label')[0].innerHTML = '<i class="'+_parent.getElementsByTagName('i')[0].className+'"></i> (keine Zuordnung; Änderung muss noch abgeschickt werden)';
+	return false;
 }
 
 function publishResponse(form,id,add,classes) {
@@ -86,7 +87,7 @@ function processForm(form,phpscript,id,add,classes) {
 		before = document.getElementsByClassName('popup_wrapper')[0];
 		document.body.insertBefore(popup_wrapper,before);
 		id = popup.id;
-		document.getElementById(id).scrollIntoView();
+		myScrollIntoView(document.getElementById(id));
 	}
 	if ( id != '' ) {
 		var el = document.getElementById(id);
@@ -171,14 +172,14 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			};
 			tinyMCEinit();
 			document.body.style.cursor = 'auto';
-			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) && el.id != 'veil' ) { el.closest('.popup_wrapper').scrollIntoView(); }
+			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) && el.id != 'veil' ) { myScrollIntoView(el.closest('.popup_wrapper')); }
 			if (callback) { resolve(window[callback](form,arg,_request.responseText)); /*return window[callback](form,arg,_request.responseText);*/ } else { resolve(false); return false; };	
 		}
 	} else {
 		_request.onload = function() { 	
  			if ( _request.responseText == "LOGGEDOUT" ) {  window.location = "/login.php"; };
 			document.body.style.cursor = 'auto';
-			if (callback) { resolve(window[callback](form,arg,_request.responseText)); return window[callback](form,arg,_request.responseText); } else { resolve(false); return false; };
+			if (callback) { resolve(window[callback](form,arg,_request.responseText)); return false; } else { resolve(false); return false; };
 		}
 	}
 	_request.open(form.method,'../php/callFunction.php',true);
@@ -241,7 +242,7 @@ function callPHPFunction(_arg,_function,_target,_classes) {
 //	var _input = document.getElementById('trash');
 //	_input.value = _arg;
 	callFunction(_arg,_function,_target,false,_classes,_function,_arg).then(()=>{ 
-		if (! _arg.classList.contains('noreset') ) { _arg.reset(); }; //why reset at all? not appropriate for exportCSV function
+		if (! _arg.classList || ! _arg.classList.contains('noreset') ) { _arg.reset(); }; //why reset at all? not appropriate for exportCSV function
 		return false;
 	})
 	return false;

@@ -156,14 +156,19 @@ function _oldautoComplete(el,suggest_array,suggest_conditions) {
 
 //to be continued: how to deal with conditionless CALENDARS (like EXTENSIBLE LISTS, but with restrictibility!)
 function updateSelection(el) {
-	var id = el.id;
+	//data-hidden as string attribute!
+	if ( ! ('hidden' in el.dataset) ) { el.dataset.hidden = el.hidden; } // get initial settings for hidden (e.g. for EXTENSIBLE data models)
+	var id = el.id.replace(/_list$/,''); //so it works for EXTENSIBLE data models, where you have _list and _text ids.
 	var option = el.getElementsByTagName('option');
 	var _disabled = new Array(); //the state for checkboxes: activate all options matching a checked checkbox
 	for (j=0; j<option.length; j++) {
 		option[j].disabled = false;
 		_disabled[j] = true;
+		//2022-02-28
+		option[j].hidden = false;
 	}
-	var conditions = JSON.parse(document.getElementById(id+'_conditions').innerText);
+	var conditions = new Array();
+	if ( document.getElementById(id+'_conditions') ) { conditions = JSON.parse(document.getElementById(id+'_conditions').innerText); }
 	var conditions_met = 0;
 	var _show_matched = false;
 	var _hide_matched = false;
@@ -190,7 +195,7 @@ function updateSelection(el) {
 						if ( allowed_values.indexOf('_HIDE_') > -1 ) { _hide_matched = true; }
 						for (j=0; j<option.length; j++) {
 							var match = allowed_values.indexOf(option[j].value);
-							if ( match == -1 ) { option[j].disabled = true; }; 
+							if ( match == -1 && ! option[j].selected ) { option[j].disabled = true; option[j].hidden = true; }; //do not disallow current value!? important for EXTENSIBLE LISTs
 						}
 					}
 				}
@@ -205,10 +210,11 @@ function updateSelection(el) {
 							if ( allowed_values.indexOf('_SHOW_') > -1 ) { _show_matched = true; }
 							if ( allowed_values.indexOf('_HIDE_') > -1 ) { _hide_matched = true; }
 							var match = allowed_values.indexOf(option[j].value);
-							if ( match > -1 ) { _disabled[j] = false; }; 
+							if ( match > -1 || option[j].selected ) { _disabled[j] = false; }; //do not disallow current value!? important for EXTENSIBLE LISTs
 						}
 					}
 					option[j].disabled = _disabled[j];
+					option[j].hidden = _disabled[j];
 				}
 			}
 		}
@@ -227,7 +233,7 @@ function updateSelection(el) {
 				if ( allowed_values.indexOf('_HIDE_') > -1 ) { _hide_matched = true; }
 				for (j=0; j<option.length; j++) {
 					var match = allowed_values.indexOf(option[j].value);
-					if ( match == -1 ) { option[j].disabled = true; }
+					if ( match == -1 && ! option[j].selected ) { option[j].disabled = true; option[j].hidden = true;} //do not disallow current value!? important for EXTENSIBLE LISTs
 				} 
 			}
 		}
@@ -236,7 +242,8 @@ function updateSelection(el) {
 		el.querySelectorAll('option:checked:disabled')[0].selected = false;
 	}
 	//_SHOW_ and _HIDE_ now acting:
-	let _label = el.parentElement.querySelector('[for="'+el.id+'"]');
+	let _label = el;
+	if ( el.parentElement.querySelector('[for="'+el.id+'"]') ) { _label = el.parentElement.querySelector('[for="'+el.id+'"]'); } // el and _label share the same properties int hre rest of this function
 	if ( _hide_matched && ! _show_matched ) {
 		el.style.opacity = 0;
 		_label.style.opacity = 0;
@@ -246,12 +253,16 @@ function updateSelection(el) {
 			}, 700);
 	} else {
 		// is this compatible with mass editing or non-editing permissions?
-		el.hidden = false; el.disabled = false;
-		el.parentElement.querySelector('[for="'+el.id+'"]').hidden = false;
+		// it is not working for extensible lists! how to decide which input method must be shown? to be continued
+//		el.hidden = false; el.disabled = false;
+		el.hidden = (el.dataset.hidden === 'true'); el.disabled = ( el.dataset.hidden === 'true' );
+		if ( el.parentElement.querySelector('[for="'+el.id+'"]') ) { el.parentElement.querySelector('[for="'+el.id+'"]').hidden = ( el.dataset.hidden === 'true' ); }
 		setTimeout(function(){
-			el.style.opacity = 1;	
-			_label.style.opacity = 1;	
-			},100)
+			if ( el.dataset.hidden == "false" ) { //new in 2022-02-26
+				el.style.opacity = 1;
+				_label.style.opacity = 'inital'; //to do: deal with labels in multiple entries: they must have opacity 0
+			}	
+		},100);
 	}
 	//now only missing: autoupdateSelection at opening (getDetails)
 }
@@ -268,8 +279,11 @@ function updateSelectionOfClasses(el) {
 				//update the selection
 				updateSelection(member);
 				//fire the change event (which otherwise would not fire)
-				ev = document.createEvent('Event');
-				ev.initEvent('change', true, false);
+				//  this is deprecated:
+				//    ev = document.createEvent('Event');
+				//    ev.initEvent('change', true, false);
+				//  instead:
+				ev = new CustomEvent('change', { bubbles: true });
 				member.dispatchEvent(ev);
 			}
 		});
@@ -384,6 +398,34 @@ function newEntry(form,arg,response) {
 		}
 		sessionStorage.removeItem(JSON.stringify(key));
 	}
+	//process function flags
+	processFunctionFlags(el);
+}
+
+//el: element whose functions child div shall be processed
+function processFunctionFlags(el) {
+	let functionList = el.querySelectorAll('.functions li label');
+	functionList.forEach(function(_function) {
+		_functionflags = JSON.parse(_function.dataset.flags);
+		_functionflags.forEach(function(_flag) {
+			switch(_flag) {
+				//flag "HIDDEN" is treated in db_functions.php: hide it before it reaches the client!
+				//flag "LOGIN" is treated by executeLoginFunctions (does not depend on el, has to be called only once)
+				case 'AUTO':
+					let ev = new Event('click');
+					_function.dispatchEvent(ev);
+					break;;
+			}
+		});
+	});
+}
+
+function executeLoginFunctions() {
+	functionList = document.querySelectorAll('.functions li label[data-flags*="LOGIN"]');
+	functionList.forEach(function(_function) {
+		let ev = new Event('click');
+		_function.dispatchEvent(ev);
+	});
 }
 
 function _saveState() {
@@ -423,8 +465,8 @@ function _toggleColumn(el,key) {
 	)
 }
 
-function _toggleEditAll(form,master) {
-	document.querySelectorAll('input[form="'+form+'"]').forEach(function(el){el.checked = document.getElementById(master).checked;});
+function _toggleEditAll(form,master,selector='') {
+	document.querySelectorAll('input[form="'+form+'"]'+selector).forEach(function(el){el.checked = document.getElementById(master).checked;});
 }
 
 function _toggleEnabled(number) {
@@ -958,4 +1000,145 @@ function unlock(form,arg,response) {
 		veil.className = '';
 	}
 //	return false
+}
+
+//this a callback for callFunction
+function cleanDB(form,arg,response) {
+	//only let one cleaning window live
+	document.querySelectorAll('.popup.cleanup').forEach(function(cleanup) {
+		if ( cleanup != document.querySelector('.popup.cleanup') ) {
+			_close(cleanup,true);
+		}
+	});
+}
+//action: copy unless it is an attribution field; then copy if clipboard is empty, paste otherwise
+//to be continued...
+function transportAttribution(el) {
+	//
+	//look for entry info depending on containing window
+	//
+	let _info = new Object();
+	let _copy = true;
+	let _infoel = null;
+	//results or trafficLight
+//was:	if ( document.getElementById('results_wrapper').contains(el) ) {
+	if ( el.closest('td') ) {
+		infoel = el.closest('td').querySelector('form input[type=text]');
+		_info._table = infoel.name;
+		_info._id = infoel.value;
+	}
+	//entry headline 
+	else if ( el.closest('.popup.details') && el.closest('.db_headline_wrapper') ) {
+		infoel = el.closest('.popup.details').querySelector('div.hidden')
+		_info._table = 'id_'+infoel.querySelector('div._table_').innerText;
+		_info._id = infoel.querySelector('div._id_').innerText;
+	}
+	//entry attribution
+	else if ( el.closest('.popup.details') ) {
+		infoel = el.nextElementSibling;
+		_info._table = infoel.name;
+		_info._id = infoel.value;
+		if ( sessionStorage.getItem('attribution_clipboard') != null ) { _copy = false; }
+	}
+	//
+	// now do the action 
+	//
+	if ( _copy ) {
+		if (el.querySelector('i')) { _info._icon = el.querySelector('i').className; }
+		else if (el.parentElement.querySelector('i')) { _info._icon = el.parentElement.querySelector('i').className; }
+		else { _info._icon = ''; }
+		sessionStorage.setItem('attribution_clipboard',JSON.stringify(_info));
+		document.getElementById('clipboard').innerHTML = '<i class="fas fa-clipboard-check"></i> <small><i class="'+_info._icon+'"></i> '+_info._id+'</small>';
+	} else {
+		//paste in attribution field
+		_info = JSON.parse(sessionStorage.getItem('attribution_clipboard'));
+		if ( el.nextElementSibling.name == _info._table ) {
+			el.nextElementSibling.value = _info._id;
+			el.querySelector('i').nextSibling.textContent = ' (ID: '+_info._id+'; Änderung muss noch abgeschickt werden)';
+			if (el.querySelector('b')) { el.querySelector('b').remove(); }
+		}
+	}
+	return false;
+}
+
+function emptyClipboard() {
+	sessionStorage.removeItem('attribution_clipboard');
+	document.getElementById('clipboard').innerHTML = '<i class="fas fa-clipboard"></i>';
+}
+
+function myScrollIntoView(el) {
+	if ( el != null ) {
+		let _scroll = 5.7; //scroll under the statusbar
+		//if inside an entry, scroll under entry header
+		if ( el.closest('.popup_wrapper .fieldset') ) { _scroll = 14.4; }
+		new Promise((resolve,reject)=>{ el.scrollIntoView(); resolve();}).then(()=>{ 
+			window.scrollBy({ top: -_scroll*pxperrem, behavior: 'smooth'});
+		});
+	}
+}
+
+//this is now a callback function for an empty PHP function
+//actually, it's toggling
+function showEmptyFields(_form,_arg,resp) {
+	let el = _form.closest('.popup_wrapper');
+	let target = el.querySelector('.message');
+	console.log(target);
+	//here is the toggle:
+	if ( target.querySelector('ul.emptyfields') ) {
+		target.innerHTML = '';
+		el.querySelectorAll('.edit_wrapper').forEach(function(editwrapper) {
+			editwrapper.style.background = "initial";
+		});	
+		return;
+	}
+	//
+	target.innerHTML = '';
+	//color the unfilled fields and keep it on the books
+	let _notFilledFields = new Array();
+	el.querySelectorAll('.edit_wrapper').forEach(function(editwrapper) {
+		editwrapper.style.background = "initial";	
+		let _filled = false;
+		editwrapper.querySelectorAll('select:not([hidden]),input:not([hidden]),textarea:not([hidden])').forEach(function(_input) {
+			if ( _input.value != '' ) { _filled = true; } else { _inputid = _input.id; }
+		});
+		if ( ! _filled ) { 
+			editwrapper.style.background = "var(--background-warning)";
+			console.log(editwrapper.querySelectorAll('label'));
+			_notFilledFields.push({_id: _inputid, _label: editwrapper.querySelector('label.onlyone,label.files').innerText});
+		}
+	});
+	//create the message
+	let _ul = document.createElement('ul');
+	_ul.classList.add('emptyfields');
+	_ul.style.maxWidth = 'calc( '+getComputedStyle(target).width+' - 1rem )';
+	target.appendChild(_ul);
+	_notFilledFields.forEach(function(_notFilledField) {
+		_li = document.createElement('li');
+		_a = document.createElement('a');
+		_a.textContent = _notFilledField._label;
+		_a.dataset.target = _notFilledField._id;
+		_a.onclick = function() { myScrollIntoView(document.getElementById(this.dataset.target).previousElementSibling); };
+		_li.appendChild(_a);
+		_ul.appendChild(_li);
+	});
+}
+
+function showOpenEntries(el) {
+	let _selectedValue = el.querySelector('select').value;
+	el.querySelector('select').innerHTML = '';
+	let _option = document.createElement('option');
+	_option.value = 'results_wrapper';
+	_option.textContent = 'Filter/Statistik/Details';
+	if ( _option.value == _selectedValue ) { _option.selected = true; }
+	el.querySelector('select').appendChild(_option);
+	let openEntries = document.querySelectorAll('.popup_wrapper .popup');
+	openEntries.forEach(function(_openEntry){
+		if ( ! _openEntry.querySelector('.db_headline') ) { return; }
+		let _option = document.createElement('option');
+		_option.value = _openEntry.id;
+		_option.textContent = _openEntry.querySelector('.db_headline').innerHTML.replace(/.*\/i>/,'').replace(/<span.*/,'').substr(0,25);
+		if ( _option.value == _selectedValue ) { _option.selected = true; }
+		el.querySelector('select').appendChild(_option);
+	});
+	return false;
 }

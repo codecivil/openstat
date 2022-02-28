@@ -19,6 +19,8 @@ body {
 	--background-details: linear-gradient(#ffffff,#ffff80);	
 	--background-details-new: linear-gradient(#80ff80,#80ffff);	
 	--background-marked: #80ff80;
+	--background-cleanup: #cce0ff;
+	--background-warning: #ffa000;	
 	--color-statusbar: #fff;
 	--color-resultswrapper: #000;
 	--color-statwrapper: #000;
