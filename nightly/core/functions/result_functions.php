@@ -4,12 +4,12 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 	function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$keyreadable,$index,$value,$tmpvalue = '',$separator = '',$emptyisall = false) {
 		switch($index) {
 			case 1001:  
-				if ( json_encode($value) == '[""]' ) { $value = array('1970-01-01'); };
+				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
 //						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
 				$tmpvalue = $value;
 				break;
 			case 1002:  
-				if ( json_encode($value) == '[""]' ) { $value = array('2070-01-01'); };
+				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
 				if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
 				$value_combined = array_combine($tmpvalue,$value);
 				foreach ( $value_combined as $von=>$bis ) {
@@ -18,12 +18,14 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 				unset($tmpvalue);
 				break;
 			case 5001:  
-				if ( json_encode($value) == '[""]' ) { $value = array('0'); };
+//				if ( json_encode($value) == '[""]' ) { $value = array('0'); };
+				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
 //						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
 				$tmpvalue = $value;
 				break;
 			case 5002:  
-				if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
+//				if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
+				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
 				if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
 				$value_combined = array_combine($tmpvalue,$value);
 				foreach ( $value_combined as $von=>$bis ) {
@@ -77,6 +79,7 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 	if ( $complement ) { $filter_results = '<b>Komplement von</b><br /><br />'; }
 	foreach ( $parameters as $tablekey=>$values )
 	{
+		$_old_filter_results = $filter_results;
 		if ( isset($parameters['table']) ) { $table = $parameters['table'][0]; } else { $table = $_table; };
 		if ( ! strpos($tablekey,'__') OR strpos($tablekey,'__id_') ) { continue; }
 		
@@ -114,7 +117,16 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 				$_tmpresult = _addToFilterStatement($values,$filter_results,$komma,$_newkomma,$keyreadable,$index,$value,$tmpvalue);
 				$filter_results = $_tmpresult[0]; $tmpvalue = $_tmpresult[1]; $komma = $_tmpresult[2];
 			}
-		$filter_results .= '<br />';
+			//now remove filters only containing 'unbestimmt' and 'ungefiltert'
+			$_diff_results = str_replace($_old_filter_results,'',$filter_results);
+			$_diff_results = str_replace('<b>'.$keyreadable.'</b> = ','',$_diff_results);
+			$_diff_results = str_replace('<b>'.$keyreadable.'</b> &#8800; ','',$_diff_results);
+			preg_match('/[^(\[ungefiltert\])(\[unbestimmt\])(von)(bis) +]/',$_diff_results,$_foundfilters);
+			if ( ! isset($_foundfilters[0]) ) {
+				$filter_results = $_old_filter_results;
+			} else {
+				$filter_results .= '<br />';
+			}
 		}
 	}
 	if ( $filter_results == '' ) { $filter_results = "Keine"; }
@@ -408,7 +420,12 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 				switch($edittype[$key]) {
 					case 'INTEGER':
 					case 'DECIMAL':
-						$rrcount[$key] += $row[$key.'_value'];
+						//take max if key is a counting attributions field (all values are the same and should not be added up)
+						if ( substr($keyreadable[explode('__',$key,2)[1]],0,1) == '#' ) {
+							$rrcount[$key] = max($rrcount[$key],$row[$key.'_value']);
+						} else {
+							$rrcount[$key] += $row[$key.'_value'];
+						}
 						break;
 					default:
 						$rrcount[$key]++;

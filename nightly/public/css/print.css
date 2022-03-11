@@ -11,6 +11,7 @@ hr, .clear { clear: both; }
 .center { text-align: center; }
 .inline { display: inline; }
 .hidden { display: none; }
+.disabled { visibility: hidden; }
 .bold { font-weight: bold; }
 .left { float: left; }
 .toggler { display: none; }

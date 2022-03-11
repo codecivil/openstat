@@ -1,3 +1,9 @@
+#v1.7.1
+
+* Datums- und Kombifelder filtern nun auch erst bei Angabe von Bedingungen
+* Negation von "#"-Filtern (Anzahlen von Zuordnungen) funktioniert nun
+* Statistik zählt "#"-Filter nun richtig
+
 #v1.7.0
 ======
 

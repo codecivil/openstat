@@ -406,13 +406,33 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		//implement here
 		$ATTR_WHERE = ''; $ATTR_OR = '';
 		if ( in_array($key,$TABLES) ) {
+			//  handle negation (has to be done separately since attribution counts have to be done before the remaining parsing...)
+			if ( array_key_exists(3001,$values) ) {
+				$ATTR_OR_PROPER = " AND ";
+				$ATTR_LE = " > ";
+				$ATTR_GE = " < ";
+				$ATTR_DEFAULT_MIN = 1000000000;
+				$ATTR_DEFAULT_MAX = 0;
+				$ATTR_AND = " OR ";
+			} else {
+				$ATTR_OR_PROPER = " OR ";		
+				$ATTR_LE = " <= ";
+				$ATTR_GE = " >= ";		
+				$ATTR_DEFAULT_MAX = 1000000000;
+				$ATTR_DEFAULT_MIN = 0;
+				$ATTR_AND = " AND ";
+			}
 			$ATTR_SELECT = $komma . 'tmp__' . $table . '__' . $key . '.' . $key . ' AS ' . $table . '__' . $key;
 			$ATTR_FROM = ' INNER JOIN ( SELECT `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.',COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') AS ' . $key . $_FROM.$_WHERE.$bracket.' GROUP BY `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' HAVING ';
 			for ( $i = 0; $i < sizeof($values[5003]); $i++ ) {
+				if ( $values[5001][$i] == '' AND $values[5002][$i] == '' ) {
+					$values[5001][$i] = $ATTR_DEFAULT_MIN;
+					$values[5002][$i] = $ATTR_DEFAULT_MAX;
+				}
 				if ( $values[5001][$i] == '' ) { $values[5001][$i] = 0; }
 				if ( $values[5002][$i] == '' ) { $values[5002][$i] = 1000000000; }
-				$ATTR_FROM .= $ATTR_OR.'( COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') >= '.$values[5001][$i].' AND COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') <= '.$values[5002][$i].')';
-				$ATTR_OR=" OR ";
+				$ATTR_FROM .= $ATTR_OR.'( COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') '.$ATTR_GE.$values[5001][$i].$ATTR_AND.' COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') '.$ATTR_LE.$values[5002][$i].')';
+				$ATTR_OR=$ATTR_OR_PROPER;
 			}
 			$ATTR_FROM .= ' ) AS tmp__' . $table . '__' . $key. ' ON tmp__' . $table . '__' . $key . '.id_' . $table . ' = `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table;	
 //			$ATTR_WHERE = $komma2.'`view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' IN ( SELECT `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.$_FROM.$_WHERE.$bracket.' GROUP BY `view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' HAVING COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') >= '.$values[5001][0].' AND COUNT(DISTINCT `view__' . $key . '__' . $_SESSION['os_role'].'`.id_'.$key.') <= '.$values[5002][0].' )';
@@ -508,24 +528,30 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 				unset($_stmt_tmp); $_stmt_tmp = array();
 				$_stmt_tmp['stmt'] = "SELECT MAX(JSON_LENGTH(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`)) AS jsonlength FROM `view__" . $table . "__" . $_SESSION['os_role']."`";
 				unset($_jsonlength);
-				$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0]; 				
+				$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0];
 				for ( $i = 0; $i < sizeof($values[1001]); $i++ )
 	//			foreach ($values[1001] as $index=>$value)
 				{
 		//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
+					if ( ! isset($_jsonlength) OR $_jsonlength == 0 ) { $_jsonlength = 1; } 
 					$_WHERE .= $komma2.' (';
 					$komma3 = '';
 					for ( $j = 0; $j < $_jsonlength; $j++ ) {
-						if ( ! isset($values[1001][$i]) OR $values[1001][$i] == '' ) { $values[1001][$i] = '1970-01-01'; }
-						$_WHERE .= $komma3."(((`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` NOT LIKE '[%' AND `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` ".$_ge." '".$values[1001][$i]."')";
-						$_WHERE .= " OR (`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') ".$_ge." \"".$values[1001][$i]."\")";
+						$_nullallowed = false;
+						$_altnull = array('','');
+						if ( ! isset($values[1001][$i]) OR $values[1001][$i] == '' ) { $values[1001][$i] = '1000-01-01'; $_nullallowed = true; $_altnull = array(" OR ( `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` IS NULL ) "," OR ( JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') = '' ) "); }
+						$_WHERE .= $komma3."(((`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` NOT LIKE '[%' AND `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` ".$_ge." '".$values[1001][$i]."')".$_altnull[0];
+						$_WHERE .= " OR (`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') ".$_ge." \"".$values[1001][$i]."\")".$_altnull[1];
 						$_WHERE .= ')';
 						$komma2 = $_komma_date_multiple_inner;
 //						$komma2 = $_komma_date_inner;
 						$bracket = ')';
-						if ( ! isset($values[1002][$i]) OR  $values[1002][$i] == '' ) { $values[1002][$i] = '2070-01-01'; }
+						//_nullallowed is easier here, since '' < any string
+						$_nullallowed = false;
+						if ( ! isset($values[1002][$i]) OR  $values[1002][$i] == '' ) { $values[1002][$i] = '9999-12-31'; $_nullallowed = true; }
 						$_WHERE .= $komma2."((`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` NOT LIKE '[%' AND `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` ".$_le." '".$values[1002][$i]."')";
 						$_WHERE .= " OR (`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$j."]') ".$_le." \"".$values[1002][$i]."\")";
+						if ( $_nullallowed ) { $_WHERE .= " OR ( `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` IS NULL ) "; }
 						$_WHERE .= '))';
 						$komma2 = $_komma_outer;
 						$komma3 = $_komma_date_multiple;
@@ -581,18 +607,20 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 					//			foreach ($cmp_values[$compoundnumber][1001] as $index=>$value)
 					//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
 					//			$komma3 = '';
-								if ( ! isset($cmp_values[$compoundnumber][1001][$i]) OR $cmp_values[$compoundnumber][1001][$i] == '' ) { $cmp_values[$compoundnumber][1001][$i] = '1970-01-01'; }
+								$_nullallowed = (((! isset($cmp_values[$compoundnumber][1001][$i])) OR ($cmp_values[$compoundnumber][1001][$i] == '')) AND ((! isset($cmp_values[$compoundnumber][1002][$i])) OR ($cmp_values[$compoundnumber][1002][$i] == '')));
+								if ( ! isset($cmp_values[$compoundnumber][1001][$i]) OR $cmp_values[$compoundnumber][1001][$i] == '' ) { $cmp_values[$compoundnumber][1001][$i] = '1000-01-01'; }
 					//			$_WHERE .= $komma3."((";
 					//			$_WHERE .= "((";
-								$_WHERE .= "(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." \"".$cmp_values[$compoundnumber][1001][$i]."\")";
+								$_WHERE .= "(IFNULL(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]'),'') ".$_ge." \"".$cmp_values[$compoundnumber][1001][$i]."\")";
 					//			$_WHERE .= ')';
 								$komma2 = $_komma_date_multiple_inner;
 		//						$komma2 = $_komma_date_inner;
 								$bracket = ')';
-								if ( ! isset($cmp_values[$compoundnumber][1002][$i]) OR  $cmp_values[$compoundnumber][1002][$i] == '' ) { $cmp_values[$compoundnumber][1002][$i] = '2070-01-01'; }
+								if ( ! isset($cmp_values[$compoundnumber][1002][$i]) OR  $cmp_values[$compoundnumber][1002][$i] == '' ) { $cmp_values[$compoundnumber][1002][$i] = '9999-12-31'; }
 					//			$_WHERE .= $komma2."(";
 								$_WHERE .= $komma2;
-								$_WHERE .= "(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." \"".$cmp_values[$compoundnumber][1002][$i]."\")";
+								$_WHERE .= "(IFNULL(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]'),'') ".$_le." \"".$cmp_values[$compoundnumber][1002][$i]."\")";
+								if ( $_nullallowed ) { $_WHERE .= " OR (IFNULL(JSON_VALUE(JSON_QUERY(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[".$compoundnumber."]'),'$[".$j."]'),'') = '' )"; }
 					//			$_WHERE .= '))';
 								$komma2 = $_komma_cmp;
 								$bracket = ')';
@@ -654,6 +682,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $complement = false, 
 		}
 	}
 	$_WHERE .= $bracket;
+	$_WHERE = preg_replace('/\(\)/',"(0=0)",$_WHERE);
 	$_main_stmt_array = array();
 	$_main_stmt_array['stmt'] = 'SELECT '.$_SELECT.$_FROM.$_WHERE.$_ORDER_BY; //do not order by id!
 //	if ( $SHOWNOTALL ) {

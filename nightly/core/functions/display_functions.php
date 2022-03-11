@@ -72,7 +72,10 @@ function _cleanup($value,$separator = '<br />')
 	}
 	//format dates (and times) to locale (here: german) 
 	if ( DateTime::createFromFormat('Y-m-d H:i:s', $value) !== FALSE) { 
-		$value = DateTime::createFromFormat('Y-m-d H:i:s', $value)->format('d.m.Y');
+		$value = DateTime::createFromFormat('Y-m-d H:i:s', $value)->format('d.m.Y H:i:s');
+	}
+	if ( DateTime::createFromFormat('Y-m-d H:i', $value) !== FALSE) { 
+		$value = DateTime::createFromFormat('Y-m-d H:i', $value)->format('d.m.Y H:i');
 	}
 	if ( DateTime::createFromFormat('Y-m-d', $value) !== FALSE) { 
 		$value = DateTime::createFromFormat('Y-m-d', $value)->format('d.m.Y');

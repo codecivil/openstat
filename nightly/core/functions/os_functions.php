@@ -588,6 +588,8 @@ function trafficLight(array $PARAM, mysqli $conn)
 			<input id="submitTrafficLightSettingsForm" type="submit" hidden>
 			</form>
 		</div>
+		<h2 class="center"><i class="fas fa-traffic-light"></i></h2>
+		<br />
 	<?php
 	foreach ( $tables as $table ) {
 		$ids = array(); $resultin = array(); $_param = array();
