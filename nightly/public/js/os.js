@@ -426,6 +426,7 @@ function executeLoginFunctions() {
 		let ev = new Event('click');
 		_function.dispatchEvent(ev);
 	});
+	return false;
 }
 
 function _saveState() {
@@ -1048,7 +1049,7 @@ function transportAttribution(el) {
 		else if (el.parentElement.querySelector('i')) { _info._icon = el.parentElement.querySelector('i').className; }
 		else { _info._icon = ''; }
 		sessionStorage.setItem('attribution_clipboard',JSON.stringify(_info));
-		document.getElementById('clipboard').innerHTML = '<i class="fas fa-clipboard-check"></i> <small><i class="'+_info._icon+'"></i> '+_info._id+'</small>';
+		document.getElementById('clipboard').innerHTML = '<label class="unlimitedWidth"><i class="fas fa-clipboard-check"></i> <small><i class="'+_info._icon+'"></i> '+_info._id+'</small></label>';
 	} else {
 		//paste in attribution field
 		_info = JSON.parse(sessionStorage.getItem('attribution_clipboard'));
@@ -1063,7 +1064,7 @@ function transportAttribution(el) {
 
 function emptyClipboard() {
 	sessionStorage.removeItem('attribution_clipboard');
-	document.getElementById('clipboard').innerHTML = '<i class="fas fa-clipboard"></i>';
+	document.getElementById('clipboard').innerHTML = '<label class="unlimitedWidth"><i class="fas fa-clipboard"></i></label>';
 }
 
 function myScrollIntoView(el) {

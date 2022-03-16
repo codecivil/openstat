@@ -21,6 +21,7 @@ body {
 	--background-marked: #a0ffa0;
 	--background-cleanup: #C9D5F5;
 	--background-warning: #ffa000;
+	--background-body-transparent: linear-gradient(#4e4e4ea0,#404040a0);
 	--color-statusbar: #8e8e8e;
 	--color-resultswrapper: #000;
 	--color-statwrapper: #000;

@@ -99,6 +99,12 @@ $whatsnewclass = "changed";
 if ( isset($_config['version']) AND $_config['version'] == $versionnumber ) { $whatsnewclass = ""; $oldversion = $_config['version']; }
 changeConfig(array("version"=>$versionnumber),$conn);
 
+//update and parse CSS choice
+$_firsttimecss = false;
+if ( ! isset($_config['css']) ) { changeConfig(array("css"=>""),$conn); $_config['css'] = ""; $_firsttimecss = true; }
+if ( $_config['css'] == '_' ) { changeConfig(array("css"=>""),$conn); $_config['css'] = ""; }
+if ( isset($PARAMETER['css']) ) { changeConfig(array("css"=>$PARAMETER['css']),$conn); $_config['css'] = $PARAMETER['css']; }
+ 
 //get changelog
 if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
 	$changelog_array = explode('v'.$_config['version'],file_get_contents('../../changelog_user'),2);
@@ -140,7 +146,7 @@ $_v = time();
 	<title>openStat</title>
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/fontsize_<?php echo($_config['_fontSize']); ?>.css?v=<?php echo($_v);?>" id="cssFontSize" />
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/config_colors_<?php echo($_config['_colors']); ?>.css?v=<?php echo($_v);?>" id="cssColors" />
-	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/main.css?v=<?php echo($_v);?>" />
+	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/main<?php echo($_config['css']); ?>.css?v=<?php echo($_v);?>" />
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontawesome/css/all.css?v=<?php echo($_v);?>" />
 	<script type="text/javascript" src="/plugins/tinymce/js/tinymce.js?v=<?php echo($_v);?>"></script>
 	<script type="text/javascript" src="/plugins/tinymce/js/os_tinymce.js?v=<?php echo($_v);?>"></script>
@@ -150,7 +156,7 @@ $_v = time();
 </head>
 <body>
 <div hidden id="generator"></div>
-<div id="veil"></div>
+<div id="veil" oncontextmenu="return false"></div>
 <!-- HelpMode Button must be topmost in content! -->
 <input form="helpModeForm" name="helpmode" value="off" hidden>
 <?php $_helpmode = ''; if ( isset($_config['helpmode']) AND $_config['helpmode'] == "on" ) { $_helpmode = "checked";} ?>
@@ -159,6 +165,7 @@ $_v = time();
 <div id="loginfunctions" hidden>
 	<?php html_echo(json_encode($_loginfunctions)); ?>
 </div>
+<div id="statusbar_handle"></div>
 <div id="statusbar">
 	<div id="logo">
 		<img id="customer_logo" src='/img/logo.png' />
@@ -218,35 +225,59 @@ $_v = time();
 				</div>
 			</div>
 		<?php } ?>
-		<div id="fontsize" data-title="Schriftgröße wählen">
-			<form method="post" id="fontsizeForm" onchange="callFunction(this,'changeConfig','',false,'','restrictResultWidth').then(()=>{ reloadCSS(); });">
-				<input type="radio" name="_fontSize" value="10" id="fs10" hidden <?php if ( $_config['_fontSize'] == "10") { ?>checked<?php }?> >
-				<label for="fs10"><i class="fas fa-font" style="font-size: 0.8rem;"></i></label>
-				<input type="radio" name="_fontSize" value="12" id="fs12" hidden <?php if ( $_config['_fontSize'] == "12") { ?>checked<?php }?> >
-				<label for="fs12"><i class="fas fa-font" style="font-size: 0.9rem;"></i></label>
-				<input type="radio" name="_fontSize" value="14" id="fs14" hidden <?php if ( $_config['_fontSize'] == "14") { ?>checked<?php }?> >
-				<label for="fs14"><i class="fas fa-font" style="font-size: 1rem;"></i></label>
-				<input type="radio" name="_fontSize" value="16" id="fs16" hidden <?php if ( $_config['_fontSize'] == "16") { ?>checked<?php }?> >
-				<label for="fs16"><i class="fas fa-font" style="font-size: 1.1rem;"></i></label>
-				<input type="radio" name="_fontSize" value="18" id="fs18" hidden <?php if ( $_config['_fontSize'] == "18") { ?>checked<?php }?> >
-				<label for="fs18"><i class="fas fa-font" style="font-size: 1.2rem;"></i></label>
-			</form>
-		</div>
-		<div id="colors" data-title="Farbschema wählen">
-			<form method="post" class="statusForm" onchange="callFunction(this,'changeConfig').then(()=>{ reloadCSS(); }); ">
-				<legend><i class="fas fa-palette"></i></legend>
-				<select id="colorsSelect" name="_colors">
-					<?php
-					$_colors = glob('../css/config_colors_*.css');
-					foreach ( $_colors as $_color ) {
-						$colorname = str_replace('.css','',str_replace('../css/config_colors_','',$_color));
-					?>
-						<option value="<?php echo($colorname); ?>" <?php if ( $_config['_colors'] == $colorname) { ?>selected<?php }?>><?php echo($colorname); ?></option>
-					<?php
-					}
-					?>
-				</select>
-			</form>
+		<div id="display">
+			<form id="osDisplayForm"></form>
+			<label for="osDisplay" data-title="Anzeigeoptionen">&nbsp;<i class="fas fa-tv"></i>&nbsp;</label>
+			<input form="osDisplayForm" type="checkbox" hidden id="osDisplay" class="userInfo">
+			<div id="display_options">
+				<div id="fontsize" data-title="Schriftgröße wählen">
+					<form method="post" id="fontsizeForm" onchange="callFunction(this,'changeConfig','',false,'','restrictResultWidth').then(()=>{ reloadCSS(); });">
+						<input type="radio" name="_fontSize" value="10" id="fs10" hidden <?php if ( $_config['_fontSize'] == "10") { ?>checked<?php }?> >
+						<label for="fs10"><i class="fas fa-font" style="font-size: 0.8rem;"></i></label>
+						<input type="radio" name="_fontSize" value="12" id="fs12" hidden <?php if ( $_config['_fontSize'] == "12") { ?>checked<?php }?> >
+						<label for="fs12"><i class="fas fa-font" style="font-size: 0.9rem;"></i></label>
+						<input type="radio" name="_fontSize" value="14" id="fs14" hidden <?php if ( $_config['_fontSize'] == "14") { ?>checked<?php }?> >
+						<label for="fs14"><i class="fas fa-font" style="font-size: 1rem;"></i></label>
+						<input type="radio" name="_fontSize" value="16" id="fs16" hidden <?php if ( $_config['_fontSize'] == "16") { ?>checked<?php }?> >
+						<label for="fs16"><i class="fas fa-font" style="font-size: 1.1rem;"></i></label>
+						<input type="radio" name="_fontSize" value="18" id="fs18" hidden <?php if ( $_config['_fontSize'] == "18") { ?>checked<?php }?> >
+						<label for="fs18"><i class="fas fa-font" style="font-size: 1.2rem;"></i></label>
+					</form>
+				</div>
+				<div id="colors" data-title="Farbschema wählen">
+					<form method="post" class="statusForm" onchange="callFunction(this,'changeConfig').then(()=>{ reloadCSS(); }); ">
+						<legend><i class="fas fa-palette"></i></legend>
+						<select id="colorsSelect" name="_colors">
+							<?php
+							$_colors = glob('../css/config_colors_*.css');
+							foreach ( $_colors as $_color ) {
+								$colorname = str_replace('.css','',str_replace('../css/config_colors_','',$_color));
+							?>
+								<option value="<?php echo($colorname); ?>" <?php if ( $_config['_colors'] == $colorname) { ?>selected<?php }?>><?php echo($colorname); ?></option>
+							<?php
+							}
+							?>
+						</select>
+					</form>
+				</div>
+				<div id="styles" data-title="Stil wählen">
+					<form method="post" class="statusForm" onchange="callFunction(this,'changeConfig').then(()=>{ window.location = '/'; }); ">
+						<legend><i class="fas fa-magic"></i></legend>
+						<select id="stylesSelect" name="css">
+							<option value="_" <?php if ( $_config['css'] == '') { ?>selected<?php }?>>default</option>
+							<?php
+							$_styles = glob('../css/main_*.css');
+							foreach ( $_styles as $_style ) {
+								$stylename = str_replace('.css','',str_replace('../css/main','',$_style));
+							?>
+								<option value="<?php echo($stylename); ?>" <?php if ( $_config['css'] == $stylename) { ?>selected<?php }?>><?php echo($stylename); ?></option>
+							<?php
+							}
+							?>
+						</select>
+					</form>
+				</div>
+			</div>
 		</div>
 		<div id="info" class="<?php echo($whatsnewclass); ?>">
 			<form id="osInfoForm"></form>
@@ -317,7 +348,7 @@ $_v = time();
 			<div>
 			</div>	
 		</div>
-		<div id="clipboard" data-title="Status der Zwischenablage (Leeren durch Anklicken)" onclick="emptyClipboard()"><i class="fas fa-clipboard"></i></div>
+		<div id="clipboard" data-title="Status der Zwischenablage (Leeren durch Anklicken)" onclick="emptyClipboard()"><label class="unlimitedWidth"><i class="fas fa-clipboard"></i></label></div>
 		<div id="openEntries">
 			<form class="statusForm" onclick="showOpenEntries(this.closest('div'))" onchange="myScrollIntoView(document.getElementById(this.querySelector('select').value))">
 				<legend><i class="fas fa-list-ol" data-title="offene Einträge"></i></legend>
@@ -341,8 +372,9 @@ $_v = time();
 		<div id="waswarneudiv"><pre><?php html_echo($olderchangelog); ?></pre></div>
 	</form>
 </div>
+<div id="wrapper_handle"></div>
 <div id="wrapper">
-		<div id="showHistory" data-title="Chronik">
+	<div id="showHistory" data-title="Chronik">
 		<div class="inline"><i class="fas fa-history"></i></div>
 		<div id="showHistoryBack" class="inline disabled" hidden onclick="restoreHistory(-1);" data-title="zurück"><i class="fas fa-chevron-left"></i></div>				
 		<div id="showHistory11" class="hidden" hidden onclick="restoreHistory(11);">&bull;</div>	
@@ -357,39 +389,39 @@ $_v = time();
 		<div id="showHistory2" class="hidden" hidden onclick="restoreHistory(2);">&bull;</div>	
 		<div id="showHistory1" class="hidden" hidden onclick="restoreHistory(1);">&bull;</div>	
 		<div id="showHistoryForward" class="inline disabled" hidden onclick="restoreHistory(0);" data-title="vor"><i class="fas fa-chevron-right"></i></div>				
-		</div>
-<div id="sidebar">
-	<div id="config" class="section">
-		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });" >
-		<?php //save button and load input like in openStat.plan explained ?>
-			<label for="config_save" class="disabled" data-title="Konfiguration speichern"><i class="fas fa-save"></i></label>
-			<input hidden type="submit" id="config_save">
-			<label for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
-			<input hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
-			<label for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
-			<input hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
-			<div class="unite">
-				<label for="db__config__list"></label>
-				<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
-				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
-					<option value="none"></option>
-				</select>
-				<label class="toggler" for="minus_config">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
-				<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
-			</div>
-			<div class="clear"></div>
-		</form>
 	</div>
-	<div id="filters">
-		<div id="addfilters">
-			<label for="toggleAddFilter"><h1 class="center"><i class="fas fa-plus"></i></h1></label>
-			<input type="checkbox" hidden id="toggleAddFilter" class="toggle">
-			<form id="formAddFilters" class="form" method="post" action="../php/addFilters.php" onsubmit="return addFilters(this);">
-					<input type="submit" value="Auswählen" >
+	<div id="sidebar">
+		<div id="config" class="section">
+			<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });" >
+			<?php //save button and load input like in openStat.plan explained ?>
+				<label for="config_save" class="disabled" data-title="Konfiguration speichern"><i class="fas fa-save"></i></label>
+				<input hidden type="submit" id="config_save">
+				<label for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
+				<input hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
+				<label for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
+				<input hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
+				<div class="unite">
+					<label for="db__config__list"></label>
+					<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
+					<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; });">
+						<option value="none"></option>
+					</select>
+					<label class="toggler" for="minus_config">&nbsp;<i class="fas fa-arrows-alt-h"></i></label>
+					<input id="minus_config" class="minus" type="button" value="+" onclick="_toggleOption('_config_')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
+				</div>
+				<div class="clear"></div>
 			</form>
 		</div>
+		<div id="filters">
+			<div id="addfilters">
+				<label for="toggleAddFilter"><h1 class="center"><i class="fas fa-plus"></i></h1></label>
+				<input type="checkbox" hidden id="toggleAddFilter" class="toggle">
+				<form id="formAddFilters" class="form" method="post" action="../php/addFilters.php" onsubmit="return addFilters(this);">
+						<input type="submit" value="Auswählen" >
+				</form>
+			</div>
+		</div>
 	</div>
-</div>
 </div>
 <div hidden id="history"><div hidden id="history_level">1</div></div>
 <div id="results_wrapper" class="popup">
@@ -426,7 +458,12 @@ $_v = time();
 	console.log("Standard 500ms here: "+st500+"ms");
 	function restrictResultWidth () {
 		var _st500 = standard500();
-		setTimeout(function () { document.getElementById('results_wrapper').style.maxWidth = document.body.offsetWidth - document.getElementById('sidebar').offsetWidth - 5*parseFloat(getComputedStyle(document.documentElement).fontSize) + "px"; }, _st500);
+		setTimeout(function () {
+			//only apply for old CSS (if wrapper has no before element)
+			if ( document.querySelector('link[href*="main.css"]') ) {
+				document.getElementById('results_wrapper').style.maxWidth = document.body.offsetWidth - document.getElementById('sidebar').offsetWidth - 5*parseFloat(getComputedStyle(document.documentElement).fontSize) + "px";
+			}
+		}, _st500);
 	}
 	setTimeout(function () {
 		switch(document.getElementById('generator').innerText) {
@@ -468,6 +505,15 @@ $_v = time();
 	},2*st500);
 	_saveStateInterval = setInterval(_saveState,300000);
 	const pxperrem = document.querySelector('#logo img').height/2.5;  //CSS sets logo image to 2.5rem
+	
+	// offer new CSS at first login after change
+	<?php if ( $_firsttimecss ) { ?>
+		setTimeout(function(){ 
+			if ( confirm('Probiere den \u{1D5FB}\u{1D5F2}\u{1D602}\u{1D5F2}\u{1D5FB} \u{1D5E6}\u{1D601}\u{1D5F6}\u{1D5F9} "\u{1F5B5} \u{1FA84}_clear_".\n\nStatuszeile und Tabelllen-/Filtereinstellungen verstecken sich am oberen bzw. linken Rand und erscheinen stets, wenn Du mit dem Mauszeiger dorthin gehst.\n\nDu kannst jederzeit in der Statuszeile mit \u{1F5B5} > \u{1FA84} die Ansichtsart wechseln.\n\nWillst Du den neuen Stil jetzt einschalten?') ) {
+				window.location = '/index.php?css=_clear_';
+			}
+		},3*st500);
+	<?php } ?>
 </script> 
 </body>
 </html>

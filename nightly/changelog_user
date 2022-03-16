@@ -1,4 +1,13 @@
+#v1.7.2
+======
+
+* Neuer Stil "_clear_" versteckt Statuszeile und Tabellen-/Filtereinstellungen, die
+nun (ohne Scrollen) durch Bewegung zum entsprechenden Rand erscheinen
+* "Displaymenu" in der Statuszeile anstatt dreier separater Displayeinstellungen
+* kein Rechtsklick im Sperrbildschirm
+
 #v1.7.1
+======
 
 * Datums- und Kombifelder filtern nun auch erst bei Angabe von Bedingungen
 * Negation von "#"-Filtern (Anzahlen von Zuordnungen) funktioniert nun

@@ -216,7 +216,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			</form>
 		</div>
 		<hr>
-		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); return false; }); return false; ">
+		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); myScrollIntoView(document.getElementById('results_wrapper')); return false; }); return false; ">
 			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>

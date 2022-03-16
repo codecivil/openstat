@@ -173,7 +173,7 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 			tinyMCEinit();
 			document.body.style.cursor = 'auto';
 			if ( ! document.getElementById('sidebar').contains(el) && ! document.getElementById('results_wrapper').contains(el) && el.id != 'veil' ) { myScrollIntoView(el.closest('.popup_wrapper')); }
-			if (callback) { resolve(window[callback](form,arg,_request.responseText)); /*return window[callback](form,arg,_request.responseText);*/ } else { resolve(false); return false; };	
+			if (callback && window[callback]) { resolve(window[callback](form,arg,_request.responseText)); /*return window[callback](form,arg,_request.responseText);*/ } else { resolve(false); return false; };	
 		}
 	} else {
 		_request.onload = function() { 	
@@ -242,6 +242,7 @@ function callPHPFunction(_arg,_function,_target,_classes) {
 //	var _input = document.getElementById('trash');
 //	_input.value = _arg;
 	callFunction(_arg,_function,_target,false,_classes,_function,_arg).then(()=>{ 
+		if ( document.getElementById(_target) ) { myScrollIntoView(document.getElementById(_target)); }
 		if (! _arg.classList || ! _arg.classList.contains('noreset') ) { _arg.reset(); }; //why reset at all? not appropriate for exportCSV function
 		return false;
 	})
