@@ -97,7 +97,7 @@ if [[ "$INSTANCE" == "" ]]; then exit 0; fi
 OS_VERSION="$VERSION"
 # get latest $INSTANCE release
 REPO="$INSTANCE"
-. "$WEBDIR/$INSTANCE.version" || { read OPENSTAT_VERSION < . "$WEBDIR/$INSTANCE.version"; INSTANCE_VERSION="$OPENSTAT_VERSION"; } #for smooth transition of $INSTANCE.version syntax
+. "$WEBDIR/$INSTANCE.version" || { read OPENSTAT_VERSION < "$WEBDIR/$INSTANCE.version"; INSTANCE_VERSION="$OPENSTAT_VERSION"; } #for smooth transition of $INSTANCE.version syntax
 #make old version available
 cp -a "$WEBDIR/$OPENSTAT_VERSION/$INSTANCE.tgz" "$WEBDIR/latest/"
 #check for new version

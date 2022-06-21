@@ -177,6 +177,7 @@ function importJS(el,subtables) {
 	var _importel = el.closest('.popup');
 	_importel.querySelector('.headermatch').setAttribute('hidden',true);
 	_importel.querySelector('.importnow').removeAttribute('hidden');
+	const _overwrite = _importel.querySelector('.import_overwrite').checked;
 	if ( typeof subtables == 'undefined' || ! subtables ) { 
 		var l_min = 0; var l_max = 1;
 		//initialize: gotID only if subtables=false, since it is called after that with true and needs the IDs
@@ -418,7 +419,11 @@ function importJS(el,subtables) {
 						_arg.line = j;
 						_arg.table = l;
 						_arg.log = _file.name+zeile+" ("+_tableheadersfull['tablemachine2readable'][_table]+")";
-						_parameter['dbAction'] = 'insertIfNotExists'; 
+						if ( _overwrite ) {
+							_parameter['dbAction'] = 'updateIfExistsElseInsert'; //users identifiers field in os_table
+						} else {
+							_parameter['dbAction'] = 'insertIfNotExists';
+						} 
 						_arg.parameter = _parameter;
 						document.getElementById('trash').value = JSON.stringify(_parameter);
 						_importSuccessHidden = _importel.querySelector('.importSuccessHidden').id;

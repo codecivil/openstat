@@ -6,7 +6,6 @@ if ( ! isset($_SESSION['user']) ) { header('Location:/html/admin.php'); exit(); 
 require_once('../../core/classes/auth.php');
 require_once('../../core/functions/db_functions.php');
 require_once('../../core/functions/frontend_functions.php');
-require_once('../../core/functions/display_functions.php');
 
 ?>
 
@@ -122,6 +121,11 @@ $_PARENTS = $_roles_array['parentid'];
 $_ROLES_NAME = $_roles_array['rolename'];
 $_ROLES_ARRAY = array_combine($_ROLES,$_ROLES_NAME);
 $_PARENTS_ARRAY = array_combine($_ROLES,$_PARENTS);
+
+//collect sqlimport log
+unset($_stmt_array); $_stmt_array = array();
+$_stmt_array['stmt'] = "SELECT * FROM osadm_sqlimport";
+$osadm_result = execute_stmt($_stmt_array,$conn)['result']; 
 
 //recreate views button
 if ( isset($PARAMETER['recreateViews']) ) {
@@ -1405,6 +1409,17 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 	$conn->query("COMMIT;");
 	$conn->commit();
 	if ( $_return['dbMessageGood'] == 'true' ) { $_return['dbMessage'] = "Import erfolgreich. "; }
+	// log import and result in osadm_sqlimport
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "INSERT INTO osadm_sqlimport (sqlfilename,importresult) VALUES (?,?) ON DUPLICATE KEY UPDATE sqlfilename=?, importresult=?;";
+	$_stmt_array['str_types'] = "ssss";
+	$_stmt_array['arr_values'] = array();
+	$_stmt_array['arr_values'][] = $PARAMETER['sqlfile'];
+	$_stmt_array['arr_values'][] = $_return['dbMessage'];	
+	$_stmt_array['arr_values'][] = $PARAMETER['sqlfile'];
+	$_stmt_array['arr_values'][] = $_return['dbMessage'];	
+	execute_stmt($_stmt_array,$conn); 
+	//
 	return $_return;
 }
 
@@ -1537,8 +1552,14 @@ $tableel .= "</table>";
 						<option value="_none_">[Bitte Datei wählen]</option>
 						<?php
 						foreach ( $_sql as $_sqlfile ){
+							$_title = ''; $_date = '';
+							$osadm_index = array_search($_sqlfile,$osadm_result['sqlfilename']);
+							if ( $osadm_index !== false ) {
+								$_date = ': importiert am '.DateTime::createFromFormat('Y-m-d H:i:s', $osadm_result['importtimestamp'][$osadm_index])->format('d.m.Y');
+								$_title = $osadm_result['importresult'][$osadm_index];
+							}
 						?>
-							<option value="<?php html_echo($_sqlfile); ?>"><?php html_echo($_sqlfile); ?></option>
+							<option value="<?php html_echo($_sqlfile); ?>" title="<?php html_echo($_title); ?>"><?php html_echo($_sqlfile.$_date); ?></option>
 						<?php	
 						}
 						?>

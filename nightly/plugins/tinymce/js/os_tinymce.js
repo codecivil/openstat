@@ -1,0 +1,1 @@
+../../../plugins-config/tinymce/js/os_tinymce.js

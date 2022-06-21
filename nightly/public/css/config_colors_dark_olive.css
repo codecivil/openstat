@@ -1,0 +1,43 @@
+body {
+	--background-body: linear-gradient(hsla(40,23.076923076923077%,30.58823529411765%,1),hsla(40,23.076923076923077%,25.098039215686274%,1));
+	--background-statusbar: #000;
+	--background-important: hsla(100,73.076923076923077%,96.078431372549%,1);
+	--background-addfilters: hsla(40,23.076923076923077%,95.68627450980392%,1);
+	--background-filters: hsla(40,23.076923076923077%,89.41176470588236%,1);
+	--background-functions: hsla(160,60.450660450660447%,38.82352941176471%,1) /*hsla(280,78.921078921078927%,69.80392156862744%,1)*/;
+	--background-config: hsla(40,23.076923076923077%,92.54901960784314%,1);
+	--background-tables: hsla(40,23.076923076923077%,92.54901960784314%,1);
+	--background-resultswrapper: linear-gradient(hsla(40,23.076923076923077%,68.62745098039215%,1), hsla(40,23.076923076923077%,67.84313725490196%,1));
+	--background-statwrapper: linear-gradient(hsla(40,23.076923076923077%,100%,1),hsla(100,123.076923076923077%,97.05882352941177%,1));
+	--background-detailswrapper: linear-gradient(hsla(40,23.076923076923077%,100%,1),hsla(100,123.076923076923077%,97.05882352941177%,1));
+	--background-goodmessage: hsla(160,123.076923076923077%,96.66666666666667%,1);
+	--background-badmessage: hsla(40,123.076923076923077%,83.33333333333333%,1);
+	--background-action: hsla(160,60.450660450660447%,38.82352941176471%,1);
+	/*--background-detailswrapper: #fff;*/
+	--background-row-odd: transparent;
+	--background-row-even: rgb(128,128,128,0.1);
+	--background-details: linear-gradient(hsla(100,123.076923076923077%,97.05882352941177%,1),hsla(100,123.076923076923077%,93.92156862745098%,1));	
+	--background-details-new: linear-gradient(hsla(160,123.076923076923077%,97.84313725490196%,1),hsla(160,123.076923076923077%,97.05882352941177%,1));
+	--background-marked: hsla(160,123.076923076923077%,81.37254901960785%,1);
+	--background-cleanup: hsla(263.63636363636363,91.826923076923137%,87.45098039215686%,1);
+	--background-warning: hsla(77.64705882352941,123.076923076923077%,50%,1);
+	--background-body-transparent: linear-gradient(hsla(40,23.076923076923077%,30.58823529411765%,.62745098039215686274),hsla(40,23.076923076923077%,25.098039215686274%,.62745098039215686274));
+	--background-subtable-header: hsla(176.55172413793105,61.743589743589737%,70.58823529411764%,1);
+	--background-choose-subtable: hsla(40,23.076923076923077%,80%,1);
+	--color-statusbar: hsla(40,23.076923076923077%,55.68627450980392%,1);
+	--color-resultswrapper: #000;
+	--color-statwrapper: #000;
+	--color-detailswrapper: #000;
+	--color-hits: #000;
+	--color-unique: hsla(160,60.450660450660447%,38.82352941176471%,1);	
+	--color-fontsize-selector: hsla(40,23.076923076923077%,76.86274509803923%,1);
+	--color-sidebar-inactive: hsla(40,23.076923076923077%,50.19607843137255%,1);
+	--color-sidebar: hsla(0,0%,0%,1);
+	--color-sidebar: hsla(0,0%,0%,1);
+	--color-sidebar-changed: hsla(160,60.450660450660447%,38.82352941176471%,1);
+	--background-slider: var(--color-statusbar);
+	--background-slider-checked: var(--background-goodmessage);
+	--button-slider: var(--color-statusbar);
+	--background-helpmode: var(--background-important);
+	--color-helpmode: var(--color-hits);
+}

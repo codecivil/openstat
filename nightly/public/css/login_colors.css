@@ -1,9 +1,9 @@
 html {
-	--background-body: linear-gradient(#4e4e4e,#404040) no-repeat;
-	--background-wrapper: linear-gradient(#afafaf, #adadad);
-	--background-loginform: linear-gradient(#ffffff,#fffff0);
-	--background-login-error: #ffaaaa;
-	--background-login-actionneeded: #bdbdff;
-	--color-loginform: #4e4e4e;
+	--background-body: linear-gradient(hsla(40,23.076923076923077%,89.41176470588236%,1),hsla(40,23.076923076923077%,83.13725490196079%,1)) no-repeat;
+	--background-wrapper: linear-gradient(hsla(40,23.076923076923077%,68.62745098039215%,1), hsla(40,23.076923076923077%,67.84313725490196%,1));
+	--background-loginform: linear-gradient(hsla(40,23.076923076923077%,100%,1),hsla(100,123.076923076923077%,97.05882352941177%,1));
+	--background-login-error: hsla(40,123.076923076923077%,83.33333333333333%,1);
+	--background-login-actionneeded: hsla(280,123.076923076923077%,87.05882352941177%,1);
+	--color-loginform: hsla(40,23.076923076923077%,30.58823529411765%,1);
 	--color: #111;
 }

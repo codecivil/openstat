@@ -1,0 +1,9 @@
+html {
+	--background-body: linear-gradient(hsla(130,20%,89.41176470588236%,1),hsla(130,20%,83.13725490196079%,1)) no-repeat;
+	--background-wrapper: linear-gradient(hsla(130,20%,68.62745098039215%,1), hsla(130,20%,67.84313725490196%,1));
+	--background-loginform: linear-gradient(hsla(130,20%,100%,1),hsla(190,120%,97.05882352941177%,1));
+	--background-login-error: hsla(130,120%,83.33333333333333%,1);
+	--background-login-actionneeded: hsla(370,120%,87.05882352941177%,1);
+	--color-loginform: hsla(130,20%,30.58823529411765%,1);
+	--color: #111;
+}

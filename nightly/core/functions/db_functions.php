@@ -100,11 +100,29 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 	$PARAMETER = FILE_Action($PARAMETER,$conn);
 	switch($PARAMETER['dbAction']) {
 		case 'getID':
+			//adapt to identifiers
+			unset($_stmt_array);
+			$_stmt_array['stmt'] = "SELECT identifiers from os_tables where tablemachine=?";
+			$_stmt_array['str_types'] = "s";
+			$_stmt_array['arr_values'] = $PARAMETER['table'];
+			$_identifiers = execute_stmt($_stmt_array,$conn)['result']['identifiers'][0];
+			if ( $_identifiers == '' ) { $_identifiers = array(); } else { $_identifiers = json_decode($_identifiers); }
+			$IDPARAM = array();
+			foreach($_identifiers as $identifier) 
+			{
+				if ( isset($PARAMETER[$PARAMETER['table'].'__'.$identifier]) ) 
+				{ $IDPARAM[$PARAMETER['table'].'__'.$identifier] = $PARAMETER[$PARAMETER['table'].'__'.$identifier]; }
+				else
+				{ $IDPARAM[$PARAMETER['table'].'__'.$identifier] = ''; }
+			}
+			// select all parameters if no identiers are given
+			if ( sizeof($IDPARAM) == 0 ) { $IDPARAM = $PARAMETER; }
 			$select = "SELECT id_".$PARAMETER['table']." FROM `view__".$PARAMETER['table']."__".$_SESSION['os_role']."` ";
 			$komma = "WHERE ";
 			$where = "";
 			$arr_values = array();
 			$str_types = '';
+			//foreach($IDPARAM as $key=>$value) //ok, but if at import e.g. all idenifiers coincide other data may have been updated, so we must be able to choose the new data somehow!
 			foreach($PARAMETER as $key=>$value)
 			{
 				if ( substr($key,0,strlen($PARAMETER['table'])) === $PARAMETER['table'] AND $value != '' ) {
@@ -132,6 +150,22 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 				return $return;				
 			}
 			break; //correct? inserted on 20200516
+		case 'updateIfExistsElseInsert':
+			$PARAMETER['dbAction'] = 'getID';
+			$_id = dbAction($PARAMETER,$conn);
+			if ( $_id != -1 )
+			{ 
+				$_tmparray = json_decode($_id,true)['id_'.$PARAMETER['table']];
+				if ( ! is_array($_tmparray) ) { $_tmparray = array($_tmparray); }
+				$PARAMETER['id_'.$PARAMETER['table']] = json_encode($_tmparray);
+				unset($_tmparray);
+				$PARAMETER['dbAction'] = 'edit';
+				return dbAction($PARAMETER,$conn);			
+			} else {
+				$PARAMETER['dbAction'] = 'insert';
+				return dbAction($PARAMETER,$conn);			
+			}
+			break;
 		case 'insert':
 			$_SESSION['insert_id'] = array($PARAMETER['table']);
 			$config = getConfig($conn);
@@ -332,8 +366,11 @@ function getDetails($PARAMETER,$conn)
 		} 
 	}
 	//}
+	//get config
+	$_config = getConfig($conn);
+	//
 	unset($_stmt_array); $_stmt_array = array();
-	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine,delete_roles,displayforeign from os_tables';
+	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine,delete_roles,displayforeign,parentmachine,tablereadable from os_tables';
 	/*$_stmt_array['str_types'] = 's';
 	$_stmt_array['arr_values'] = array($table);*/
 	$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
@@ -342,12 +379,28 @@ function getDetails($PARAMETER,$conn)
 	$displayforeign = array();
 	for ( $i = 0; $i < sizeof($_table_result); $i++ ) {
 		$icon[$_table_result[$i]['tablemachine']] = $_table_result[$i]['iconname'];
+		$tablereadable[$_table_result[$i]['tablemachine']] = $_table_result[$i]['tablereadable'];
 		$delete_roles[$_table_result[$i]['tablemachine']] = $_table_result[$i]['delete_roles'];
 		$displayforeign[$_table_result[$i]['tablemachine']] = $_table_result[$i]['displayforeign'];
 	}
 	$iconname = $icon[$table];
+	//get fields from MAIN and subtables; it's a bit rough, since (id-)fields my occur more than once, but they all carry the same value, and
+	//fetch_assoc as used in execute_stmt simply overwrites the values, which is ok:
+	//"If two or more columns of the result have the same name, the last column will take precedence and overwrite any previous data."
 	unset($_stmt_array); $_stmt_array = array();
-	$_stmt_array['stmt'] = 'SELECT * from `view__' . $table . '__' . $_SESSION['os_role'].'` WHERE id_'.$table.' IN ('.implode(',',$id).')';
+	$_stmt_array['stmt'] = 'SELECT * from `view__' . $table . 'MAIN__' . $_SESSION['os_role'] . '`';
+	//recursively add subtable views
+	function addSubtablesToStmt($table,$_table_result,$_config,$stmt) {
+		foreach ( array_filter($_table_result,function($_tmptable) use($table,$_config){ return ( $_tmptable['parentmachine'] == $table ) AND in_array($_tmptable['tablemachine'],$_config['subtable']); }) as $_subtablefull ) {
+			$_subtablemachine = $_subtablefull['tablemachine'];
+			//$_stmt_array['stmt'] .= ' INNER JOIN view__'.$_subtablemachine.'__'.$_SESSION['os_role'].' USING (id_'.$table.')';
+			$stmt .= ' INNER JOIN view__'.$_subtablemachine.'__'.$_SESSION['os_role'].' USING (id_'.$table.')';
+			$stmt = addSubtablesToStmt($_subtablefull,$_table_result,$_config,$stmt);
+		}
+		return $stmt;
+	}
+	$_stmt_array['stmt'] = addSubtablesToStmt($table,$_table_result,$_config,$_stmt_array['stmt']);
+	$_stmt_array['stmt'] .= ' WHERE id_'.$table.' IN ('.implode(',',$id).')';
 //	$_stmt_array['str_types'] = 'i';
 //	$_stmt_array['arr_values'] = array($id);
 
@@ -380,7 +433,6 @@ function getDetails($PARAMETER,$conn)
 		}
 	}
 	//update config
-	$_config = getConfig($conn);
 	$_config['_openids'] = $_SESSION['os_opennow'];
 	updateConfig($_config,$conn);
 	?>
@@ -580,7 +632,22 @@ function getDetails($PARAMETER,$conn)
 					} else {
 						$_single = true;
 					}
-					if ( substr($key,0,3) != 'id_'  AND $key != 'table' ) {
+					if ( substr($key,0,9) == 'subtable_' ) {
+						$currentsubtablemachine = substr($key,9);
+						$_subrnd = rand(0,2147483647);
+						?>
+						<!-- the header and clickers here... -->
+						<input hidden type="checkbox" id="subToggle<?php echo($_subrnd); ?>" class="subtoggle">
+						<div class="subtable_header">
+							<label for="subToggle<?php echo($_subrnd); ?>">
+								<i class="fas fa-angle-right closed">&nbsp;</i>
+								<i class="fas fa-angle-down open">&nbsp;</i>
+								<i class="fas fa-<?php echo($icon[$currentsubtablemachine]);?>"></i> <b><?php echo($tablereadable[$currentsubtablemachine]); ?></b>
+							</label>
+						</div>
+						<?php
+					}
+					if ( substr($key,0,9) != 'subtable_' AND substr($key,0,3) != 'id_'  AND $key != 'table' ) {
 						$edit = new OpenStatEdit($table,$key,$conn);
 						$PARAMTYPE[$table.'__'.$key] = $edit->edit($default,$_single);
 						unset($edit);

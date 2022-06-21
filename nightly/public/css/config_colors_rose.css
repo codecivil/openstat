@@ -1,0 +1,45 @@
+body {
+	--background-body: linear-gradient(#FFCEC6,#FFBFB9);
+	--background-statusbar: #FFDBC8;
+	--background-important: #FFE6C3;
+	--background-addfilters: #FFCCC8;
+	--background-filters: #9898CF; /*#FFBDBB;*/
+	--background-functions: #FFDBC8;
+	--background-config: #FFDBC8;
+	--background-tables: #CAC5C2; /*#FFC5C2;*/
+	--background-resultswrapper: linear-gradient(#CAC5C2,#B1B6C2); /*linear-gradient(#FFAFAE, #FFA88E); */
+	--background-statwrapper: linear-gradient(#FFEBCF,#FFEBC3);
+	--background-detailswrapper: linear-gradient(#FFEBCF,#FFEBC3);
+	--background-goodmessage: #FFEBC2;
+	--background-badmessage: #FF9C8A;
+	--background-action: #FFDBC8;
+	/*--background-detailswrapper: #fff;*/
+	--background-row-odd: transparent;
+	--background-row-even: rgb(128,128,128,0.1);
+	--background-details: linear-gradient(#FFEBC3,#FFEBB6);	
+	--background-details-new: linear-gradient(#FFEAC8,#FFEABB);	
+	--background-filepreview: #FFDBC8;
+	--background-marked: #FFEBC2;
+	--background-cleanup: #fff;
+	--background-warning: #FF9300;
+	--background-body-transparent: linear-gradient(#FFCEC6a0,#FFBFB9a0);
+	--background-subtable-header: #FFC9B4;
+	--background-choose-subtable: #FFD3C7;
+	--color-statusbar: #79473F;
+	--color-resultswrapper: #150C0B;
+	--color-statwrapper: #150C0B;
+	--color-detailswrapper: #150C0B;
+	--color-hits: #150C0B;
+	--color-unique: #8A7E84;	
+	--color-fontsize-selector: #9898CF; /*#FFCEC6;*/	
+	--color-sidebar-inactive: #FFB09C;
+	--color-sidebar: hsla(0,0%,0%,1);
+	--color-sidebar: hsla(0,0%,0%,1);
+	--color-sidebar-changed: #4E6CA8;
+	--color-filelink: #8A7E84;
+	--background-slider: var(--color-statusbar);
+	--background-slider-checked: var(--background-goodmessage);
+	--button-slider: var(--color-statusbar);
+	--background-helpmode: var(--background-important);
+	--color-helpmode: var(--color-hits);
+}

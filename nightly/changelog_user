@@ -1,3 +1,15 @@
+#v1.7.4
+======
+
+* viele neue Farbschemata; zu finden unter Displayeinstellungen (Displayicon) > Farbschema (Palettensymbol)
+* helleres Farbschema beim Login (durchläuft den Farbkreis im Jahreslauf)
+* neue Funktion "Suche in Ergebnissen" (experimentell): Im Filteranwendungsfeld kann links oben ein Listensymbol an- und abgeschaltet werden; nach Anschaltung werden
+  die (geänderten) Filter auf die bereits angezeigten Ergebnisse angewendet; das Benutzerinterface dafür kann sich noch ändern.
+* Die Komplementfunktion ist nun zusätzlich auch als an- und abschaltbare Eigenschaft im Filteranwendungsfeld auswählbar 
+* Vorbereitung für "Kernfelder", um Duplikate erkennen zu können; die Kernfelder müssen vom Kunden definiert werden.
+* Vorbereitung für Untertabellen; die Untertabellen müssen vom Kunden definiert werden.
+* openStatAdmin: Logging für SQL-Importe
+
 #v1.7.2
 ======
 

@@ -1,3 +1,21 @@
+#v1.7.4
+======
+
+21.06.20222
+
+* much more color schemes
+* identifiers implemented (identify two entries even if only certain field values are identical)
+* search in results implemented (experimental)
+* subtables implemented as virtual table with parent entry; fields must be associated to the subtable in the setup of the parent table; works recursively
+* openStatAdmin: added table osadm_sqlimport in order to log sql imports; show import date at selection in SQL import page
+
+#v1.7.3
+======
+
+20.06.2022
+
+* sql peparation for v1.7.4
+
 #v1.7.2
 ======
 
