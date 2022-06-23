@@ -6,6 +6,7 @@ if ( ! isset($_SESSION['user']) ) { header('Location:/html/admin.php'); exit(); 
 require_once('../../core/classes/auth.php');
 require_once('../../core/functions/db_functions.php');
 require_once('../../core/functions/frontend_functions.php');
+require_once('../../core/functions/display_functions.php');
 
 ?>
 
@@ -105,13 +106,14 @@ mysqli_set_charset($conn,"utf8");
 
 //collect most important info
 unset($_stmt_array); $_stmt_array = array();
-$_stmt_array['stmt'] = "SELECT id,tablemachine,allowed_roles FROM `os_tables`";
+$_stmt_array['stmt'] = "SELECT id,tablemachine,allowed_roles,parentmachine FROM `os_tables`";
 $_tables_array = execute_stmt($_stmt_array,$conn)['result'];
 $_TABLES = $_tables_array['tablemachine'];
 $_TABLES_ID = $_tables_array['id'];
 $_TABLES_ALLOW = $_tables_array['allowed_roles'];
 $_TABLES_ARRAY = array_combine($_TABLES_ID,$_TABLES);
 $_TABLES_ALLOW_ARRAY = array_combine($_TABLES_ID,$_TABLES_ALLOW);
+$_TABLES_PARENTMACHINE_ARRAY = array_combine($_TABLES_ID,$_tables_array['parentmachine']);
 
 unset($_stmt_array); $_stmt_array = array();
 $_stmt_array['stmt'] = "SELECT id,rolename,parentid FROM `os_roles`";
@@ -192,7 +194,8 @@ function readable(string $_string) {
 		"calendarfields" => "Kalenderfelder",
 		"secretreadable" => "lesbarer Geheimnisname",
 		"secretmachine" => "interner Geheimnisname",
-		"pwdhash" => "Geheimnis (Passwort)"
+		"pwdhash" => "Geheimnis (Passwort)",
+		"identifiers" => "Identifikatoren"
 	);
 	if ( isset($_translate[$_string]) ) { return $_translate[$_string]; } else { return $_string; }
 }
@@ -220,7 +223,7 @@ function collectInfo(mysqli $conn) {
 }
 
 function _adminActionBefore(array $PARAMETER, mysqli $conn) {
-	global $_TABLES, $_TABLES_ARRAY, $_TABLES_ALLOW_ARRAY, $_ROLES, $_ROLES_ARRAY, $_PARENTS, $_PARENTS_ARRAY, $ENCRYPTED, $_warning; //$PARAMETER['pwdhash'] may be changed...
+	global $_TABLES, $_TABLES_ARRAY, $_TABLES_ALLOW_ARRAY, $_TABLES_PARENTMACHINE_ARRAY, $_ROLES, $_ROLES_ARRAY, $_PARENTS, $_PARENTS_ARRAY, $ENCRYPTED, $_warning; //$PARAMETER['pwdhash'] may be changed...
 	$_stmt_array = array();
 	$_return = array();
 	switch($PARAMETER['table']) {
@@ -557,21 +560,25 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					} else {
 						//add subtable in parent table_permissions
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "ALTER TABLE `".$PARAMETER['parentmachine']."` ADD COLUMN IF NOT EXISTS `subtablemachine` VARCHAR(40);";
+						$_stmt_array['stmt'] = "ALTER TABLE `".$PARAMETER['parentmachine']."_permissions` ADD COLUMN IF NOT EXISTS `subtablemachine` VARCHAR(40);";
 						_execute_stmt($_stmt_array,$conn);						
 						//create views for subtables
 						// // create view for table
+						//problem: this is static and does not change when new fields are added to the subtable, so it is rather empty at "creation"
+						//in reality, it is non-existent, so there must be an error in the transaction somewhere
+						//indeed: @qry is NULL and hence @qry2 is NULL if there is no subtable field yet...
+						//solution for static: include this view in recreateView function
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."` AS SELECT id_".$PARAMETER['tablemachine'].", changedat, changedby, code";
-						foreach ( $_TABLES as $_table )
+						$_stmt_array['stmt'] = "SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."` AS SELECT D.`subtable_".$PARAMETER['tablemachine']."`, T.id_".$PARAMETER['parentmachine'].", T.changedat, T.changedby, T.code";
+						foreach ( $_TABLES_ARRAY as $_id_ => $_table ) //this should only loop over base tables!
 							{
-								if ( $_table == $PARAMETER['tablemachine'] ) { continue; }
-								$_stmt_array['stmt'] .= ", `id_".$_table."`";
+								if ( $_table == $PARAMETER['parentmachine'] OR $_TABLES_PARENTMACHINE_ARRAY[$_id_] != '' ) { continue; }
+								$_stmt_array['stmt'] .= ", T.`id_".$_table."`";
 							}
-						$_stmt_array['stmt'] .= "', @qry, ' FROM ".$PARAMETER['parentmachine']." WITH CHECK OPTION') INTO @qry2;";
+						$_stmt_array['stmt'] .= ",', @qry, ' FROM (SELECT 1 AS `subtable_".$PARAMETER['tablemachine']."`) D CROSS JOIN ".$PARAMETER['parentmachine']." AS T WITH CHECK OPTION') INTO @qry2;";
 						$conn->begin_transaction();
 						$conn->query("START TRANSACTION;");
-						$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$PARAMETER['tablemachine']."';");
+						$conn->query("SELECT GROUP_CONCAT(CONCAT('T.',keymachine) ORDER BY realid) INTO @qry FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$PARAMETER['tablemachine']."';");
 						$conn->query($_stmt_array['stmt']);
 						$conn->query("PREPARE stmt FROM @qry2;");
 						$conn->query("EXECUTE stmt;");
@@ -579,11 +586,11 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 						$conn->commit();
 						// // create view for _permissions
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."_permissions` AS SELECT * FROM ".$PARAMETER['parentmachine']." WHERE subtablemachine = '".$PARAMETER['tablemachine']."'";
+						$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."_permissions` AS SELECT * FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$PARAMETER['tablemachine']."'";
 						_execute_stmt($_stmt_array,$conn);						
 						// // create view for _references
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."_permissions` AS SELECT * FROM ".$PARAMETER['parentmachine'];
+						$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$PARAMETER['tablemachine']."_references` AS SELECT * FROM ".$PARAMETER['parentmachine']."_references WHERE referencetag in (SELECT DISTINCT referencetag FROM `".$PARAMETER['tablemachine']."_permissions`)";
 						_execute_stmt($_stmt_array,$conn);						
 					}
 					foreach ( json_decode($PARAMETER['allowed_roles'],true) as $_role )
@@ -646,6 +653,14 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "DROP TABLE ".$PARAMETER['tablemachine']."_permissions";
 					_execute_stmt($_stmt_array,$conn);
+					unset($_stmt_array); $_stmt_array = array();
+					// simply do the same for VIEWS in case it was a subtable
+					$_stmt_array['stmt'] = "DROP VIEW ".$PARAMETER['tablemachine'];
+					_execute_stmt($_stmt_array,$conn);
+					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "DROP VIEW ".$PARAMETER['tablemachine']."_permissions";
+					_execute_stmt($_stmt_array,$conn);
+					//
 					unset($_table);
 					foreach ( $_TABLES as $_table )
 					{
@@ -780,7 +795,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					foreach ( json_decode($PARAMETER['allowed_roles'],true) as $_role )
 					{
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
+						$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
 						_execute_stmt($_stmt_array,$conn); 
 						unset($_stmt_array); $_stmt_array = array();
 						$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_role].";";
@@ -795,7 +810,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 						foreach ( $_children as $_child )
 						{
 							unset($_stmt_array); $_stmt_array = array();
-							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
+							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
 							_execute_stmt($_stmt_array,$conn); 
 							unset($_stmt_array); $_stmt_array = array();
 							$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_child].";";
@@ -942,7 +957,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 						$_stmt_array['stmt'] = "ALTER TABLE `".$_table."_permissions` ADD COLUMN `restrictrole_".$_result_id."` VARCHAR(40) DEFAULT NULL;";
 						_execute_stmt($_stmt_array,$conn);
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,typelist,edittype,realid,referencetag,role_".$_result_id.",restrictrole_".$_result_id.") ON ".$_table."_permissions TO ".$_ROLES_ARRAY[$_result_id].";";
+						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,realid,referencetag,role_".$_result_id.",restrictrole_".$_result_id.") ON ".$_table."_permissions TO ".$_ROLES_ARRAY[$_result_id].";";
 						_execute_stmt($_stmt_array,$conn);
 						unset($_stmt_array); $_stmt_array = array();
 						$_stmt_array['stmt'] = "GRANT SELECT (role_".$_result_parentid.",restrictrole_".$_result_parentid.") ON ".$_table."_permissions TO ".$_ROLES_ARRAY[$_result_id].";";
@@ -1212,16 +1227,64 @@ function _dbAction(array $PARAMETER,mysqli $conn) {
 }
 
 function recreateView(string $_propertable, mysqli $conn) {
-	global $_TABLES, $_TABLES_ARRAY, $_TABLES_ALLOW_ARRAY, $_ROLES, $_ROLES_ARRAY, $_PARENTS, $_PARENTS_ARRAY, $ENCRYPTED, $_warning;
+	global $_TABLES, $_TABLES_ARRAY, $_TABLES_ALLOW_ARRAY, $_TABLES_PARENTMACHINE_ARRAY, $_ROLES, $_ROLES_ARRAY, $_PARENTS, $_PARENTS_ARRAY, $ENCRYPTED, $_warning;
 	//recreate view
-	//get delete_roles for this table
+	//get delete_roles and parentmachine (is it a table or a view?) for this table
 	$PARAMETER = array();
 	$PARAMETER['table'] = $_propertable.'_permissions';
-	$_stmt_array['stmt'] = "SELECT delete_roles FROM os_tables WHERE tablemachine = ?";
+	$_stmt_array['stmt'] = "SELECT delete_roles,parentmachine FROM os_tables WHERE tablemachine = ?";
 	$_stmt_array['str_types'] = "s";
 	$_stmt_array['arr_values'] = array();
 	$_stmt_array['arr_values'][] = $_propertable;
-	$_delete_roles = execute_stmt($_stmt_array,$conn,true)['result'][0]['delete_roles']; 
+	$_os_tables_result = execute_stmt($_stmt_array,$conn,true)['result'][0];
+	$_delete_roles = $_os_tables_result['delete_roles'];
+	$PARAMETER['parentmachine'] = $_os_tables_result['parentmachine'];
+	//recreate $_propertable if it is a subtable
+	if ( $PARAMETER['parentmachine'] != '' ) {
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = "SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$_propertable."` AS SELECT D.`subtable_".$_propertable."`, T.id_".$PARAMETER['parentmachine'].", T.changedat, T.changedby, T.code";
+		foreach ( $_TABLES_ARRAY as $_id_ => $_table ) //this should only loop over base tables!
+			{
+				if ( $_table == $PARAMETER['parentmachine'] OR $_TABLES_PARENTMACHINE_ARRAY[$_id_] != '' ) { continue; }
+				$_stmt_array['stmt'] .= ", T.`id_".$_table."`";
+			}
+		$_stmt_array['stmt'] .= ",', @qry, ' FROM (SELECT 1 AS `subtable_".$_propertable."`) D CROSS JOIN ".$PARAMETER['parentmachine']." AS T WITH CHECK OPTION') INTO @qry2;";
+		file_put_contents('/var/www/test/openStat/mylog.txt',$_stmt_array['stmt'],FILE_APPEND);
+		$conn->begin_transaction();
+		$conn->query("START TRANSACTION;");
+		$conn->query("SELECT GROUP_CONCAT(CONCAT('T.',keymachine) ORDER BY realid) INTO @qry FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$_propertable."';");
+		$conn->query($_stmt_array['stmt']);
+		$conn->query("PREPARE stmt FROM @qry2;");
+		$conn->query("EXECUTE stmt;");
+		$conn->query("COMMIT;");
+		$conn->commit();
+	} elseif ( substr($_propertable,-4) != "MAIN" ) {
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = "SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$_propertable."MAIN` AS SELECT id_".$_propertable;
+		foreach ( $_TABLES_ARRAY as $_id_ => $_table ) //this should only loop over base tables!
+			{
+				if ( $_table == $_propertable OR $_TABLES_PARENTMACHINE_ARRAY[$_id_] != '' ) { continue; }
+				$_stmt_array['stmt'] .= ", `id_".$_table."`";
+			}
+		$_stmt_array['stmt'] .= ",', @qry, ' FROM ".$_propertable." WITH CHECK OPTION') INTO @qry2;";
+		$conn->begin_transaction();
+		$conn->query("START TRANSACTION;");
+		$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$_propertable."_permissions WHERE subtablemachine = '' OR subtablemachine IS NULL;");
+		$conn->query($_stmt_array['stmt']);
+		$conn->query("PREPARE stmt FROM @qry2;");
+		$conn->query("EXECUTE stmt;");
+		$conn->query("COMMIT;");
+		$conn->commit();
+		// // create view for _permissions
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$_propertable."MAIN_permissions` AS SELECT * FROM ".$_propertable."_permissions WHERE subtablemachine = '' OR subtablemachine IS NULL";
+		_execute_stmt($_stmt_array,$conn);						
+		// // create view for _references
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = "CREATE OR REPLACE ALGORITHM = MERGE VIEW  `".$_propertable."MAIN_references` AS SELECT * FROM ".$_propertable."_references WHERE referencetag in (SELECT DISTINCT referencetag FROM `".$_propertable."MAIN_permissions`)";
+		_execute_stmt($_stmt_array,$conn);						
+		recreateView($_propertable."MAIN",$conn);
+	}
 	unset($_stmt_array);
 	//query os_roles into $PARAMETER['rolename'] in a loop
 	$_stmt_array['stmt'] = "SELECT id AS roleid,parentid,rolename FROM os_roles";
@@ -1293,11 +1356,14 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7;"); //if you add permission types: 8=2^n; 7=2^n-1;
 				//id in next line is wrong: replace by id_s of allowed tables for role
 				$CREATEVIEW_ID = '';
+				if ( $PARAMETER['parentmachine'] != '' ) { $CREATEVIEW_ID = 'subtable_'.$_propertable.','; }
 				$CREATEVIEW_KOMMA = ',';
+				unset($_tableid);
 				foreach ( $_TABLES_ALLOW_ARRAY as $_tableid=>$_allowed_roles )
 				{
 					//added parentid on 20211109
-					if ( in_array($PARAMETER['roleid'],json_decode($_allowed_roles,true)) OR in_array($PARAMETER['parentid'],json_decode($_allowed_roles,true)) ) {
+					//added test for subtables 20220319
+					if ( $_TABLES_PARENTMACHINE_ARRAY[$_tableid] == '' AND ( in_array($PARAMETER['roleid'],json_decode($_allowed_roles,true)) OR in_array($PARAMETER['parentid'],json_decode($_allowed_roles,true)) ) ) {
 						$CREATEVIEW_ID .= 'id_'.$_TABLES_ARRAY[$_tableid].$CREATEVIEW_KOMMA;
 					}	
 				}
@@ -1321,7 +1387,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$conn->query("SELECT CONCAT('GRANT SELECT (".$CREATEVIEW_ID."', @qry1,'), UPDATE (".$CREATEVIEW_ID."', @qry2,'), INSERT(".$CREATEVIEW_ID."', @qry4, ') ON view__".$_propertable.'__'.$PARAMETER['roleid']." TO ".$PARAMETER['rolename']."') INTO @qry;");
 //wrong place:					$conn->query("GRANT SELECT, UPDATE ON os_userconfig.* TO".$PARAMETER['rolename'].";");
 //needs to be in role>insert	$conn->query("GRANT SELECT ON os_functions.* TO".$PARAMETER['rolename'].";");
-//								$conn->query("GRANT SELECT (keymachine,keyreadable,typelist,edittype,referencetag,role_".$PARAMETER['roleid'].",restrictrole_".$PARAMETER['roleid'].") ON ".$PARAMETER['table']."_permissions TO ".$PARAMETER['rolename'].";");
+//								$conn->query("GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$PARAMETER['roleid'].",restrictrole_".$PARAMETER['roleid'].") ON ".$PARAMETER['table']."_permissions TO ".$PARAMETER['rolename'].";");
 				$conn->query("PREPARE stmt FROM @qry;");
 				$conn->query("EXECUTE stmt;");
 				$conn->query("FLUSH PRIVILEGES;");
@@ -1552,14 +1618,8 @@ $tableel .= "</table>";
 						<option value="_none_">[Bitte Datei wählen]</option>
 						<?php
 						foreach ( $_sql as $_sqlfile ){
-							$_title = ''; $_date = '';
-							$osadm_index = array_search($_sqlfile,$osadm_result['sqlfilename']);
-							if ( $osadm_index !== false ) {
-								$_date = ': importiert am '.DateTime::createFromFormat('Y-m-d H:i:s', $osadm_result['importtimestamp'][$osadm_index])->format('d.m.Y');
-								$_title = $osadm_result['importresult'][$osadm_index];
-							}
 						?>
-							<option value="<?php html_echo($_sqlfile); ?>" title="<?php html_echo($_title); ?>"><?php html_echo($_sqlfile.$_date); ?></option>
+							<option value="<?php html_echo($_sqlfile); ?>"><?php html_echo($_sqlfile); ?></option>
 						<?php	
 						}
 						?>
