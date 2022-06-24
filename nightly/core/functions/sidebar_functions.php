@@ -1,64 +1,6 @@
 <?php
 function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '') 
 {
-	//define function to be able to show subtables recursively
-	function showSubtables(string $_tablemachine,array $_result_normal, array $_result, array $_config_array) {
-		$table_index = array_search($_tablemachine,$_result_normal['tablemachine']);
-		if ( sizeof(array_keys($_result_normal['parentmachine'],$_tablemachine)) > 0 ) {
-			$_subrnd = rand(0,2147483647);
-		?>
-		<label for="toggleSubtables<?php echo($_subrnd); ?>" class="chooseSubtable">
-			<i class="fas fa-table"></i>
-		</label>
-		<input
-			type="checkbox"
-			hidden
-			class="toggle"
-			id="toggleSubtables<?php echo($_subrnd); ?>"
-			name="showSubtablesOf[]"
-			value="<?php echo($_tablemachine); ?>"
-			<?php if ( isset($_config_array['showSubtablesOf']) AND in_array($_tablemachine,$_config_array['showSubtablesOf']) ) { ?>
-			checked
-			<?php } ?>
-		>
-		<?php
-		}
-		if ( sizeof(array_keys($_result_normal['parentmachine'],$_tablemachine)) > 1 ) { ?>
-			<div class="chooseSubtable">
-				<span style="display: inline-block; width: <?php echo($_config_array['table_hierarchy'][$table_index]+1.8); ?>rem">&nbsp;</span>
-				<input 
-					id="add_<?php html_echo($_tablemachine); ?>_allsubtables" 
-					type="checkbox" 
-					onclick="_toggleEditAll('formChooseTables',this.id,'.subtableOf<?php echo($_tablemachine); ?>');"
-					<?php if ( ! isset($_config_array['subtable']) OR ( isset($_config_array['subtable']) AND in_array($_subtable['tablemachine'],$_config_array['subtable']) ) ) { ?>checked<?php }; ?>
-				/>
-			</div>
-		<?php }
-		foreach ( array_keys($_result_normal['parentmachine'],$_tablemachine) as $subtable_index ) {
-			$_subtable = $_result[$subtable_index];
-			if ( in_array($_SESSION['os_role'],json_decode($_subtable['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_subtable['allowed_roles'])) ) { ?>
-			<div class="chooseSubtable">
-				<span style="display: inline-block; width: <?php echo($_config_array['table_hierarchy'][$table_index]+1.8); ?>rem">&nbsp;</span>
-				<input 
-					name="subtable[]" 
-					id="add_<?php html_echo($_subtable['tablemachine']); ?>" 
-					type="checkbox" 
-					value="<?php html_echo($_subtable['tablemachine']); ?>"
-					class="subtableOf<?php echo($_tablemachine); ?>"
-					onchange="updateTime(this);"
-					form="formChooseTables"
-					<?php if ( ! isset($_config_array['subtable']) OR ( isset($_config_array['subtable']) AND in_array($_subtable['tablemachine'],$_config_array['subtable']) ) ) { ?>checked<?php }; ?>
-				/>
-				<label for="add_<?php html_echo($_subtable['tablemachine']); ?>"><i class="fas fa-<?php html_echo($_subtable['iconname']); ?>"></i> <?php html_echo($_subtable['tablereadable']); ?></label><br>
-				<?php 
-					showSubtables($_subtable['tablemachine'],$_result_normal,$_result,$_config_array);
-				?>
-			</div>
-			<?php 
-			}
-		}
-	}
-	
 	if ( ! isset($PARAMETER['table']) ) { $PARAMETER['table'] = array('os_all'); };
 	$table = $PARAMETER['table'][0];
 
@@ -81,13 +23,6 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		if ( $_config_array['configname'] == 'Default') { $config_remove_class = 'disabled'; } 
 	}
 	$_config = $_config_array['filters'];
-	//parse filter options
-	$option_complement = '';
-	$option_searchinsresults = '';
-	if ( isset($_config['os_OPTIONS']) ) {
-			if ( is_array($_config['os_OPTIONS']) AND in_array('complement',$_config['os_OPTIONS']) ) { $option_complement = 'checked'; }
-			if ( is_array($_config['os_OPTIONS']) AND in_array('searchinresults',$_config['os_OPTIONS']) ) { $option_searchinresults = 'checked'; }
-	}
 	$_config_tables = $_config_array['table'];
 	$_config_hierarchy = $_config_array['table_hierarchy'];
 	$_stmt_array['stmt'] = "SELECT configname FROM os_userconfig_".$_SESSION['os_user'];
@@ -164,12 +99,9 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<input type="checkbox" hidden id="notoggleTables" class="notoggle">
 		<form id="formChooseTables" class="noform function" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ processFunctionFlags(this.closest('.section')); return false; });return false;" >
 			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
-			<input type="text" hidden value="_none_" name="subtable[]">
-			<input type="text" hidden value="_none_" name="showSubtablesOf[]">
 			<?php
-				//the hidden subtable input above allows to choose no subtable at all
 				unset($_stmt_array); $_stmt_array = array();
-				$_stmt_array['stmt'] = "SELECT iconname,tablemachine,tablereadable,allowed_roles,parentmachine FROM os_tables";
+				$_stmt_array['stmt'] = "SELECT iconname,tablemachine,tablereadable,allowed_roles FROM os_tables";
 				$_result_array = execute_stmt($_stmt_array,$conn,true); 
 				$_result_array_normal = execute_stmt($_stmt_array,$conn); //first keynames then rows 
 				if ($_result_array['dbMessageGood']) 
@@ -198,18 +130,13 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 									<?php if ( in_array($_table['tablemachine'],$_config_tables) ) { ?>checked<?php }; ?>
 								/>
 								<label for="add_<?php html_echo($_table['tablemachine']); ?>"><i class="fas fa-<?php html_echo($_table['iconname']); ?>"></i> <?php html_echo($_table['tablereadable']); ?></label><br>
-								<?php
-								//recursively show subtables
-								//$_tablemachine is the actual parameter; everything else has just to be passed
-								showSubtables($_table['tablemachine'],$_result_normal,$_result,$_config_array);	
-								?>
 							</div>
 						<?php }			
 					}
 					unset($_table);
 					foreach ( $_result as $_table )
 					{
-						if ( in_array($_table['tablemachine'],$_config_tables) OR $_table['parentmachine'] != '') { continue; }
+						if ( in_array($_table['tablemachine'],$_config_tables) ) { continue; }
 						if ( in_array($_SESSION['os_role'],json_decode($_table['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_table['allowed_roles'])) ) { ?>
 							<div id="table_<?php html_echo($_table['tablemachine']); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragstart="drag(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)"> 
 								<input 
@@ -249,7 +176,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						<h2><i class="fas fa-<?php html_echo($table_array['iconname']); ?>"></i><?php html_echo($table_array['tablereadable']); ?></h2>
 						<?php 
 						unset($_stmt_array); $_stmt_array = array(); $key_array = array();
-						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype,subtablemachine FROM ".$table."_permissions ORDER BY realid";
+						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype FROM ".$table."_permissions ORDER BY realid";
 						$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field
 						if ($_result_array['dbMessageGood']) { $key_array = $_result_array['result']; };
 						if ( isset($_children_table[$table]) ) {
@@ -270,9 +197,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						<?php
 						foreach ( $key_array as $key ) 
 						{ 
-							//test for NONE or unchecked subtables OR artificial subtable_-key
-							if ( substr($key['keymachine'],0,9) == 'subtable_' OR $key['edittype'] == 'NONE' OR ( $key['subtablemachine'] != '' AND ! in_array($key['subtablemachine'],$_config_array['subtable']) ) ) { continue; }
-							//
+							if ( $key['edittype'] == 'NONE' ) { continue; }
 							if ( ! array_key_exists($table.'__'.$key['keymachine'],$_config) ) 
 							{ ?> 
 							<input 
@@ -292,10 +217,6 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		</div>
 		<hr>
 		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); myScrollIntoView(document.getElementById('results_wrapper')); return false; }); return false; ">
-			<input hidden id="formFiltersSearchInResults" type="checkbox" value="searchinresults" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_searchinresults); ?>>
-			<label for="formFiltersSearchInResults" class="unlimitedWidth"><i class="fas fa-list"></i></label>
-			<input hidden id="formFiltersComplement" type="checkbox" value="complement" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_complement); ?>>
-			<label for="formFiltersComplement" class="unlimitedWidth"><i class="fas fa-puzzle-piece"></i></label>
 			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>
@@ -383,7 +304,7 @@ function updateSidebarCustom(array $PARAMETER, mysqli $conn)
 } 
 
 // display=false: only return the mysql statement
-function applyFilters(array $parameter, mysqli $conn, bool $_complement = false, bool $display = true, bool $changeconf = true, bool $_searchinresults = false)
+function applyFilters(array $parameter, mysqli $conn, bool $complement = false, bool $display = true, bool $changeconf = true)
 {
 	if ( isset($parameter) AND $changeconf ) {
 		$config = array('filters'=>$parameter);
@@ -402,19 +323,6 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	$TABLES = $_config['table'];
 	$HIERARCHY = $_config['table_hierarchy'];
 	$maintable = $TABLES[0];
-	
-	//handle options (like complement, searchinresults, <more to come>)
-	$complement = $_complement;
-	$searchinresults = $_searchinresults;
-	if ( isset($PARAMETER['os_OPTIONS']) ) {
-		$_filter_options = $PARAMETER['os_OPTIONS'];
-		if ( is_array($_filter_options) ) {
-			//give priority to passed arguments:
-			$complement = ($_complement OR in_array('complement',$_filter_options));
-			$searchinresults = ($_searchinresults OR in_array('searchinresults',$_filter_options));
-		}
-		unset($PARAMETER['os_OPTIONS']);
-	}
 	
 	//get edittypes (for strict or weak matches of values)
 	$_edittypes = array();
@@ -440,19 +348,10 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	$JOINSRC = array();
 	$SHOWME = array(); //array of fields to be displayed in results
 	unset($tindex);
-	$_WHERE = '';
-	$komma2 = ' WHERE (';
-	$komma0 = " WHERE ";
 	foreach ( $TABLES as $tindex => $table )
 	{
 		//add table to showme (customer request); here for economic reasons...
 		array_push($SHOWME,$table.'__id_'.$table);
-		//select from former result if requested; also here for economic reasons...
-		if ( isset($searchinresults) and $searchinresults ) {
-			$_WHERE .= $komma0.'(`view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IS NULL OR `view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IN ('.implode(',',json_decode($_SESSION['results'],true)[$table]).') )';
-			$komma0 = " AND ";
-			$komma2 = " AND (";
-		}
 		//
 		$JOINSRC[$HIERARCHY[$tindex]] = $table;
 		$_JOIN = '';
@@ -478,6 +377,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 		$_SELECT .= '`view__' . $table . '__' . $_SESSION['os_role'].'`.id_'.$table.' AS '.$table.'__'.'id_'.$table.',';
 		previous working! version (w/o hierarchies)*/ 
 	}
+	$_WHERE = '';
+	$komma2 = ' WHERE (';
 	$bracket = '';
 	$_ORDER_BY = ' ORDER BY ';
 	$_komma_cmp = ' AND '; //conditions for different compounds in one key filter have all to be satisfied
@@ -813,8 +714,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	}
 	if ( isset($display) AND !$display ) { return $_main_stmt_array; }
 	//print_r($_main_stmt_array); //for debug only
-	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement,$searchinresults);
-	$_SESSION['currentfilters'] = $filters;
+	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement);
 	$table_results = generateResultTable($_main_stmt_array,$conn);
 	$stat_results = generateStatTable($_main_stmt_array,$conn);
 	?>

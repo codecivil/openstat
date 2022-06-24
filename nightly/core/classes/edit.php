@@ -185,14 +185,13 @@ class OpenStatEdit {
 		$_stmt_array['arr_values'] = array($this->key);
 		$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
 		unset($_stmt_array); $_stmt_array = array();
-		$_stmt_array['stmt'] = 'SELECT keyreadable,subtablemachine FROM `'.$this->table.'_permissions` WHERE keymachine = ?';
+		$_stmt_array['stmt'] = 'SELECT keyreadable FROM `'.$this->table.'_permissions` WHERE keymachine = ?';
 		$_stmt_array['str_types'] = "s";
 		$_stmt_array['arr_values'] = array();
 		$_stmt_array['arr_values'][] = $this->key;
-		$_result_array = execute_stmt($_stmt_array,$this->connection);
+		$_result_array = execute_stmt($_stmt_array,$this->connection); 
 		if ($_result_array['dbMessageGood']) { 
 			$keyreadable = $_result_array['result']['keyreadable'][0];
-			$subtablemachine = $_result_array['result']['subtablemachine'][0];
 		};
 		$firstrnd = -1;
 		$key = $this->key;
@@ -229,9 +228,8 @@ class OpenStatEdit {
 		unset($_tmp_array);
 		//
 		if ( $_result['edittype'] != 'NONE') {
-			if ( $subtablemachine != '' ) { $_addclasses .= " subtable"; }
 		?>
-		<div class="edit_wrapper<?php echo($_addclasses); ?>" data-subtable="<?php echo($subtablemachine); ?>">
+		<div class="edit_wrapper<?php echo($_addclasses); ?>">
 		<?php };
 		$_default_array = '';
 		$_arrayed = '';

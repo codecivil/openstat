@@ -64,7 +64,7 @@ $conn->close();
 	<meta name="description" content="openStat v<?php echo($versionnumber); ?>">
 	<title>openStat Login</title>
 	<link rel="icon" type="image/x-icon" href="favicon.ico"/>
-	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/login_colors_<?php echo(date('z')); ?>.css" />
+	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/login_colors.css" />
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/login.css" />
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontawesome/css/all.css" />
 </head>

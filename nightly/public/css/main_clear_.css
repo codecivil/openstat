@@ -226,13 +226,11 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #sidebar .toggle:not(:checked) ~ label .closed { display: inline; }
 #sidebar label.not { top: 0; }
 #sidebar label.not::before { content: 'Finde:'; }
-#sidebar :checked + label.not::before { content: 'Schließe aus:'; color: var(--color-sidebar); }
+#sidebar :checked + label.not::before { content: 'SchlieÃe aus:'; color: var(--color-sidebar); }
 
 #sidebar .empty { height: 1rem; margin: 0; padding: 0; }
 .disabled { color: var(--color-sidebar-inactive); cursor: initial; }
 #sidebar .unsaved { color: var(--color-sidebar-changed); }
-#sidebar .fontToggle + label { color: var(--color-sidebar-inactive); cursor: initial; font-size: 1rem; padding: 0.5rem; }
-#sidebar .fontToggle:checked + label { color: var(--color-sidebar); cursor: initial; }
 
 /* config */
 #config,#showHistory {  
@@ -247,10 +245,6 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 }
 #formChooseTables { font-size: 1rem; }
 #formChooseTables > div:nth-child(2) { font-weight: bold; }
-#formChooseTables .toggle + .chooseSubtable { display: none; }
-#formChooseTables .toggle:checked + .chooseSubtable { display: block; }
-#formChooseTables .chooseSubtable { background: var(--background-choose-subtable); }
-#formChooseTables label.chooseSubtable { position: relative; top: -1.4rem; left: calc(100% - 1.4rem); font-size: 0.7rem; display: block; height: 0; width: 0.7rem; }
 .hier_up:hover::after { content: '\2190'; } /* arrow left */
 .hier_down:hover::before { content: '\2192'; } /*arrow right */
 
@@ -410,14 +404,6 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details .export { text-align: center; }
 .details .toggle + div { display: none; }
 .details .toggle:checked + div { display: block; }
-.details .subtoggle ~ .subtable { display: none; }
-.details .subtoggle ~ .subtoggle ~ .subtable { display: inital; }
-.details .subtoggle:checked ~ .subtable { display: block; }
-.details .subtoggle:checked + div label .open { display: inline; }
-.details .subtoggle:checked + div label .closed { display: none; }
-.details .subtoggle:not(:checked) + div label .open { display: none; }
-.details .subtoggle:not(:checked) + div label .closed { display: inline; }
-.details .subtable_header { display: block; height: 2rem; background: var(--background-subtable-header); margin: 0.5rem; }
 /** SUGGESTion windows **/
 .details .suggestions { 
 	opacity: 0;
@@ -491,8 +477,3 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .filepreview { background: var(--background-filepreview); border-radius: 5px; padding: 0.5rem; }
 .filepreview ._iframe { border: 1px solid black; border-radius: 5px; width: calc(100% - 0.6rem); height: 20rem; padding: 0.2rem; background: #e4e4e4; }
 #path,#fullpath { overflow-x: hidden; }
-
-/* os_functions */
-.import_overwrite + label:hover { cursor: pointer; text-decoration: underline; }
-.import_overwrite + label::after { content: 'Bereits existierende Einträge werden nicht importiert.'; }
-.import_overwrite:checked + label::after { content: 'Bereits existierende Einträge werden durch die importierte Version überschrieben.'; font-weight: bold; }

@@ -192,7 +192,7 @@ $_v = time();
 				<form  data-title="Klicken, um Benutzernamen zu ändern" method="POST" id="usernameForm" onsubmit="callFunction(this,'changeUserName','',false,'','changeUserName','').then(()=>{ return false; }); return false;" class="inline">
 					<input id="userName" name="userName" type="text" value="<?php echo($_SESSION['os_username']); ?>">
 				</form>
-				als&nbsp; <b><?php
+				als <b><?php
 				if ( $_SESSION['os_parent'] > 0 ) {
 					echo($_SESSION['os_parentname']); 
 				} else {

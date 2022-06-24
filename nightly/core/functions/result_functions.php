@@ -1,5 +1,5 @@
 <?php
-function generateFilterStatement(array $parameters, mysqli $conn, string $_table = 'os_all', bool $complement = false, bool $searchinresults = false)
+function generateFilterStatement(array $parameters, mysqli $conn, string $_table = 'os_all', bool $complement = false)
 {
 	function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$keyreadable,$index,$value,$tmpvalue = '',$separator = '',$emptyisall = false) {
 		switch($index) {
@@ -77,15 +77,6 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 	$_TABLES = $_config['table'];
 	$filter_results = '';
 	if ( $complement ) { $filter_results = '<b>Komplement von</b><br /><br />'; }
-	if ( $searchinresults ) { 
-		if ( substr($_SESSION['currentfilters'],0,7) != '<em>In:' ) {
-			$filter_results .= '<em>In:<br />';
-		} else {
-			$filter_results .= '<em>';
-		}
-		$filter_results .= $_SESSION['currentfilters'];
-		$filter_results .= '</em><br />';
-	}
 	foreach ( $parameters as $tablekey=>$values )
 	{
 		$_old_filter_results = $filter_results;
@@ -149,8 +140,6 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 	if ( isset($_config['hiddenColumns']) ) { $HIDDEN = $_config['hiddenColumns']; } else { $HIDDEN = array(); };
 	$TABLES = $_config['table'];
 	$ICON = array(); $TABLEREADABLE = array();
-	unset($_SESSION['results']);
-	$_sessionresults = array();
 	foreach ( $TABLES as $table )
 	{
 		unset($_stmt_array); $_stmt_array = array();
@@ -162,8 +151,6 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 		$ICON[$table] = $_thisresult['iconname'][0];
 		$TABLEREADABLE[$table] = $_thisresult['tablereadable'][0];
 		unset($_thisresult);
-		//reset the results session variables;
-		$_sessionresults[$table] = array(-1);
 	}
 	unset($table);
 	unset($oldvalue);
@@ -216,8 +203,6 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 				{
 					if ( isset($row[$table.'__'.'id_'.$table]) ) {
 						$_editvalue['id_'.$table] = $row[$table.'__'.'id_'.$table];
-						//populate results session variable
-						$_sessionresults[$table][] = $row[$table.'__'.'id_'.$table];
 					}
 				} 
 				$table_results .= "<td>
@@ -277,8 +262,6 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 		}
 	} else { $table_results .= "<tr><td>Ihre Suche liefert leider keine Ergebnisse.</td><tr>"; };
 	$table_results .= "</table>";
-	$_SESSION['results']=json_encode($_sessionresults);
-	unset($_sessionresults);
 	return $table_results;
 }
 

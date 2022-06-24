@@ -30,7 +30,6 @@ function newEntry(array $PARAM,$conn) {
 	//get config
 	$_config = getConfig($conn);
 	$TABLES = $_config['table'];
-	$SUBTABLES = $_config['subtable'];
 	$maintable = $TABLES[0];
 	//distinguish mass and single edit
 	if ( isset($_array['massEdit']) ) {
@@ -55,17 +54,16 @@ function newEntry(array $PARAM,$conn) {
 	$PARAM = $_array;
 	
 	unset($_stmt_array); $_stmt_array = array();
-	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine,parentmachine,identifiers from os_tables';
+	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine from os_tables';
 	/*$_stmt_array['str_types'] = 's';
 	$_stmt_array['arr_values'] = array($table);*/
 	$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
 	$icon = array();
 	for ( $i = 0; $i < sizeof($_table_result); $i++ ) {
 		$icon[$_table_result[$i]['tablemachine']] = $_table_result[$i]['iconname'];
-		$identifiers[$_table_result[$i]['tablemachine']] = $_table_result[$i]['identifiers'];
 	}
 	$iconname = $icon[$table[0]];
-	$mainidentifiers = $identifiers[$table[0]];
+
 /*	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = 'SELECT iconname from os_tables WHERE tablemachine = ?';
 	$_stmt_array['str_types'] = 's';
@@ -115,9 +113,6 @@ function newEntry(array $PARAM,$conn) {
 					<select id="_action<?php echo($table[0].$id[0].$rnd); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($rnd); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ document.getElementById('_action<?php echo($table[0].$id[0].$rnd); ?>_sticky').value = 'pleasechoose'; myScrollIntoView(this); return false; });" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="pleasechoose" selected>[Bitte erst nach Bearbeitung wählen]</option> <!-- pleasechoose: arbitrary non-empty value, so that the message is returned and not an array-->
 						<option value="insert">als neuen Eintrag anlegen</option>
-						<?php if ( $mainidentifiers != '' AND $mainidentifiers != '[]' ) { ?>
-						<option value="updateIfExistsElseInsert">alten Eintrag ggf. überschreiben; sonst neu anlegen</option>
-						<?php } ?>
 					</select>
 				</div>
 				<?php 
@@ -294,11 +289,6 @@ function importCSV(array $PARAM,$conn) {
 			</ol>
 		</div>
 		<form class="fileSelectionForm">
-			<div>
-				<input type="checkbox" class="import_overwrite" id="import_overwrite<?php echo($rnd); ?>" checked hidden>
-				<label class="unlimitedWidth" for="import_overwrite<?php echo($rnd); ?>" title="Klicken, um zu ändern"><i class="fas fa-angle-right"></i>&nbsp;</label>
-			</div>
-			<div class="clear"></div>
 			<input type="file" multiple class="importFile" accept=".csv,application/csv,text/csv" onchange="matchHeaders(this,this.files,'headermatch')">
 		</form>
 	</div>
@@ -382,13 +372,6 @@ function importCSV(array $PARAM,$conn) {
 //scope: FILTERS
 function applyComplement (array $PARAM, $conn) {
 	applyFilters($PARAM,$conn,true);
-}
-
-//search in current results
-//scope: FILTERS
-function applyFiltersOnResults(array $parameter, mysqli $conn)
-{
-	applyFilters($parameter,$conn,false,true,true,true);
 }
 
 //scope: RESULTDETAILS
@@ -558,20 +541,13 @@ function trafficLight(array $PARAM, mysqli $conn)
 	$_stmt_array['stmt'] = "SELECT functionconfig from os_functions where functionmachine = 'trafficLight'";
 	$_config = json_decode(execute_stmt($_stmt_array,$conn,true)['result'][0]['functionconfig'],true);
 	unset($_stmt_array); $_stmt_array = array();
-	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine,identifiers from os_tables';
+	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine from os_tables';
 	/*$_stmt_array['str_types'] = 's';
 	$_stmt_array['arr_values'] = array($table);*/
 	$_table_result = execute_stmt($_stmt_array,$conn,true)['result'];
 	$icon = array();
-	$tableidentifiers = array();
 	for ( $i = 0; $i < sizeof($_table_result); $i++ ) {
 		$icon[$_table_result[$i]['tablemachine']] = $_table_result[$i]['iconname'];
-		$tableidentifiers[$_table_result[$i]['tablemachine']] = $_table_result[$i]['identifiers'];
-		if ( $tableidentifiers[$_table_result[$i]['tablemachine']] == '') {
-			$tableidentifiers[$_table_result[$i]['tablemachine']] = array();
-		} else {
-			$tableidentifiers[$_table_result[$i]['tablemachine']] = json_decode($tableidentifiers[$_table_result[$i]['tablemachine']]);
-		}
 	}
 	
 	if (sizeof($tables) == 0) { return; }
@@ -645,12 +621,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 		<?php
 		}
 		foreach ( array_keys($ids) as $idstable ) {
-			//use table identifiers if not set in function config
-			if ( isset($_config['identifiers'][$idstable]) ) {
-				$identifiers = implode(',',$_config['identifiers'][$idstable]);
-			} else {
-				$identifiers = implode(',',$tableidentifiers[$idstable]);
-			}
+			$identifiers = implode(',',$_config['identifiers'][$idstable]);
 			$identifiers_esc = "'".str_replace(",","','",$identifiers)."'";
 			unset($_stmt_array); $_stmt_array = array();
 			$_stmt_array['stmt'] = 'SELECT keymachine,keyreadable from '.$idstable.'_permissions WHERE keymachine IN ('.$identifiers_esc.')';
@@ -862,10 +833,6 @@ function lock(array $PARAM, ?mysqli $conn) {
 		</form>
 	</div>
 	<?php
-}
-
-function findDuplicates(array $PARAM, mysqli $conn) {
-//to be implemented
 }
 
 function unlock(array $PARAM, ?mysqli $conn) {
