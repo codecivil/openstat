@@ -22,6 +22,8 @@ body {
 	--background-cleanup: #cce0ff;
 	--background-warning: #ffa000;	
 	--background-body-transparent: linear-gradient(#ffffffa0,#ffff00a0);
+	--background-subtable-header: #48F95D;
+	--background-choose-subtable: #FFAA80;
 	--color-statusbar: #fff;
 	--color-resultswrapper: #000;
 	--color-statwrapper: #000;
@@ -30,6 +32,8 @@ body {
 	--color-unique: #0000ff;	
 	--color-fontsize-selector: #ffff00;
 	--color-sidebar-inactive: #808080;
+	--color-sidebar: hsla(0,0%,0%,1);
+	--color-sidebar: hsla(0,0%,0%,1);
 	--color-sidebar-changed: #0000c0;	
 	--background-slider: var(--color-statusbar);
 	--background-slider-checked: var(--background-goodmessage);
