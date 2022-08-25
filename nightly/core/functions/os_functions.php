@@ -894,3 +894,99 @@ function uuid() {
 function showEmptyFields($PARAM,$conn) {
 	return;
 }
+
+//function scope: GLOBAL (in statusbar)
+//classes: profile section
+function editProfile(array $PARAM, mysqli $conn) {
+	$fields = array('vorname','name','telefon','email');
+	$inputtypes = array('name'=>'text','vorname'=>'text','telefon'=>'text','email'=>'email');
+	$datatypes = json_encode(array('name_private'=>'TEXT','vorname_private'=>'TEXT','telefon_private'=>'PHONE','email_private'=>'EMAIL')); //only the _private fields are visible (text) inputs
+	//to do: use these types...
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = 'SELECT * from os_userprofiles WHERE userid = ?';
+	$_stmt_array['str_types'] = "i";
+	$_stmt_array['arr_values'] = array();
+	$_stmt_array['arr_values'][] = $_SESSION['os_user'];
+	unset($_result);
+	$_result = execute_stmt($_stmt_array,$conn,true)['result'][0];
+	$_public = json_decode($_result['_public'],true);
+	$_machine = json_decode($_result['_machine'],true);
+	$_private = json_decode($_result['_private'],true);
+	$rnd = rand(0,2147483647);
+	?>
+	<h2>Profil: <?php echo($_SESSION['os_username']); ?></h2>
+	<p>Deine Profildaten können stets von Funktionen Deiner Sitzung verwendet werden.</p>
+	<p>Sollen auch Funktionen anderer Nutzer darauf zugreifen können,
+	muss <em>Funktionen</em> angehakt sein.</p>
+	<p>Sollen Funktionen anderen Nutzern auch Daten aus Deinem Profil anzeigen dürfen, muss <em>Benutzer</em> angehakt sein.</p>
+	<p>Die Profildaten sind gegen unbefugten Zugriff gesichert, aber nicht auf demselben hohen Niveau wie Tabelleneinträge oder Passwörter. Gib daher bitte keine sensiblen 
+	privaten Informationen im Profil an.</p>
+	<div class="message"><div class="dbMessage"></div></div>
+	<form method="POST" onsubmit="updateProfile(this,'<?php html_echo($datatypes); ?>'); return false" id="profileCheckBoxes">
+	<!-- disable submit by enter -->
+		<input type="submit" disabled style="display: none" aria-hidden="true" />
+		<?php if ( isset($_result) ) { ?>
+			<input type="text" hidden name="profile_exists" value="true">
+		<?php } ?>
+		<table>
+		<thead>
+			<tr><th></th><th></th><th title="Funktionen anderer Benutzer dürfen das Feld benutzen, aber nicht anzeigen">Funktionen</th><th title="Andere Benutzer dürfen das Feld auch einsehen">Benutzer</th></tr>
+			<tr><td></td><td></td><td><input type="checkbox" id="profileCheckFunctions" onclick="_toggleEditAll('profileCheckBoxes','profileCheckFunctions','.profileCheckFunctions')"></td><td><input type="checkbox" id="profileCheckUsers" onclick="_toggleEditAll('profileCheckBoxes','profileCheckUsers','.profileCheckUsers')"></td></tr>
+		</thead>
+		<tbody>
+		<?php foreach ( $fields as $_field ) {
+			if ( isset($_private[$_field]) ) { $this_private = $_private[$_field]; } else { $this_private = ''; } 
+			if ( isset($_machine[$_field]) ) { $this_machine = $_machine[$_field]; } else { $this_machine = ''; } 
+			if ( isset($_public[$_field]) ) { $this_public = $_public[$_field]; } else { $this_public = ''; } 
+		?>
+		<tr>
+			<th class="right"><label for="profile_<?php html_echo($_field.'_private'); ?>"><?php html_echo(ucfirst(str_replace('_',' ',$_field))); ?></label></th>
+			<td><input type="<?php echo($inputtypes[$_field]); ?>" value="<?php html_echo($this_private); ?>" id="profile_<?php html_echo($_field.'_private'); ?>" name="<?php html_echo($_field.'_private'); ?>"></td>
+			<td><input type="checkbox" form="profileCheckBoxes" class="profileCheckFunctions" data-name="<?php html_echo($_field); ?>" data-scope="<?php echo('_machine'); ?>" <?php if ( $this_private != '' AND $this_private == $this_machine ) { echo("checked "); } ?>></td>
+			<td><input type="checkbox" form="profileCheckBoxes" class="profileCheckUsers" data-name="<?php html_echo($_field); ?>" data-scope="<?php echo('_public'); ?>" <?php if ( $this_private != '' AND  $this_private == $this_public ) { echo("checked "); } ?>></td>
+			<td>
+				<input type="<?php echo($inputtypes[$_field]); ?>" hidden name="<?php html_echo($_field.'_machine'); ?>">
+				<input type="<?php echo($inputtypes[$_field]); ?>" hidden name="<?php html_echo($_field.'_public'); ?>">
+			</td>
+		</tr>
+		<?php } ?>			
+		</tbody>
+		</table>
+		<div class="submitProfile" data-title="Profil speichern"><label class="submitProfileLabel" for="submitProfile<?php echo($rnd);?>"><i class="fas fa-save"></i></label><input id="submitProfile<?php echo($rnd);?>" type="submit" hidden></div>
+	</form>
+	<?php
+}
+
+function updateProfile(array $PARAM, mysqli $conn) {
+//to be continued: save profile PARAMS in os_profiles and return success state
+	//collect fields into json bundles
+	$json = array();
+	foreach ( array('_private','_machine','_public') as $suffix ) {
+		$json[$suffix] = '[]';
+		foreach ( $PARAM as $key => $value ) {
+			if ( preg_match('/'.$suffix.'$/',$key) ) {
+				$json[$suffix] = json_encode(array_merge(json_decode($json[$suffix],true),array(str_replace($suffix,'',$key) => $value)));
+			}
+		}
+	}
+	if ( isset($PARAM['profile_exists']) ) {
+		unset($PARAM['profile_exists']);
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = 'UPDATE os_userprofiles SET userid = ?,_private = ?,_machine = ?,_public = ?';
+		$_stmt_array['str_types'] = "isss";
+		$_stmt_array['arr_values'] = array($_SESSION['os_user'],$json['_private'],$json['_machine'],$json['_public']);
+		$_stmt_array['message'] = "Profil wurde aktualisiert.";
+		unset($_result);
+		$_result = _execute_stmt($_stmt_array,$conn); //with execute_stmt the dbMessage does not work, instead fails and $_result is null
+		
+	} else {
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = 'INSERT INTO os_userprofiles (userid,_private,_machine,_public) VALUES (?,?,?,?)';
+		$_stmt_array['str_types'] = "isss";
+		$_stmt_array['arr_values'] = array($_SESSION['os_user'],$json['_private'],$json['_machine'],$json['_public']);
+		$_stmt_array['message'] = "Profil wurde angelegt.";
+		unset($_result);
+		$_result = _execute_stmt($_stmt_array,$conn);
+	}
+	return json_encode($_result);
+}

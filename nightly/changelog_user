@@ -1,3 +1,16 @@
+#v1.7.6
+======
+
+* Nutzerprofile können nun eingerichtet und bearbeitet werden. Dazu gibt es die Funktion "Profil bearbeiten" im Funktionsabschnitt der Statuszeile (ganz rechts),
+  gekennzeichnet mit einem "Benutzer"-Icon. Die eingetragenen Daten können für Funktionen anderer Nutzer oder auch zur Ansicht durch andere Nutzer freigegeben werden.
+  Dadurch wird es in Zukunft zum Beispiel ermöglicht, eine Funktion zu implementieren, die Benutzer per e-Mail bei bestimmten Datenbankereignissen benachrichtigt.
+* rote Nachricht im Kopfbereich des Eintrags, wenn ein Feldeintrag ungültig ist und ein Speicherversuch veranlasst wurde.
+* neues Datenmodell NOTE: Ein Feld des Typs NOTE erlaubt ab der Stelle des Feldes das Anlegen, Ändern und Löschen einer Notiz; während die Optionen bei nichtleerer
+  Notiz stets zu sehen sind, erscheinen die entsprechenden Optionen bei leerer Notiz, wenn man die Maus in den rechtesten Bereich der Feldstelle bzw. in die rechte Ecke 
+  unterhalb des Eintragskopfbereichs, sobald über die Feldstelle hinweg gescrollt wurde, bewegt. Außer Löschen stehen die Notizzettelfarben blau, grün, gelb, rot und
+  eine dem jeweiligen Farbschema angepasste Farbe (für unklassifizierte Notizen; Optionsdarstellung schraffiert) zur Auswahl.
+* Eingabefelder überprüfen Längenbegrenzung
+
 #v1.7.5
 ======
 

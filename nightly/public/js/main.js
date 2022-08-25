@@ -337,15 +337,28 @@ function validate(el,json)
 
 function colorInvalid(el,invalid) {
 	var form = el.closest('form');
+	var message = form.closest('.section').querySelector('.message');
+	//uncolor all labels
 	var alllabels = form.querySelectorAll('label[for]');
 	for ( i = 0; i < alllabels.length; i++ ) {
 		alllabels[i].style.color = 'inherit';
 	}
+	//remove all invalid message parts
+	first = true;
+	message.querySelectorAll('.dbMessage').forEach(function(dbMessage){
+			if ( first ) { dbMessage.textContent = ''; first = false; } else { dbMessage.remove(); }
+		});
+	//color labels of invalid entries
 	for ( i = 0; i < invalid.length; i++ ) {
 		invalidel = form.querySelector('[name="'+invalid[i]+'"]');
 		invalidlabel = form.querySelector('label[for="'+invalidel.id+'"]');
 		invalidlabel.style.color = '#a00000';
-	}
+		//put invalid entries into the message part
+		var invalidmessage = document.createElement('div');
+		invalidmessage.classList.add('dbMessage','false');
+		invalidmessage.textContent += 'Ungültig: '+invalidlabel.textContent;
+		message.appendChild(invalidmessage);
+	}	
 }
 
 /* obsolete: replace by php-curl in db_functions...

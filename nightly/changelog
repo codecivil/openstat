@@ -1,7 +1,37 @@
+#v1.7.6
+======
+23.08.2022
+
+* os.js: implementation of _SHOW_/_HIDE_ for EXTENSIBLE LISTS(; MULTIPLE)
+  (strictly separate: for entries (.details) visible is governed by js, opacity is governed by css)
+
+20.08.2022
+
+* implementation of user profiles: 
+  * global function editProfile
+  * new table os_userprofiles, accessible to all roles! There is currently no restriction of permissions on SQL level possible
+  * (vendor) functions have to obey to:
+    * entries of the field _private are only used by the logged in user
+    * entries of the field _machine are only used, but never shown to other users
+    * entries of the field _public can be freely used and shown by/to other users
+    This is a bit shaky in terms of security but access restrictions on SQL level are only possible for roles not users, anyway.
+
+17.08.2022
+
+* main.js: colorInvalid() now adds a failure message to the entry head's message element
+
+15.08.2022
+
+* data model NOTE added
+
+12.08.2022
+
+* input fields of type VARCHAR in database enforce length restriction now
+
 #v1.7.5
 ======
 
-23.06.20222
+23.06.2022
 
 * fixed regression in create_structure.php
 

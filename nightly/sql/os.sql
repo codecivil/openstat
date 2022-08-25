@@ -306,6 +306,23 @@ LOCK TABLES `os_users` WRITE;
 INSERT INTO `os_users` VALUES (1,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `os_users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `os_userprofiles`
+-- profile fields are currently defined in os_function updateProfile; the fields here store json of the profile fields to the respective access level
+
+DROP TABLE IF EXISTS `os_userprofiles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `os_userprofiles` (
+  `userid` int(11) DEFAULT NULL,
+  `_private` TEXT DEFAULT NULL,
+  `_machine` TEXT DEFAULT NULL,
+  `_public` TEXT DEFAULT NULL,
+  PRIMARY KEY (`userid`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 `ENCRYPTED`=YES;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

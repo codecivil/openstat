@@ -30,6 +30,23 @@ hr, .clear { clear: both; }
 .marked { background: var(--background-marked); }
 .myidentity { font-size: 6pt; }
 
+/* NOTEs */
+.note { opacity: 0; }
+.note:hover { opacity: 1; }
+.note .note_unfocussed { display: block; }
+.note .note_wrapper textarea { display: none; }
+.note .note_cb:checked ~ div textarea { display: block; height: 10rem; width: 10rem; text-align: center; }
+.note .note_unfocussed, .note .note_wrapper { width: 10rem; height: 10rem; }
+.note .note_wrapper { transform: rotate(2deg); }
+.note div textarea { background: var(--background-functions); border: 1px dashed black; text-align:center; font-family: cursive; }
+.note_blue,.note input.note_blue:checked ~ .note_wrapper textarea { background: lightblue; }
+.note_green,.note input.note_green:checked ~ .note_wrapper textarea { background: lightgreen; }
+.note_yellow,.note input.note_yellow:checked ~ .note_wrapper textarea { background: lightyellow; }
+.note_red,.note input.note_red:checked ~ .note_wrapper textarea { background: lightpink; }
+.note_theme { background: repeating-linear-gradient(45deg,var(--background-functions),var(--background-functions) 0.1rem, #00000080 0.2rem); }
+.note input:checked { border: 2px solid black; }
+/* end of NOTES */
+
 input,select,textarea { font-size: 1rem;}
 input[type='checkbox'] + label, label.orand { position: relative; top: -0.2rem; }
 /*label:active { filter: invert(100%); transition: 0s ease; }*/
@@ -351,7 +368,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details .toggle + div { display: none; }
 .details .toggle:checked + div { display: block; }
 .details .subtoggle ~ .subtable { display: none; }
-.details .subtoggle ~ .subtoggle ~ .subtable { display: inital; }
+.details .subtoggle ~ .subtoggle ~ .subtable { display: initial; }
 .details .subtoggle:checked ~ .subtable { display: block; }
 .details .subtoggle:checked + div label .open { display: inline; }
 .details .subtoggle:checked + div label .closed { display: none; }
@@ -436,3 +453,9 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .import_overwrite + label:hover { cursor: pointer; text-decoration: underline; }
 .import_overwrite + label::after { content: 'Bereits existierende Einträge werden nicht importiert.'; }
 .import_overwrite:checked + label::after { content: 'Bereits existierende Einträge werden durch die importierte Version überschrieben.'; font-weight: bold; }
+
+.profile { width: 35rem; background: var(--background-config); }
+.profile table { text-align: center; }
+.profile table th.right { text-align: right; }
+.profile .submitProfile { display: block; visibility: hidden; position: relative; width: 2rem; left: calc(100% - 2.4rem); font-size: 2rem; color: var(--background-warning); background: #ffffff80; border-radius: 5px; padding: 0.2rem; }
+.profile .submitProfile.changed { visibility: visible; }

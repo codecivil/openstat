@@ -180,7 +180,7 @@ class OpenStatEdit {
 	public function edit(string $_default, bool $_single = true) {
 		$default = $_default;
 		$_stmt_array = array();
-		$_stmt_array['stmt'] = 'SELECT edittype,role_'.$_SESSION['os_role'].' AS role, restrictrole_'.$_SESSION['os_role'].' AS restrictrole, role_'.$_SESSION['os_parent'].' AS parentrole, restrictrole_'.$_SESSION['os_parent'].' AS restrictparentrole FROM '.$this->table.'_permissions WHERE keymachine = ?';
+		$_stmt_array['stmt'] = 'SELECT edittype,typelist,role_'.$_SESSION['os_role'].' AS role, restrictrole_'.$_SESSION['os_role'].' AS restrictrole, role_'.$_SESSION['os_parent'].' AS parentrole, restrictrole_'.$_SESSION['os_parent'].' AS restrictparentrole FROM '.$this->table.'_permissions WHERE keymachine = ?';
 		$_stmt_array['str_types'] = 's';
 		$_stmt_array['arr_values'] = array($this->key);
 		$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
@@ -208,6 +208,12 @@ class OpenStatEdit {
 		
 		/// if restrictions are set, present them as closed list
 		if ( $_result['restrictrole'] != '' OR $_result['restrictparentrole'] != '' ) { $_result['edittype'] = 'LIST'; };
+		//
+		// look for length restrictions in typelist
+		$_maxlength = '';
+		if ( preg_match('/VARCHAR/',$_result['typelist']) == 1 ) {
+			$_maxlength = ' maxlength='.preg_replace('/\)/','',preg_replace('/VARCHAR\(/','',$_result['typelist'])).' ';
+		}
 		//
 		//separate MULTIPLE keyword, e.g. EXTENSIBLE LIST; MULTIPLE
 		$_tmp_array = explode('; ',$_result['edittype']);
@@ -342,7 +348,7 @@ class OpenStatEdit {
 					case 'SUGGEST':
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input <?php echo($_disabled.' '.$_onchange_text); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
+						<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
 						<div class="suggestions"></div>
 						<div class="clear"></div>
 						<?php break;
@@ -438,7 +444,7 @@ class OpenStatEdit {
 							<?php }; ?>
 							<div id="db_<?php echo($key.$rnd); ?>_list"></div>
 							<div class="left">
-								<input <?php echo($_disabled.' '.$_onchange_text); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+								<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
 								<div class="suggestions"></div>
 								<label class="toggler" for="minus<?php echo($rnd); ?>" data-title="Zwischen Auswahl und Eingabe wechseln">&nbsp;<i class="fas fa-plus"></i></label>
 								<input <?php echo($_disabled); ?>  id="minus<?php echo($rnd); ?>" class="minus" type="button" value="+" onclick="_toggleOption('<?php echo($key.$rnd); ?>')" data-title="Erlaubt die Eingabe eines neuen Wertes" hidden>
@@ -449,7 +455,7 @@ class OpenStatEdit {
 					case 'EXTENSIBLE LIST':
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>_list" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input <?php echo($_disabled.' '.$_onchange_text); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+						<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
 						<div class="suggestions"></div>
 						<select <?php echo($_disabled); ?>  id="db_<?php echo($key.$rnd); ?>_list" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value);<?php echo($_onchange_function); ?>">
 						<!--	<option value="none"></option> -->
@@ -476,7 +482,7 @@ class OpenStatEdit {
 						?>
 							<div class="searchfield">
 								<label for="db_<?php echo($key.$rnd); ?>_list" style="opacity: 0"><?php echo($keyreadable); ?></label>
-								<input <?php echo($_disabled.' '.$_onchange_text); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
+								<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?>  type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" value="" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus disabled hidden>
 								<div class="suggestions"></div>
 								<select <?php echo($_disabled); ?>  id="db_<?php echo($key.$rnd); ?>_list" name="<?php echo($this->table.'__'.$this->key); ?>[]" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value);<?php echo($_onchange_function); ?>">
 								<!--	<option value="none"></option> -->
@@ -500,7 +506,7 @@ class OpenStatEdit {
 					case 'SUGGEST BEFORE LIST':
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>_list" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input <?php echo($_disabled.' '.$_onchange_text); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
+						<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> type="text" id="db_<?php echo($key.$rnd); ?>_text" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" value="<?php echo($default); ?>" onkeyup='_autoComplete(this,<?php echo(preg_replace("/\'/","&apos;",json_encode($options))); ?>,<?php echo(json_encode($conditions)); ?>)' autofocus>
 						<div class="suggestions"></div>
 						<select <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>_list" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>" onclick="updateSelection(this);" onchange="_onResetFilter(this.value);<?php echo($_onchange_function); ?>" disabled hidden>
 						<!--	<option value="none"></option> -->
@@ -595,13 +601,13 @@ class OpenStatEdit {
 								<div onclick="document.getElementById('trash').value = '<?php echo($default_array['filepath'][$i]); ?>'; callFunction('_','openFile','_popup_'); document.getElementById('trash').value = '';">
 									<label><?php echo($default['filepath'][$i]); ?>)</label>
 									<label onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
-									<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['filedescription'][]" id="db_<?php echo($key.$rnd); ?>_filedescription_<?php echo($i); ?>" type="text" value="<?php echo($default['filedescription'][$i]); ?>" class="db_<?php echo($key); ?>" />
+									<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['filedescription'][]" id="db_<?php echo($key.$rnd); ?>_filedescription_<?php echo($i); ?>" type="text" value="<?php echo($default['filedescription'][$i]); ?>" class="db_<?php echo($key); ?>" <?php echo($_maxlength); ?>/>
 									<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['filepath'][]" id="db_<?php echo($key.$rnd); ?>_filepath_<?php echo($i); ?>" type="text" value="<?php echo($default['filepath'][$i]); ?>" class="db_<?php echo($key); ?>" />
 								</div>
 							<?php }
 						?>
 						</div>
-						<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['filedescription'][]" id="db_<?php echo($key.$rnd); ?>_filedescription" type="text" class="db_<?php echo($key); ?>" placeholder="Beschreibung"/>
+						<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['filedescription'][]" id="db_<?php echo($key.$rnd); ?>_filedescription" type="text" class="db_<?php echo($key); ?>" placeholder="Beschreibung" <?php echo($_maxlength); ?>/>
 						<input <?php echo($_disabled.' '.$_onchange_text); ?> hidden name="<?php echo($this->table.'__'.$this->key); ?>['FILES']" id="db_<?php echo($key.$rnd); ?>_filepath" type="file" multiple class="db_<?php echo($key); ?>" />
 						<div class="clear"></div>
 						<?php break;
@@ -684,10 +690,32 @@ class OpenStatEdit {
 						</div>
 						<div class="clear"></div>
 						<?php break;			
+					case 'NOTE':
+						$default = json_decode($default);
+						if ( ! is_array($default) ) { $default = array('theme',''); }
+						$_cbcolors = array("blue","green","yellow","red","theme");
+						?>
+						<div class="note" data-title="Notiz erstellen oder bearbeiten">
+							<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
+							<input type="checkbox" id="note_delete_cb<?php echo($rnd); ?>" class="note_cb" onclick="note_delete(this)" hidden>
+							<?php foreach ( $_cbcolors as $_cbcolor ) {
+							?>
+							<input type="radio" onclick="note_show(this)" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" value="<?php echo($_cbcolor); ?>" <?php if ( $default[0] == $_cbcolor ) { echo(" checked "); } ?> id="note_<?php echo($_cbcolor); ?>_cb<?php echo($rnd); ?>" class="note_cb note_<?php echo($_cbcolor); ?>" hidden>
+							<?php } ?>
+							<div class="note_wrapper">
+								<label for="note_delete_cb<?php echo($rnd); ?>" class="unlimitedWidth note_delete"><i class="fas fa-minus-square"></i></label>
+							<?php foreach ( $_cbcolors as $_cbcolor ) {
+							?>
+								<label for="note_<?php echo($_cbcolor); ?>_cb<?php echo($rnd); ?>" class="unlimitedWidth note_<?php echo($_cbcolor); ?>"><i class="far fa-square"></i></label>
+							<?php } ?>
+								<textarea  <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> onchange="note_synctext(this)" spellcheck="true" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" class="db_formbox db_<?php echo($key.' note_'.$default[0]); ?>"  value="" rows="3" wrap="hard"><?php echo($default[1]); ?></textarea>
+							</div>
+						</div>
+						<?php break;
 					default:
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input <?php echo($_disabled.' '.$_onchange_text); ?> spellcheck="true" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>"  value="<?php echo($default); ?>">
+						<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> spellcheck="true" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?>"  value="<?php echo($default); ?>">
 						<div class="clear"></div>
 						<?php break;
 				}

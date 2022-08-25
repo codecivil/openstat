@@ -360,6 +360,9 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					$_stmt_array['stmt'] = "GRANT SELECT ON os_tables TO ".$PARAMETER['rolename'].";";
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "GRANT SELECT, UPDATE, INSERT ON os_userprofiles TO ".$PARAMETER['rolename'].";";
+					_execute_stmt($_stmt_array,$conn); 
+					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";
 					_execute_stmt($_stmt_array,$conn);  
 					unset($_stmt_array); $_stmt_array = array();
@@ -1616,10 +1619,17 @@ $tableel .= "</table>";
 					<div class="warning"><?php echo($_warning); ?></div>
 					<select class="db_formbox" name="sqlfile" onchange="_displayFile(this.value)">
 						<option value="_none_">[Bitte Datei wählen]</option>
-						<?php
-						foreach ( $_sql as $_sqlfile ){
-						?>
-							<option value="<?php html_echo($_sqlfile); ?>"><?php html_echo($_sqlfile); ?></option>
+ 						<?php
+ 						foreach ( $_sql as $_sqlfile ){
+							$_title = ''; $_date = '';
+							$osadm_index = false;
+							if ( is_array($osadm_result) ) {$osadm_index = array_search($_sqlfile,$osadm_result['sqlfilename']); }
+							if ( $osadm_index !== false ) {
+								$_date = ': importiert am '.DateTime::createFromFormat('Y-m-d H:i:s', $osadm_result['importtimestamp'][$osadm_index])->format('d.m.Y');
+								$_title = $osadm_result['importresult'][$osadm_index];
+							}
+ 						?>
+							<option value="<?php html_echo($_sqlfile); ?>" title="<?php html_echo($_title); ?>"><?php html_echo($_sqlfile.$_date); ?></option>
 						<?php	
 						}
 						?>

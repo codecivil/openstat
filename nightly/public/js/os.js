@@ -182,7 +182,7 @@ function updateSelection(el) {
 		//
 		if ( depends_local != '' ) { var search_el = el.closest('.searchfield'); } else { var search_el = el.closest('form'); }
 		if ( search_el.querySelector('[name*="'+depends_on_key+'"]') ) {
-			_hits = search_el.querySelectorAll('[name*="'+depends_on_key+'"]');
+				_hits = search_el.querySelectorAll('[name*="'+depends_on_key+'"]');
 			//restrict successively for almost all fields
 			if ( _hits[0].type != "checkbox" ) {
 				for (k=0; k<_hits.length; k++) {
@@ -245,8 +245,20 @@ function updateSelection(el) {
 	let _label = el;
 	if ( el.parentElement.querySelector('[for="'+el.id+'"]') ) { _label = el.parentElement.querySelector('[for="'+el.id+'"]'); } // el and _label share the same properties int hre rest of this function
 	if ( _hide_matched && ! _show_matched ) {
-		el.style.opacity = 0;
-		_label.style.opacity = 0;
+		// if MULTIPLE simply hide the full searchfield
+		if ( el.closest('.edit_wrapper') ) {
+			el.closest('.edit_wrapper').querySelectorAll('.searchfield').forEach(function(_searchfield){
+				_searchfield.hidden = true;
+			});
+			el.closest('.edit_wrapper').querySelectorAll('label[id$=_plus]').forEach(function(_plus){
+				_plus.hidden = true;
+			});
+		}
+		//
+//		el.style.opacity = 0;
+//		_label.style.opacity = 0;
+		el.style.visibility = 'hidden';
+		_label.style.visibility = 'hidden';
 		setTimeout(function(){
 			el.hidden = true; el.disabled = true;
 			el.parentElement.querySelector('[for="'+el.id+'"]').hidden = true;		
@@ -255,21 +267,45 @@ function updateSelection(el) {
 		// is this compatible with mass editing or non-editing permissions?
 		// it is not working for extensible lists! how to decide which input method must be shown? to be continued
 //		el.hidden = false; el.disabled = false;
+		// if MULTIPLE simply hide the full searchfield
+		if ( el.closest('.edit_wrapper') ) {
+			el.closest('.edit_wrapper').querySelectorAll('.searchfield').forEach(function(_searchfield){
+				_searchfield.hidden = false;
+			});
+			el.closest('.edit_wrapper').querySelectorAll('label[id$=_plus]').forEach(function(_plus){
+				_plus.hidden = false;
+			});
+		}
+		//
 		el.hidden = (el.dataset.hidden === 'true'); el.disabled = ( el.dataset.hidden === 'true' );
 		if ( el.parentElement.querySelector('[for="'+el.id+'"]') ) { el.parentElement.querySelector('[for="'+el.id+'"]').hidden = ( el.dataset.hidden === 'true' ); }
 		setTimeout(function(){
 			if ( el.dataset.hidden == "false" ) { //new in 2022-02-26
-				el.style.opacity = 1;
-				_label.style.opacity = 'inital'; //to do: deal with labels in multiple entries: they must have opacity 0
+//				el.style.opacity = 1;
+				el.style.visibility = 'visible';
+//				_label.style.opacity = 'initial'; //to do: deal with labels in multiple entries: they must have opacity 0
+				_label.style.visibility = 'initial'; //to do: deal with labels in multiple entries: they must have opacity 0
+				if ( el.closest('.edit_wrapper' ) ) {
+				// compare to main_*.css, e.g.: .details label ~  .searchfield + .searchfield label.onlyone { opacity: 0.5; }
+					el.closest('.edit_wrapper').querySelectorAll('.searchfield + .searchfield label.onlyone').forEach(function(_onlyone) {
+						_onlyone.style.visibility = 'hidden';
+					});
+					el.closest('.edit_wrapper').querySelectorAll('label ~ .searchfield + .searchfield label.onlyone').forEach(function(_onlyone) {
+						_onlyone.style.visibility = 'visible';
+					});
+				}
 			}	
 		},100);
 	}
-	//now only missing: autoupdateSelection at opening (getDetails)
 }
 
 //update selection of all class members of array of classes given by json_string
 function updateSelectionOfClasses(el) {
-	dependency_divs = el.parentElement.querySelectorAll('.dependencies');
+	if ( el.parentElement.querySelector('.dependencies') ) {
+		dependency_divs = el.parentElement.querySelectorAll('.dependencies');
+	} else {
+		dependency_divs = el.closest('.edit_wrapper').querySelectorAll('.dependencies');
+	}
 	for ( let dependency_div of dependency_divs ) {
 		json_string = dependency_div.textContent;
 		var _classes = JSON.parse(json_string);
@@ -612,6 +648,41 @@ function updateSelectionsOfThis(form,arg,responsetext) {
 			edit_wrapper.remove();
 		});
 	}
+	// implement the NOTEs position and sync
+	el.querySelectorAll('.note').forEach(function(_note){
+		_note.closest('.edit_wrapper').style.position = "sticky";
+		_note.closest('.edit_wrapper').style.top = "8rem";	
+		_note.closest('.edit_wrapper').style.display = "flex";	
+		_note.closest('.edit_wrapper').style.width = "10rem";	
+		_note.closest('.edit_wrapper').style.height = "0";	
+		_note.closest('.edit_wrapper').style.left = "calc(100% - 14rem)";	
+		_note.closest('.edit_wrapper').style.zIndex = "5";
+		if ( _note.querySelector('.note_wrapper textarea').value == '' ) {
+			_note.querySelector('.note_wrapper textarea').style.visibility = 'hidden';
+		} else {
+			_note.style.opacity = 1;
+// This prevents that the note flows awkwardly into next entry, but creates a 14rem space at entry location; but only if there is a note...
+			_note.closest('.edit_wrapper').style.height = "14rem";	
+		}
+	});
+}
+
+function note_show(el) {
+	el.parentElement.querySelector('.note_wrapper textarea').style.visibility = "visible";
+	el.parentElement.style.opacity = 1;
+// This prevents that the note flows awkwardly into next entry, but creates a 14rem space at entry location; but only if there is a note...
+	el.closest('.edit_wrapper').style.height = "14rem";
+	return false
+}
+
+function note_delete(el) {
+	let _textarea = el.parentElement.querySelector('.note_wrapper textarea');
+	_textarea.value = '';
+	_textarea.style.visibility = 'hidden';
+	el.parentElement.style.opacity = "";
+// This prevents that the note flows awkwardly into next entry, but creates a 14rem space at entry location; but only if there is a note...
+	el.closest('.edit_wrapper').style.height = "0";
+	return false
 }
 
 function _scrapeStat(chosencolumn) {
@@ -1142,4 +1213,57 @@ function showOpenEntries(el) {
 		el.querySelector('select').appendChild(_option);
 	});
 	return false;
+}
+
+//callback functions for editProfile
+//responsetext is new profile popup on first call, db success for subsequent calls
+function editProfile(form,arg,responsetext) {
+	let responseObj = new Object();
+	try { responseObj = JSON.parse(responsetext); } catch(err) { responseObj = new Object(); responseObj.dbMessage = ''; responseObj.dbMessageGood = "true"; }
+	//keep only one profile popup
+	let first=true;
+	document.querySelectorAll('.profile').forEach(function(_profile){
+		if ( ! first ) { _profile.closest('.popup_wrapper').remove(); first = false; }
+		first = false;
+	});
+	let submitProfile = document.querySelector('.profile .submitProfile');
+	let messageProfile = document.querySelector('.profile .dbMessage');
+	//fill message div
+	if ( responseObj.dbMessageGood ) {
+		messageProfile.classList.add(responseObj.dbMessageGood);
+	}
+	if ( responseObj.dbMessage ) {
+		messageProfile.textContent = responseObj.dbMessage;
+	}
+	//show save button if entries change
+	document.querySelectorAll('.profile input[type=text],.profile input[type=email]').forEach(function(_input){
+		_input.onkeyup = function() { submitProfile.classList.add('changed'); }
+	});
+	document.querySelectorAll('.profile input[type=checkbox]').forEach(function(_input){
+		_input.onchange = function() { submitProfile.classList.add('changed'); }
+	});
+	if ( responseObj.dbMessageGood == "true" ) { submitProfile.classList.remove('changed'); }
+	return false
+}
+
+// el is the profile form in the popup
+function updateProfile(el,json) {
+	//remove result message
+	el.closest('.profile').querySelector('.dbMessage').textContent = '';
+	//update hidden fields
+	el.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+		if (cb.dataset && cb.dataset.name && cb.dataset.scope ) {
+			if ( cb.checked ) {
+				el.querySelector('input[name='+cb.dataset.name+cb.dataset.scope+']').value = el.querySelector('input[name='+cb.dataset.name+'_private]').value;
+			} else {
+				el.querySelector('input[name='+cb.dataset.name+cb.dataset.scope+']').value = '';
+			}
+		}
+	});
+	//validate entries
+	let invalid = validate(el,json);
+	colorInvalid(el,invalid);
+	//update os_profiles
+	if ( invalid.length == 0 ){ callFunction(el,'updateProfile','',false,'','editProfile').then(()=>{ return false; }); }
+	return false
 }
