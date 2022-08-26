@@ -9,6 +9,6 @@ CREATE TABLE `os_userprofiles` (
   PRIMARY KEY (`userid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 `ENCRYPTED`=YES;
 -- grant permissions
-GRANT SELECT,UPDATE,INSERT ON os_profiles TO OS_ROLES LIKE '%';
+GRANT SELECT,UPDATE,INSERT ON os_userprofiles TO OS_ROLES LIKE '%';
 -- register global function
 INSERT  INTO `os_functions` (`iconname`,`functionmachine`,`functionreadable`,`functionscope`,`functionclasses`,`allowed_roles`,`functiontarget`) VALUES ('user','editProfile','Profil bearbeiten','GLOBAL','profile section','[0]','_popup_');
