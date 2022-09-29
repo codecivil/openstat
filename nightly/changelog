@@ -1,3 +1,9 @@
+#v1.7.7
+======
+29.09.2022
+
+* fast fix for HIDE/SHOW error in local fields
+
 #v1.7.6
 ======
 23.08.2022
@@ -38,7 +44,7 @@
 #v1.7.4
 ======
 
-21.06.20222
+21.06.2022
 
 * much more color schemes
 * identifiers implemented (identify two entries even if only certain field values are identical)
