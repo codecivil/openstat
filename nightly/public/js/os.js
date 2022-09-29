@@ -245,8 +245,8 @@ function updateSelection(el) {
 	let _label = el;
 	if ( el.parentElement.querySelector('[for="'+el.id+'"]') ) { _label = el.parentElement.querySelector('[for="'+el.id+'"]'); } // el and _label share the same properties int hre rest of this function
 	if ( _hide_matched && ! _show_matched ) {
-		// if MULTIPLE simply hide the full searchfield
-		if ( el.closest('.edit_wrapper') ) {
+		// if MULTIPLE and NOT local simply hide the full searchfield
+		if ( el.closest('.edit_wrapper') && el.id.indexOf('[') == -1 ) {
 			el.closest('.edit_wrapper').querySelectorAll('.searchfield').forEach(function(_searchfield){
 				_searchfield.hidden = true;
 			});
