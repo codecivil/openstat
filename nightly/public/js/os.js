@@ -159,6 +159,7 @@ function updateSelection(el) {
 	//data-hidden as string attribute!
 	if ( ! ('hidden' in el.dataset) ) { el.dataset.hidden = el.hidden; } // get initial settings for hidden (e.g. for EXTENSIBLE data models)
 	var id = el.id.replace(/_list$/,''); //so it works for EXTENSIBLE data models, where you have _list and _text ids.
+	id = id.replace(/_functions$/,''); //so it works for FUNCTION data model, where you have _functions as hidden select.
 	var option = el.getElementsByTagName('option');
 	var _disabled = new Array(); //the state for checkboxes: activate all options matching a checked checkbox
 	for (j=0; j<option.length; j++) {
@@ -261,7 +262,7 @@ function updateSelection(el) {
 		_label.style.visibility = 'hidden';
 		setTimeout(function(){
 			el.hidden = true; el.disabled = true;
-			el.parentElement.querySelector('[for="'+el.id+'"]').hidden = true;		
+			if ( el.parentElement.querySelector('[for="'+el.id+'"]') ){ el.parentElement.querySelector('[for="'+el.id+'"]').hidden = true; }		
 			}, 700);
 	} else {
 		// is this compatible with mass editing or non-editing permissions?
@@ -300,20 +301,42 @@ function updateSelection(el) {
 }
 
 //update selection of all class members of array of classes given by json_string
+//currently, in local use it loops if a subfield has conditions as well as dependencies!
 function updateSelectionOfClasses(el) {
+	console.log("el",el);
 	if ( el.parentElement.querySelector('.dependencies') ) {
 		dependency_divs = el.parentElement.querySelectorAll('.dependencies');
 	} else {
-		dependency_divs = el.closest('.edit_wrapper').querySelectorAll('.dependencies');
+		if ( el.closest('.edit_wrapper') && el.closest('.edit_wrapper').querySelector('.dependencies') ) {
+			dependency_divs = el.closest('.edit_wrapper').querySelectorAll('.dependencies');
+		}
+		else return false
 	}
+	//take only the closest dependency_div (upwards) sibling for compounds
+	let cprx = new RegExp('\\[[\\d]*\\]');
+	if ( el.id.match(cprx) != null ) {
+		console.log("match",el.id);
+		let prev = el.previousElementSibling;
+		let maxdist = 3;
+		let dist = 0;
+		while ( ! prev.classList.contains("dependencies") && dist < maxdist ) {
+			prev = prev.previousElementSibling;
+			dist++;
+		}
+		if ( dist < maxdist ) { dependency_divs = [prev]; }
+	} 
+	console.log(dependency_divs);
 	for ( let dependency_div of dependency_divs ) {
 		json_string = dependency_div.textContent;
 		var _classes = JSON.parse(json_string);
+		//too much recursion here currently: inquire
 		_classes.forEach(function(_class) {
+			console.log("class",_class);
 			_classMembers = document.getElementsByClassName(_class);
 			for ( let member of _classMembers ) {
 				//update the selection
 				updateSelection(member);
+				console.log("member",member.id);
 				//fire the change event (which otherwise would not fire)
 				//  this is deprecated:
 				//    ev = document.createEvent('Event');
@@ -321,6 +344,7 @@ function updateSelectionOfClasses(el) {
 				//  instead:
 				ev = new CustomEvent('change', { bubbles: true });
 				member.dispatchEvent(ev);
+		//too much recursion... (above)
 			}
 		});
 	}
@@ -1265,5 +1289,55 @@ function updateProfile(el,json) {
 	colorInvalid(el,invalid);
 	//update os_profiles
 	if ( invalid.length == 0 ){ callFunction(el,'updateProfile','',false,'','editProfile').then(()=>{ return false; }); }
+	return false
+}
+
+function _FUNCTIONobserveChanges(el) {
+	let _parent = el.parentElement;
+	//execute functions if hidden //seems not to fire for dynamic _HIDE_ and _SHOW_
+	if (_parent.querySelector('.db_function_check').hidden) { _parent.querySelector('.db_function_check').checked = true; }
+	//
+	//what for?: if (_parent.querySelector('.db_function_check').checked) {
+		_FUNCTIONStatus(el,'changed');
+	//}
+}
+
+/*
+ * FUNCTION values are JSON strings with attributes
+ * "type": "FUNCTION" (in order to be recognized on server side),
+ * "status": initial and changed values of relevant fields
+ * "functions": FIELD functions to be executed
+*/
+function _FUNCTIONStatus(el,statusname) {
+	if ( ! statusname ) { let statusname = 'initial'; }
+	inputfield = el.closest('.edit_wrapper');
+	if ( inputfield.querySelector('div[id$=_conditions]') ) { 
+		_conditions_element = el.closest('.edit_wrapper').querySelector('div[id$=_conditions]');
+	}
+	if ( _conditions_element == undefined ) { return false; }
+	let _conditions = JSON.parse(_conditions_element.textContent);
+	let _status = new Object();
+	for ( let _condition of _conditions ) {
+		if ( _condition.depends_on_key != '' ) {
+			if ( el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])') ) {
+				value = el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])');
+			} else {
+				value = '';
+			}
+			_status[_condition.depends_on_key] = value;
+		}
+	}
+	try {
+		function_field_obj = JSON.parse(inputfield.querySelector('.db_function_field').value);
+	} catch(e) {
+		function_field_obj = new Object();
+	}
+	if ( ! function_field_obj.status ) { function_field_obj.status = new Object(); }
+	if ( ! function_field_obj.functions ) { function_field_obj.functions = new Object(); }
+	function_field_obj.status[statusname] = _status;
+	function_field_obj.functions = new Array();
+	function_field_obj.type = 'FUNCTION';
+	for ( let option of inputfield.querySelector('.db_function_functions').options ) { if (! option.disabled) {function_field_obj.functions.push(option.value);} }
+	inputfield.querySelector('.db_function_field').value = JSON.stringify(function_field_obj);
 	return false
 }

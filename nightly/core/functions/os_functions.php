@@ -549,14 +549,23 @@ function changeUserName(array $PARAM, $conn) {
 	return $_SESSION['os_username'];			
 }
 
+function getFunctionConfig(string $functionname, mysqli $conn)
+{
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "SELECT functionconfig from os_functions where functionmachine = ?";
+	$_stmt_array['str_types'] = 's';
+	$_stmt_array['arr_values'] = array($functionname);
+	$_config = json_decode(execute_stmt($_stmt_array,$conn,true)['result'][0]['functionconfig'],true);
+	return $_config;
+}
+
 function trafficLight(array $PARAM, mysqli $conn)
 {
 	$tables = $PARAM['table'];
 	$userconfig = getConfig($conn);
 	
-	unset($_stmt_array); $_stmt_array = array();
-	$_stmt_array['stmt'] = "SELECT functionconfig from os_functions where functionmachine = 'trafficLight'";
-	$_config = json_decode(execute_stmt($_stmt_array,$conn,true)['result'][0]['functionconfig'],true);
+	$_config = getFunctionConfig('trafficLight',$conn);
+
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine,identifiers from os_tables';
 	/*$_stmt_array['str_types'] = 's';
@@ -617,19 +626,31 @@ function trafficLight(array $PARAM, mysqli $conn)
 	<?php
 	foreach ( $tables as $table ) {
 		$ids = array(); $resultin = array(); $_param = array();
-		foreach ( $_config['criteria'] as $criterion ){
-			if ( ( ! isset($userconfig['trafficLight']) OR in_array($criterion['name'],$userconfig['trafficLight']) ) AND $criterion['associated_table'] == $table ) {
-				$resultout_array = _parseCriterion($resultin,$_param,$criterion,$tables,$conn);
-				$resultout = $resultout_array[0];
-				$_param = $resultout_array[1];
-				foreach ( $resultout as $id ) {
-					if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
-					$_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
-					if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
-					if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }
-					if ( $criterion['urgency'] == "-" ) { $ids[$criterion['table']][$id]['urgency'] -= 1; }
-					if ( is_int($criterion['urgency']) ) { $ids[$criterion['table']][$id]['urgency'] = max($ids[$criterion['table']][$id]['urgency'],$criterion['urgency']); }
-					if (! substr_in_array($criterion['name'],$ids[$criterion['table']][$id]['criteria']) ) { array_push($ids[$criterion['table']][$id]['criteria'],$criterion['name'].$_criteriondetail); } 
+		foreach ( $_config['criteria'] as $criterion_template ){
+			//parse "template" attribute:
+			//only available in top level criteria
+			//only one template variable at the moment
+			//no template variable in "name" attribute possible at the moment (see l.601ff. )
+			if ( ! isset($criterion_template['template']) ) { $criterion_template['template'] = array( "XX" => array("") ); }
+			foreach ( $criterion_template['template'] as $_template_var => $_template_values ) {
+				if ( is_string($_template_values) ) { $_template_values = range(explode('...',$_template_values)[0],explode('...',$_template_values)[1]); }
+				foreach ( $_template_values as $_template_value ) {
+					$criterion = json_decode(str_replace('--'.$_template_var,$_template_value,json_encode($criterion_template)),true);
+					unset($criterion['template']);
+					if ( ( ! isset($userconfig['trafficLight']) OR in_array($criterion['name'],$userconfig['trafficLight']) ) AND $criterion['associated_table'] == $table ) {
+						$resultout_array = _parseCriterion($resultin,$_param,$criterion,$tables,$conn);
+						$resultout = $resultout_array[0];
+						$_param = $resultout_array[1];
+						foreach ( $resultout as $id ) {
+							if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
+							$_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
+							if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
+							if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }
+							if ( $criterion['urgency'] == "-" ) { $ids[$criterion['table']][$id]['urgency'] -= 1; }
+							if ( is_int($criterion['urgency']) ) { $ids[$criterion['table']][$id]['urgency'] = max($ids[$criterion['table']][$id]['urgency'],$criterion['urgency']); }
+							if (! substr_in_array($criterion['name'],$ids[$criterion['table']][$id]['criteria']) ) { array_push($ids[$criterion['table']][$id]['criteria'],$criterion['name'].$_criteriondetail); } 
+						}
+					}
 				}
 			}
 		}
@@ -719,6 +740,21 @@ function trafficLight(array $PARAM, mysqli $conn)
 	}
 }
 
+//concats array values of same key; used in _parseCriterion
+function array_concat(array $arr1,array $arr2) {
+	$_arr = array();
+	foreach ( array_diff_key($arr1,$arr2) as $_key => $_value ) {
+		$_arr[$_key] = $_value;
+	}
+	foreach ( array_diff_key($arr2,$arr1) as $_key => $_value ) {
+		$_arr[$_key] = $_value;
+	}
+	foreach ( array_intersect_key($arr1,$arr2) as $_key => $_value ) {
+		$_arr[$_key] = $_value.', '.$arr2[$_key];
+	}
+	return $_arr;
+}
+
 function _parseCriterion(array $resultin, array $_param, array $criterion, array $tables, mysqli $conn) {
 	//make tables to views
 	foreach ( $tables as $cftable ) {
@@ -750,7 +786,8 @@ function _parseCriterion(array $resultin, array $_param, array $criterion, array
 			$subresultout_array = _parseCriterion($resultin,$_param,$subcriterion,$tables,$conn);
 			$subresultout = $subresultout_array[0];
 			$_subparam = $subresultout_array[1];
-			$_param = array_merge($_param,$_subparam);
+//			$_param = array_merge($_param,$_subparam); //overwrites previous display values
+			$_param = array_concat($_param,$_subparam); //concats all display values; os_functiom
 			switch($_logical[0]) {
 				case 'and':
 					if ( $index == 0 ) { $resultin = $subresultout; }
@@ -836,7 +873,7 @@ function _parseCriterion(array $resultin, array $_param, array $criterion, array
 				array_push($_resultout,$_maybe['id_'.$criterion['table']]);
 				if ( isset($criterion['display']) ) {
 					//need non-numeric keys for array_merge to do what we want
-					$_param['id'.$_maybe['id_'.$criterion['table']]] = $value.' '.$criterion['display'];
+					$_param['id'.$_maybe['id_'.$criterion['table']]] .= $value.' '.$criterion['display'];
 				}
 			}
 		}

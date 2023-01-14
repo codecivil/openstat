@@ -38,7 +38,7 @@ hr, .clear { clear: both; }
 .note .note_cb:checked ~ div textarea { display: block; height: 10rem; width: 10rem; text-align: center; }
 .note .note_unfocussed, .note .note_wrapper { width: 10rem; height: 10rem; }
 .note .note_wrapper { transform: rotate(2deg); }
-.note div textarea { background: var(--background-functions); border: 1px dashed black; text-align:center; font-family: cursive; }
+.note div textarea { background: var(--background-functions); border: 1px dashed black; text-align:center; font-family: serif; }
 .note_blue,.note input.note_blue:checked ~ .note_wrapper textarea { background: lightblue; }
 .note_green,.note input.note_green:checked ~ .note_wrapper textarea { background: lightgreen; }
 .note_yellow,.note input.note_yellow:checked ~ .note_wrapper textarea { background: lightyellow; }

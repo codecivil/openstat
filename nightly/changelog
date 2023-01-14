@@ -1,3 +1,13 @@
+#v1.7.8
+======
+14.01.2022
+
+* fix: infinite loops when in compound fields dependencies depend on local dependencies
+* feature: "display" attribute in trafficLight config is now cumulative
+* feature: "template" attribute in trafficLight config for top level criteria; only one template variable possible at the moment
+* date model FUNCTION added; not yet fully implemented
+* FUNCTION function sendmail added; not yet fully implemented
+
 #v1.7.7
 ======
 29.09.2022

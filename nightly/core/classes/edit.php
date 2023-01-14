@@ -94,6 +94,7 @@ class OpenStatEdit {
 			case 'EDITOR':
 			case 'FILESPATH':
 			case 'NONE':
+			case 'NOTE':
 				break;
 			case 'SUGGEST':
 			case 'EXTENSIBLE LIST':
@@ -117,6 +118,7 @@ class OpenStatEdit {
 				}
 				unset($option); unset($_index);
 				$options = array_diff($options,$_splice);
+			case 'FUNCTION':
 			case 'CHECKBOX':
 			case 'LIST':
 			/* REFERENCE (tag, depends_on_key, depends_on_value, allowed_values as json); several rows with same tag are applied with AND (intersection of allowed values)
@@ -364,6 +366,32 @@ class OpenStatEdit {
 								<option value="<?php echo($value); ?>" <?php echo($_sel); ?> ><?php echo($value); ?></option>
 							<?php } ?>
 						</select>
+						<div class="clear"></div>
+						<?php break;
+					case 'FUNCTION':
+						?>
+						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
+						<input type="checkbox" <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>" class="db_function_check db_<?php echo($key); ?>" onchange="_FUNCTIONobserveChanges(this)">
+						<select hidden <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>_functions" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_<?php echo($key); ?>  db_function_functions" onchange="_FUNCTIONobserveChanges(this)">
+							<option value="none" selected ></option> 
+						<!--
+							Do not select any of the allowed functions, since then they may not be updated according to the conditions...
+							
+							It is on purpose that the select above has the same name as the input[type=text] below:
+							js will querySelector the first (select): ok
+							php will send the value of the second: also ok
+							
+							but I admit, it's a bit shaky and not good to maintain...
+						-->
+							<?php foreach ( $options as $value ) { 
+								?>				
+								<option value="<?php echo($value); ?>"><?php echo($value); ?></option>
+							<?php } ?>
+						</select>
+						<input type="number" hidden <?php echo($_disabled); ?> class="db_function_changes" value="0">
+						<input type="text" hidden <?php echo($_disabled); ?> class="db_function_field" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" value="<?php echo($default); ?>">
+						<!-- That is the image hack: missing src leads to error and thus to js execution even if this is added way after loading the page... -->
+						<img src onerror="_FUNCTIONStatus(this,'initial')">
 						<div class="clear"></div>
 						<?php break;
 					case 'CHECKBOX':
@@ -874,6 +902,7 @@ class OpenStatEdit {
 					*/
 					case 'CALENDAR':
 					case 'SECRET':
+					case 'FUNCTION':
 					case 'NONE': break;
 					case 'TEXT':
 					case 'EMAIL':
@@ -881,6 +910,7 @@ class OpenStatEdit {
 					case 'FREE':
 					case 'EDITOR':
 					case 'FILESPATH':
+					case 'NOTE':
 						?>
 							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 							<?php foreach ( $checked as $searchterm ) {
