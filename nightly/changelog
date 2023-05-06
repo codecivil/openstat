@@ -1,6 +1,15 @@
+#v1.7.9
+======
+06.05.2023
+
+* feature: now many template variables in any subcriteria in trafficLight possible
+* tietotables now also works if specified (only) in parent role
+* newEntry now styles notes correctly
+* context menu at result table headers: "reverse order" and "hide column" implemented
+
 #v1.7.8
 ======
-14.01.2022
+14.01.2023
 
 * fix: infinite loops when in compound fields dependencies depend on local dependencies
 * feature: "display" attribute in trafficLight config is now cumulative

@@ -1347,8 +1347,16 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$_stmt_array['arr_values'][] = $_propertable;
 				$_tietotables = execute_stmt($_stmt_array,$conn,true)['result'][0]['tietotables'];
 				$_tietotables_array = json_decode($_tietotables,true);
+				#tie for role id
 				if ( isset($_tietotables_array[$PARAMETER['roleid']]) ) {
 					foreach ( $_tietotables_array[$PARAMETER['roleid']] as $_tieingtable ) {
+						$CREATEVIEW_WHERE .= $CREATEVIEW_AND." id_".$_tieingtable." IN ( SELECT id_".$_tieingtable." FROM view__".$_tieingtable."__".$PARAMETER['roleid']." ) ";
+						$CREATEVIEW_AND = ' AND ';
+					}
+				}
+				#tie for parent id
+				if ( isset($_tietotables_array[$PARAMETER['parentid']]) ) {
+					foreach ( $_tietotables_array[$PARAMETER['parentid']] as $_tieingtable ) {
 						$CREATEVIEW_WHERE .= $CREATEVIEW_AND." id_".$_tieingtable." IN ( SELECT id_".$_tieingtable." FROM view__".$_tieingtable."__".$PARAMETER['roleid']." ) ";
 						$CREATEVIEW_AND = ' AND ';
 					}

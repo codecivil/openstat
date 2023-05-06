@@ -519,3 +519,8 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .profile table th.right { text-align: right; }
 .profile .submitProfile { display: block; visibility: hidden; position: relative; width: 2rem; left: calc(100% - 2.4rem); font-size: 2rem; color: var(--background-warning); background: #ffffff80; border-radius: 5px; padding: 0.2rem; }
 .profile .submitProfile.changed { visibility: visible; }
+
+/* context menu*/
+#contextmenu { background: var(--background-helpmode); }
+#contextmenu menu { list-style-type: none; font-family: system-ui; font-size: small; margin: 0; padding: 0.5rem; border: 0.1rem solid var(--color-statusbar); border-radius: 5px; }
+#contextmenu menu li:hover { background: var(--background-filters); }

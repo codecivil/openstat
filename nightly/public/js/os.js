@@ -90,6 +90,81 @@ function _addOption(keyname) {
 //		document.getElementById('db_options').submit();
 }
 
+//contextMenu: decide on element type what to offer or what to do immediately
+function _contextMenu(el) {
+	if ( document.getElementById('contextmenu') ) { return false; }
+	let menuwrapper = document.createElement('div');
+	let menu = document.createElement('menu');
+	if ( el.closest('table') ) {
+		li = document.createElement('li');
+		li.textContent = "Sortierung umkehren";
+		li.classList.add("contextmenu");
+		li.addEventListener('click',function(){ _toggleSortTableIn(el.closest('table'),Array.prototype.indexOf.call(el.parentElement.children,el)); document.getElementById('contextmenu').remove(); });
+		menu.appendChild(li);
+		li = document.createElement('li');
+		li.textContent = "Spalte verstecken";
+		li.classList.add("contextmenu");
+		li.addEventListener('click',function(){ el.onclick(); document.getElementById('contextmenu').remove(); });
+		menu.appendChild(li);
+	}
+	menuwrapper.appendChild(menu);
+	elrect = el.getBoundingClientRect();
+	console.log(elrect);
+	menuwrapper.style.position = "fixed";
+	menuwrapper.style.top = elrect.bottom+"px";
+	menuwrapper.style.left = elrect.left+"px";
+	menuwrapper.id = "contextmenu";
+	document.body.appendChild(menuwrapper);
+	document.addEventListener('click', (e) => {
+		if (e.target.offsetParent != document.getElementById('contextmenu') ) {
+			document.getElementById('contextmenu').remove();
+		}
+	});
+}
+
+//reverses order from position-th column on
+function _toggleSortTableFrom(tableel,position) {
+	let tablecopy = tableel.cloneNode(true);
+	let tabletarget = document.createElement('table');
+	let oldjson = '';
+	let lasttr = null;
+	tableel.querySelectorAll('tr').forEach(tr => {
+		newjson = _childElements2JSON(tr,position);
+		console.log(newjson);
+		if ( oldjson != newjson ) {
+			tabletarget.appendChild(tr);
+		}
+		if ( oldjson == newjson ) {
+			tabletarget.insertBefore(tr,lasttr);
+		}
+		lasttr = tr;
+		oldjson = newjson;
+	});
+	tabletarget.id = tableel.id;
+	tableel.replaceWith(tabletarget);
+	//to be continued
+}
+
+//reverses order in position-th column (needs the tableel to have an id!)
+function _toggleSortTableIn(tableel,position) {
+	_toggleSortTableFrom(tableel,position);
+	tableel = document.getElementById(tableel.id);
+	_toggleSortTableFrom(tableel,position+1);
+}
+
+//limit: end at the limit-th child element
+function _childElements2JSON(el,limit) {
+	_counter = 0
+	_array = []
+	for (const child of el.children) {
+		if ( _counter < limit ) {
+			_array.push(child.textContent);
+			_counter++;
+		}
+	}
+	return JSON.stringify(_array)
+}
+
 function _toggleOption(keyname) {
 	//was == false in next line
 	if ( ! document.getElementById("db_"+keyname+"_list") ) { return; }
@@ -303,7 +378,6 @@ function updateSelection(el) {
 //update selection of all class members of array of classes given by json_string
 //currently, in local use it loops if a subfield has conditions as well as dependencies!
 function updateSelectionOfClasses(el) {
-	console.log("el",el);
 	if ( el.parentElement.querySelector('.dependencies') ) {
 		dependency_divs = el.parentElement.querySelectorAll('.dependencies');
 	} else {
@@ -315,7 +389,6 @@ function updateSelectionOfClasses(el) {
 	//take only the closest dependency_div (upwards) sibling for compounds
 	let cprx = new RegExp('\\[[\\d]*\\]');
 	if ( el.id.match(cprx) != null ) {
-		console.log("match",el.id);
 		let prev = el.previousElementSibling;
 		let maxdist = 3;
 		let dist = 0;
@@ -325,18 +398,15 @@ function updateSelectionOfClasses(el) {
 		}
 		if ( dist < maxdist ) { dependency_divs = [prev]; }
 	} 
-	console.log(dependency_divs);
 	for ( let dependency_div of dependency_divs ) {
 		json_string = dependency_div.textContent;
 		var _classes = JSON.parse(json_string);
 		//too much recursion here currently: inquire
 		_classes.forEach(function(_class) {
-			console.log("class",_class);
 			_classMembers = document.getElementsByClassName(_class);
 			for ( let member of _classMembers ) {
 				//update the selection
 				updateSelection(member);
-				console.log("member",member.id);
 				//fire the change event (which otherwise would not fire)
 				//  this is deprecated:
 				//    ev = document.createEvent('Event');
@@ -460,8 +530,29 @@ function newEntry(form,arg,response) {
 	}
 	//process function flags
 	processFunctionFlags(el);
+	//position notes correctly
+	styleNotes();
 }
 
+function styleNotes() {
+	// implement the NOTEs position and sync
+	document.querySelectorAll('.note').forEach(function(_note){
+		_note.closest('.edit_wrapper').style.position = "sticky";
+		_note.closest('.edit_wrapper').style.top = "8rem";	
+		_note.closest('.edit_wrapper').style.display = "flex";	
+		_note.closest('.edit_wrapper').style.width = "10rem";	
+		_note.closest('.edit_wrapper').style.height = "0";	
+		_note.closest('.edit_wrapper').style.left = "calc(100% - 14rem)";	
+		_note.closest('.edit_wrapper').style.zIndex = "5";
+		if ( _note.querySelector('.note_wrapper textarea').value == '' ) {
+			_note.querySelector('.note_wrapper textarea').style.visibility = 'hidden';
+		} else {
+			_note.style.opacity = 1;
+// This prevents that the note flows awkwardly into next entry, but creates a 14rem space at entry location; but only if there is a note...
+			_note.closest('.edit_wrapper').style.height = "14rem";	
+		}
+	});	
+}
 //el: element whose functions child div shall be processed
 function processFunctionFlags(el) {
 	let functionList = el.querySelectorAll('.functions li label');
@@ -512,6 +603,7 @@ function _saveState() {
 }
 
 function _toggleColumn(el,key) {
+	console.log(el.textContent);
 	var _table = el.closest('table');
 	_table.querySelectorAll('.'+key).forEach(
 		function(td){
@@ -672,23 +764,8 @@ function updateSelectionsOfThis(form,arg,responsetext) {
 			edit_wrapper.remove();
 		});
 	}
-	// implement the NOTEs position and sync
-	el.querySelectorAll('.note').forEach(function(_note){
-		_note.closest('.edit_wrapper').style.position = "sticky";
-		_note.closest('.edit_wrapper').style.top = "8rem";	
-		_note.closest('.edit_wrapper').style.display = "flex";	
-		_note.closest('.edit_wrapper').style.width = "10rem";	
-		_note.closest('.edit_wrapper').style.height = "0";	
-		_note.closest('.edit_wrapper').style.left = "calc(100% - 14rem)";	
-		_note.closest('.edit_wrapper').style.zIndex = "5";
-		if ( _note.querySelector('.note_wrapper textarea').value == '' ) {
-			_note.querySelector('.note_wrapper textarea').style.visibility = 'hidden';
-		} else {
-			_note.style.opacity = 1;
-// This prevents that the note flows awkwardly into next entry, but creates a 14rem space at entry location; but only if there is a note...
-			_note.closest('.edit_wrapper').style.height = "14rem";	
-		}
-	});
+	// implement the NOTEs position and sync (globally)
+	styleNotes();
 }
 
 function note_show(el) {

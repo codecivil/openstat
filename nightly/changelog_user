@@ -1,9 +1,16 @@
+#v1.7.9
+======
+
+* Notizen werden im Formular für neue Einträge nun korrekt angezeigt
+* Die Spalten der Ergebnistabelle können nun einzeln umsortiert werden: Durch Rechtsklick auf eine Spaltenüberschrift erscheint ein Kontextmenu
+  mit den Optionen "Sortierung umkehren" und "Spalte verstecken"
+
 #v1.7.8
 ======
 
 * openStatAdmin: in der trafficLight-Konfiguration kann nun 
 * * "display" kumulativ genutzt werden
-* * "template"-Attribut im Top-Level-Kriterium gesetzt werden: "template": { "XYZ": ["a", "b", "c"] } oder "template": { "XYZ": "0...28" } ersetzt alle Vorkommen von "--XYZ" im Kriterium
+* * "template"-Attribut im Top-Level-Kriterium gesetzt werden: "template": { "XYZ": ["a", "b", "c"] } oder "template": { "XYZ": "0...28" }
 * * ersetzt alle Vorkommen von "--XYZ" im Kriterium durch die angegebenen Werte
 
 #v1.7.7
