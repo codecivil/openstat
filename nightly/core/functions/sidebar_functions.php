@@ -247,11 +247,15 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						$table_array = $tables_array[$tindex];
 						?>
 						<h2><i class="fas fa-<?php html_echo($table_array['iconname']); ?>"></i><?php html_echo($table_array['tablereadable']); ?></h2>
+						<div>
 						<?php 
 						unset($_stmt_array); $_stmt_array = array(); $key_array = array();
 						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype,subtablemachine FROM ".$table."_permissions ORDER BY realid";
 						$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field
 						if ($_result_array['dbMessageGood']) { $key_array = $_result_array['result']; };
+						//split in jenks top and bottom natural parts
+						[$jenks_top,$jenks_bottom] = jenks($_SESSION['os_user'],$table,$key_array,$_config,$conn);
+						//
 						if ( isset($_children_table[$table]) ) {
 							foreach ( $_children_table[$table] as $_child ) {
 								if ( ! array_key_exists($table.'__'.$_child,$_config) ) 
@@ -268,7 +272,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						}
 						?>
 						<?php
-						foreach ( $key_array as $key ) 
+						foreach ( $jenks_top as $key ) 
 						{ 
 							//test for NONE or unchecked subtables OR artificial subtable_-key
 							if ( substr($key['keymachine'],0,9) == 'subtable_' OR $key['edittype'] == 'NONE' OR ( $key['subtablemachine'] != '' AND ! in_array($key['subtablemachine'],$_config_array['subtable']) ) ) { continue; }
@@ -285,8 +289,41 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 							<?php }
 						}
 						unset($key);
+						if ( sizeof($jenks_bottom) > 0 ) {
+						?>
+							<input type="checkbox" id="<?php html_echo($table.'__jenksbottom'); ?>" class="toggle" hidden>
+							<label class="more" for="<?php html_echo($table.'__jenksbottom'); ?>">
+								<span class="open">Weniger...</span>
+								<span class="closed">Mehr...</span>
+							</label>
+							<div class="jenks_bottom form" hidden>
+							<?php
+							foreach ( $jenks_bottom as $key ) 
+							{ 
+								//test for NONE or unchecked subtables OR artificial subtable_-key
+								if ( substr($key['keymachine'],0,9) == 'subtable_' OR $key['edittype'] == 'NONE' OR ( $key['subtablemachine'] != '' AND ! in_array($key['subtablemachine'],$_config_array['subtable']) ) ) { continue; }
+								//
+								if ( ! array_key_exists($table.'__'.$key['keymachine'],$_config) ) 
+								{ ?> 
+								<input 
+									name="<?php html_echo($table.'__'.$key['keymachine']); ?>" 
+									id="add_<?php html_echo($table.'__'.$key['keymachine']); ?>" 
+									type="checkbox" 
+									value="add"
+								/>
+								<label for="add_<?php html_echo($table.'__'.$key['keymachine']); ?>"><?php html_echo(explode(': ',$key['keyreadable'])[0]); ?></label><br>
+								<?php }
+							}
+							unset($key);
+							?>
+							</div>
+							<?php
+						}
+					?>
+					</div>
+					<?php
 					}
-					unset ($table); unset($_child);
+					unset($table); unset($_child);
 				?>
 			</form>
 		</div>
@@ -345,7 +382,8 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 							value="_shownot"
 							<?php if ( isset($checked[-1]) ) { ?> checked <?php } ?>
 						/>
-						<input type="checkbox" hidden id="toggle<?php html_echo($tabledotkeymachine); ?>" class="toggle">
+						<?php if ( _generateFilterStatementForKey($checked) != '' ) { $toggle_checked = "checked"; } else { $toggle_checked = ''; } ?>
+						<input type="checkbox" hidden id="toggle<?php html_echo($tabledotkeymachine); ?>" class="toggle" <?php echo($toggle_checked); ?>>
 						<label for="toggle<?php html_echo($tabledotkeymachine); ?>">
 							<h2>
 								<i class="open fas fa-angle-down"></i>
@@ -491,13 +529,32 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 		$table = explode('__',$key,2)[0];
 		$key = explode('__',$key,2)[1];
 		if ( ! in_array($table,$TABLES) ) { continue; };
+		//record users filter statistics
+		$_stmt_array = array();
+		$_stmt_array['stmt'] = "INSERT INTO os_userstats (userid,tablemachine,keymachine) VALUES (?,?,?)";
+		$_stmt_array['str_types'] = "iss";
+		$_stmt_array['arr_values'] = array($_SESSION['os_user'],$table,$key);
+		$tmpresult = execute_stmt($_stmt_array,$conn);
+		//and keep only last 1000 filters
+		unset($_stmt_array); $_stmt_array = array();
+		$_stmt_array['stmt'] = "DELETE FROM os_userstats WHERE userid=? AND id NOT IN ( SELECT id FROM os_userstats us1 WHERE ( SELECT count(*) FROM os_userstats us2 WHERE userid=? AND us1.id <= us2.id ) <= 1000 );"; //use of LIMIT & IN not yet possible
+		$_stmt_array['str_types'] = "ii";
+		$_stmt_array['arr_values'] = array($_SESSION['os_user'],$_SESSION['os_user']);
+		$tmpresult = execute_stmt($_stmt_array,$conn);
+		//sort ascending or descending
+		$_sort = "";
+		if ( array_key_exists(3501,$values) )
+		{
+			$_sort .= " DESC";
+		}
+		unset($values[3501]);
 		//only filter/also select selection
 		if ( array_key_exists(-1,$values) )
 		{
 			$SHOWNOTALL = true;
 		} else {
 			if ( ! in_array($table.'__id_'.$table,$SHOWME) ) { array_push($SHOWME,$table.'__id_'.$table); };
-			array_push($EXT_ORDER_BY,$table.'__'.$key);
+			array_push($EXT_ORDER_BY,$table.'__'.$key.$_sort);
 			array_push($SHOWME,$table.'__'.$key);
 		}
 		unset($values[-1]);
@@ -538,7 +595,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 //			$_WHERE .= $ATTR_WHERE;
 			$_SELECT .= $ATTR_SELECT;
 			$_FROM .= $ATTR_FROM;
-			$_ORDER_BY .= $komma.$table.'__'.$key;
+			$_ORDER_BY .= $komma.$table.'__'.$key.$_sort;
 			$komma = ',';
 //			$komma2 = ') AND (';
 			continue;
@@ -570,7 +627,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 		//replace the __ by . (HTML5 replaces inner white space by _, so no . possible)
 		//$key = str_replace('__','.',$key);
 		$_SELECT .= $komma.'`view__' . $table . '__' . $_SESSION['os_role'].'`.'.$key.' AS `'.$table.'__'.$key.'`';
-		$_ORDER_BY .= $komma.$table.'__'.$key;
+		$_ORDER_BY .= $komma.$table.'__'.$key.$_sort;
 		$komma = ',';
 		$_orand = 0;
 		if ( sizeof($values) > 1 ) {
@@ -606,7 +663,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 				$_komma_date_multiple_inner = " AND ";
 				$_komma_cmp = " AND ";
 				$_komma_cmp_entry = " OR ";
-			}			
+			}
 			unset($values[3001]);
 			switch($_orand) {
 				case 0:
@@ -806,7 +863,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 			//replace the __ by . (HTML5 replaces inner white space by _, so no . possible)
 			//$key = str_replace('__','.',$key);
 			$_SELECT .= $komma.'`view__' . $table . '__' . $_SESSION['os_role'].'`.'.$key.' AS `'.$table.'__'.$key.'`';
-			$_ORDER_BY .= $komma.$table.'__'.$key;
+			$_ORDER_BY .= $komma.$table.'__'.$key.$_sort;
 			$komma = ',';
 		}
 		$_main_stmt_array['stmt'] = $_SELECT.$_FROM.$_WHERE.$_main_stmt_array['stmt'].$bracket.$_ORDER_BY;
@@ -861,5 +918,45 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 function applyFiltersOnlyChangeConfig(array $parameter, mysqli $conn)
 {
 	applyFilters($parameter,$conn,false,false,true);
+}
+
+// returns top and bottom array of filters of given table for given user and given already chosen filters
+// this is a slight variationf of jenks natural breaks or two classes: we stop at first *local* minimum of total class variations
+function jenks(int $userid, string $tablemachine, array $key_array, array $already_chosen, mysqli $conn) {
+	//return array($key_array,array());
+	//collect stats
+	$_stmt_array = array();
+	$_stmt_array['stmt'] = "select keymachine,count(*) AS _count from os_userstats where userid=? and tablemachine=? group by tablemachine,keymachine order by _count desc";
+	$_stmt_array['str_types'] = "is";
+	$_stmt_array['arr_values'] = array($_SESSION['os_user'],$tablemachine);
+	$_fullstats = execute_stmt($_stmt_array,$conn)['result'];
+	$_keystats = array_combine($_fullstats['keymachine'],$_fullstats['_count']);
+	foreach ( $key_array as $key ) {
+		if ( ! isset($_keystats[$key['keymachine']]) ) { $_keystats[$key['keymachine']] = 0; }
+		if ( isset($already_chosen[$table.'__'.$key['keymachine']])	 ) { unset($_keystats[$key['keymachine']]); } //disregard already chosen keys
+	}
+	arsort($_keystats); //ensure descending order of frequency
+	//recursively compute means and jenks value differences
+	$_mu = 0; $_mubar = array_sum($_keystats)/sizeof($_keystats); $_m = 0; $_n = sizeof($_keystats);
+	$_break = false;
+	$jenks_top_stats = array();
+	foreach ( $_keystats as $_key => $_value ) {
+		$_m += 1;
+		//...put key,value in jenks_top...
+		//test if jenks value increases again:
+//		if ( ! $_break AND pow($_value - $_mu,2)/pow($_value-$_mubar,2) <= $_m*($_n-$_m+1)/($_m-1)/($_n-$_m) ) { $_break = true; } //check this formula...
+		if ( ! $_break AND $_m < $_n AND ($_m-1)/$_m*pow($_value - $_mu,2) >= ($_n-$_m+1)/($_n-$_m)*pow($_value-$_mubar,2) ) { $_break = true; } //check this formula...
+		if ( ! $_break ) { array_push($jenks_top_stats,$_key); }
+		$_mu += 1/$_m*($_value-$_mu);
+		$_mubar -= 1/($_n-$_m)*($_value-$_mubar);
+	}
+	$jenks_top = array();
+	$jenks_bottom = array();
+	foreach ( $key_array as $key ) {
+		if ( in_array($key['keymachine'],$jenks_top_stats) ) { array_push($jenks_top,$key); } else { array_push($jenks_bottom,$key); }
+	}
+	// if top is empty show all
+	if ( sizeof($jenks_top) == 0 ) { $jenks_top = $jenks_bottom; $jenks_bottom = array(); };
+	return array($jenks_top,$jenks_bottom);	
 }
 ?>

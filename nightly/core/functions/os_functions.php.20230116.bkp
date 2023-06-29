@@ -167,10 +167,7 @@ function newEntry(array $PARAM,$conn) {
 	</div>
 <?php }
 
-function printResults(array $PARAM, $conn) { 
-	$_config = getFunctionConfig('printResults',$conn);
-	if ( isset($_config['orientation']) ) { return $_config['orientation']; } else { return ''; }
-}
+function printResults() { return; }
 
 function importCSV(array $PARAM,$conn) {
 	$rnd = rand(0,2147483647);
@@ -587,38 +584,6 @@ function trafficLight(array $PARAM, mysqli $conn)
 	}
 	
 	if (sizeof($tables) == 0) { return; }
-	// expand templates
-	function _expandTemplate($criterion) {
-		$expanded_criterion = json_decode(json_encode($criterion),true);
-		if ( isset($criterion['template']) ) {
-			$expanded_criterion = array();
-			//due to recursion inside the loop we need/must only to use the first template var here
-			foreach ( array_slice($criterion['template'],0,1,true) as $_template_var => $_template_values ) {
-				if ( is_string($_template_values) ) { $_template_values = range(explode('...',$_template_values)[0],explode('...',$_template_values)[1]); }
-				foreach ( $_template_values as $_template_value ) {
-					$expanded_criterion_instance = json_decode(str_replace('--'.$_template_var,$_template_value,json_encode($criterion)),true);
-					unset($expanded_criterion_instance['template'][$_template_var]);
-					if ( sizeof($expanded_criterion_instance['template']) == 0 ) { unset($expanded_criterion_instance['template']); }
-					//recursion: expand the remaining vars for this instance
-					$expanded_criterion_instance = _expandTemplate($expanded_criterion_instance);
-					//
-					$expanded_criterion[] = $expanded_criterion_instance;
-				}
-			}
-		}
-		//recursion: look if subcrteria have to be expanded
-		foreach ( $expanded_criterion as $_attribute => $_value ) {
-			if ( is_array($_value) ) { $expanded_criterion[$_attribute] = _expandTemplate($_value); }
-		}
-		//
-		
-		//return the expanded criterion
-		return $expanded_criterion;
-	}
-	
-	//expand the templates
-	$_config['criteria'] = _expandTemplate($_config['criteria']);
-	//end expand the templates
 	?>
 	<div class="imp_wrapper">
 		<div class="imp_close"><i class="fas fa-times-circle" onclick="_close(this,true);"></i></div>
@@ -661,19 +626,31 @@ function trafficLight(array $PARAM, mysqli $conn)
 	<?php
 	foreach ( $tables as $table ) {
 		$ids = array(); $resultin = array(); $_param = array();
-		foreach ( $_config['criteria'] as $criterion ){
-			if ( ( ! isset($userconfig['trafficLight']) OR in_array($criterion['name'],$userconfig['trafficLight']) ) AND $criterion['associated_table'] == $table ) {
-				$resultout_array = _parseCriterion($resultin,$_param,$criterion,$tables,$conn);
-				$resultout = $resultout_array[0];
-				$_param = $resultout_array[1];
-				foreach ( $resultout as $id ) {
-					if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
-					$_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
-					if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
-					if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }
-					if ( $criterion['urgency'] == "-" ) { $ids[$criterion['table']][$id]['urgency'] -= 1; }
-					if ( is_int($criterion['urgency']) ) { $ids[$criterion['table']][$id]['urgency'] = max($ids[$criterion['table']][$id]['urgency'],$criterion['urgency']); }
-					if (! substr_in_array($criterion['name'],$ids[$criterion['table']][$id]['criteria']) ) { array_push($ids[$criterion['table']][$id]['criteria'],$criterion['name'].$_criteriondetail); } 
+		foreach ( $_config['criteria'] as $criterion_template ){
+			//parse "template" attribute:
+			//only available in top level criteria
+			//only one template variable at the moment
+			//no template variable in "name" attribute possible at the moment (see l.601ff. )
+			if ( ! isset($criterion_template['template']) ) { $criterion_template['template'] = array( "XX" => array("") ); }
+			foreach ( $criterion_template['template'] as $_template_var => $_template_values ) {
+				if ( is_string($_template_values) ) { $_template_values = range(explode('...',$_template_values)[0],explode('...',$_template_values)[1]); }
+				foreach ( $_template_values as $_template_value ) {
+					$criterion = json_decode(str_replace('--'.$_template_var,$_template_value,json_encode($criterion_template)),true);
+					unset($criterion['template']);
+					if ( ( ! isset($userconfig['trafficLight']) OR in_array($criterion['name'],$userconfig['trafficLight']) ) AND $criterion['associated_table'] == $table ) {
+						$resultout_array = _parseCriterion($resultin,$_param,$criterion,$tables,$conn);
+						$resultout = $resultout_array[0];
+						$_param = $resultout_array[1];
+						foreach ( $resultout as $id ) {
+							if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
+							$_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
+							if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
+							if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }
+							if ( $criterion['urgency'] == "-" ) { $ids[$criterion['table']][$id]['urgency'] -= 1; }
+							if ( is_int($criterion['urgency']) ) { $ids[$criterion['table']][$id]['urgency'] = max($ids[$criterion['table']][$id]['urgency'],$criterion['urgency']); }
+							if (! substr_in_array($criterion['name'],$ids[$criterion['table']][$id]['criteria']) ) { array_push($ids[$criterion['table']][$id]['criteria'],$criterion['name'].$_criteriondetail); } 
+						}
+					}
 				}
 			}
 		}

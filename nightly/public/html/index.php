@@ -147,6 +147,8 @@ $_v = time();
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/fontsize_<?php echo($_config['_fontSize']); ?>.css?v=<?php echo($_v);?>" id="cssFontSize" />
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/config_colors_<?php echo($_config['_colors']); ?>.css?v=<?php echo($_v);?>" id="cssColors" />
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/main<?php echo($_config['css']); ?>.css?v=<?php echo($_v);?>" />
+	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/config_columns_<?php echo(max(1,$_config['columns'])); ?>.css?v=<?php echo($_v);?>" id="cssColumns"/>
+	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontcc/css/fcc1.css?v=<?php echo($_v);?>" />
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontawesome/css/all.css?v=<?php echo($_v);?>" />
 	<script type="text/javascript" src="/plugins/tinymce/js/tinymce.js?v=<?php echo($_v);?>"></script>
 	<script type="text/javascript" src="/plugins/tinymce/js/os_tinymce.js?v=<?php echo($_v);?>"></script>
@@ -260,6 +262,12 @@ $_v = time();
 						</select>
 					</form>
 				</div>
+				<div id="columns" data-title="Spaltenanzahl">
+					<form method="post" class="statusForm" onchange="callFunction(this,'changeConfig').then(()=>{ reloadCSS(); }); ">
+						<legend><i class="fas fa-columns"></i></legend>
+						<input id="columnsSelect" type="number" min=1 max=3 name="columns" value="<?php echo(max(1,$_config['columns'])); ?>">
+					</form>
+				</div>
 				<div id="styles" data-title="Stil wählen">
 					<form method="post" class="statusForm" onchange="callFunction(this,'changeConfig').then(()=>{ window.location = '/'; }); ">
 						<legend><i class="fas fa-magic"></i></legend>
@@ -286,7 +294,7 @@ $_v = time();
 			<div>
 				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="myScrollIntoView(document.getElementById('wasistneu_wrapper'))">Was ist neu?</label><br />
 				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
-				<b>Autor:</b> <?php html_echo($author); ?><br />
+				<b>Autor:</b> <i class="fcc fcc-codecivil-icon"></i><?php html_echo($author); ?><br />
 				<?php if ( $contact != '' ) { 
 					$_contactbefore = ''; $_contactafter = '';
 					if ( preg_match('/[a-zA-Z0-9\.-_].*\@[a-zA-Z0-9\.-_].*/',$contact) ) {
@@ -439,7 +447,7 @@ $_v = time();
 </form>
 
 <script>
-	function standard500 () {
+	async function standard500 () {
 		var t0 = performance.now();
 		for ( var _i = 0; _i < 500; _i++ ) {
 			var testdiv = document.createElement('div');
@@ -450,14 +458,15 @@ $_v = time();
 			document.body.removeChild(document.querySelector('#testdiv'));
 		}
 		var t1 = performance.now();
-		var _standard500 = 75*(t1-t0);
+//		var _standard500 = 75*(t1-t0);
+		var _standard500 = 20*(t1-t0);
 		return _standard500
 	}
-	
-	var st500 = standard500();
-	console.log("Standard 500ms here: "+st500+"ms");
-	function restrictResultWidth () {
-		var _st500 = standard500();
+	_saveStateInterval = setInterval(_saveState,300000);
+	const pxperrem = document.querySelector('#logo img').height/2.5;  //CSS sets logo image to 2.5rem
+
+	async function restrictResultWidth () {
+		var _st500 = await standard500();
 		setTimeout(function () {
 			//only apply for old CSS (if wrapper has no before element)
 			if ( document.querySelector('link[href*="main.css"]') ) {
@@ -465,55 +474,58 @@ $_v = time();
 			}
 		}, _st500);
 	}
-	setTimeout(function () {
-		switch(document.getElementById('generator').innerText) {
-			case '':
-				window.location = window.location+'?submit=noextension';
-				break;
-			case '<?php echo($_ext); ?>':
-				break;
-			default:
-				window.location = window.location+'?submit=extensionupdate';
-				break;
-		}
-	},st500);
-	setTimeout(function () {
-		callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth').then(()=>{
-			callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ executeLoginFunctions(); return false; });
-	//	processForm(document.getElementById('formAddFilters'),'../php/updateSidebar.php','sidebar');
-		<?php 
-			unset($value);
-			if ( isset($_config['_openids']) )
-			{
-				$alreadyopen = array();
-		?>
-		<?php	foreach ( $_config['_openids'] as $value ) { 
-					if ( isset($value) ) {
-						foreach( $value as $tablekey => $number ) {
-							$value[$tablekey] = _cleanup($number);
-						}
-						if ( ! in_array(json_encode($value),$alreadyopen) ) {
-							?>
-							callJSFunction('<?php echo(json_encode($value)); ?>',openIds);
-						<?php
-							array_push($alreadyopen,json_encode($value));
-						} 
-					}
-				}
-			}  ?>
-		})
-	},2*st500);
-	_saveStateInterval = setInterval(_saveState,300000);
-	const pxperrem = document.querySelector('#logo img').height/2.5;  //CSS sets logo image to 2.5rem
-	
-	// offer new CSS at first login after change
-	<?php if ( $_firsttimecss ) { ?>
-		setTimeout(function(){ 
-			if ( confirm('Probiere den \u{1D5FB}\u{1D5F2}\u{1D602}\u{1D5F2}\u{1D5FB} \u{1D5E6}\u{1D601}\u{1D5F6}\u{1D5F9} "\u{1F5B5} \u{1FA84}_clear_".\n\nStatuszeile und Tabelllen-/Filtereinstellungen verstecken sich am oberen bzw. linken Rand und erscheinen stets, wenn Du mit dem Mauszeiger dorthin gehst.\n\nDu kannst jederzeit in der Statuszeile mit \u{1F5B5} > \u{1FA84} die Ansichtsart wechseln.\n\nWillst Du den neuen Stil jetzt einschalten?') ) {
-				window.location = '/index.php?css=_clear_';
+
+	standard500().then( st500 => {
+	//	var st500 = standard500();
+		console.log("Standard 500ms here: "+st500+"ms");
+		setTimeout(function () {
+			switch(document.getElementById('generator').innerText) {
+				case '':
+					window.location = window.location+'?submit=noextension';
+					break;
+				case '<?php echo($_ext); ?>':
+					break;
+				default:
+					window.location = window.location+'?submit=extensionupdate';
+					break;
 			}
-		},3*st500);
-	<?php } ?>
+		},st500);
+		setTimeout(function () {
+			callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth').then(()=>{
+				callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ executeLoginFunctions(); return false; });
+		//	processForm(document.getElementById('formAddFilters'),'../php/updateSidebar.php','sidebar');
+			<?php 
+				unset($value);
+				if ( isset($_config['_openids']) )
+				{
+					$alreadyopen = array();
+			?>
+			<?php	foreach ( $_config['_openids'] as $value ) { 
+						if ( isset($value) ) {
+							foreach( $value as $tablekey => $number ) {
+								$value[$tablekey] = _cleanup($number);
+							}
+							if ( ! in_array(json_encode($value),$alreadyopen) ) {
+								?>
+								callJSFunction('<?php echo(json_encode($value)); ?>',openIds);
+							<?php
+								array_push($alreadyopen,json_encode($value));
+							} 
+						}
+					}
+				}  ?>
+			})
+		},2*st500);
+		
+		// offer new CSS at first login after change
+		<?php if ( $_firsttimecss ) { ?>
+			setTimeout(function(){ 
+				if ( confirm('Probiere den \u{1D5FB}\u{1D5F2}\u{1D602}\u{1D5F2}\u{1D5FB} \u{1D5E6}\u{1D601}\u{1D5F6}\u{1D5F9} "\u{1F5B5} \u{1FA84}_clear_".\n\nStatuszeile und Tabelllen-/Filtereinstellungen verstecken sich am oberen bzw. linken Rand und erscheinen stets, wenn Du mit dem Mauszeiger dorthin gehst.\n\nDu kannst jederzeit in der Statuszeile mit \u{1F5B5} > \u{1FA84} die Ansichtsart wechseln.\n\nWillst Du den neuen Stil jetzt einschalten?') ) {
+					window.location = '/index.php?css=_clear_';
+				}
+			},3*st500);
+		<?php } ?>
+	});	
 </script> 
 </body>
 </html>

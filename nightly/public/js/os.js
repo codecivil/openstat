@@ -99,12 +99,20 @@ function _contextMenu(el) {
 		li = document.createElement('li');
 		li.textContent = "Sortierung umkehren";
 		li.classList.add("contextmenu");
-		li.addEventListener('click',function(){ _toggleSortTableIn(el.closest('table'),Array.prototype.indexOf.call(el.parentElement.children,el)); document.getElementById('contextmenu').remove(); });
+		li.addEventListener('click',function(){ 
+			_toggleSortTableIn(el.closest('table'),Array.prototype.indexOf.call(el.parentElement.children,el));
+			document.getElementById('contextmenu').remove();
+			document.removeEventListener('click', _removeContextmenu);
+		});
 		menu.appendChild(li);
 		li = document.createElement('li');
 		li.textContent = "Spalte verstecken";
 		li.classList.add("contextmenu");
-		li.addEventListener('click',function(){ el.onclick(); document.getElementById('contextmenu').remove(); });
+		li.addEventListener('click',function(){
+			el.onclick();
+			document.getElementById('contextmenu').remove();
+			document.removeEventListener('click', _removeContextmenu);
+		});
 		menu.appendChild(li);
 	}
 	menuwrapper.appendChild(menu);
@@ -115,11 +123,14 @@ function _contextMenu(el) {
 	menuwrapper.style.left = elrect.left+"px";
 	menuwrapper.id = "contextmenu";
 	document.body.appendChild(menuwrapper);
-	document.addEventListener('click', (e) => {
+	//eventListener function:
+	function _removeContextmenu(e) {
 		if (e.target.offsetParent != document.getElementById('contextmenu') ) {
 			document.getElementById('contextmenu').remove();
 		}
-	});
+		document.removeEventListener('click', _removeContextmenu);
+	}
+	document.addEventListener('click', _removeContextmenu);
 }
 
 //reverses order from position-th column on
@@ -532,6 +543,45 @@ function newEntry(form,arg,response) {
 	processFunctionFlags(el);
 	//position notes correctly
 	styleNotes();
+	//add help text functionality
+	document.querySelector('#helpModeBtn').removeEventListener('click',toggleHelpTexts);
+	document.querySelector('#helpModeBtn').addEventListener('click',toggleHelpTexts);
+	toggleHelpTexts();
+}
+
+function toggleHelpTexts(evt) {
+	if ( document.querySelector('#helpModeBtn').checked ) {
+		document.querySelectorAll('[data-title]').forEach(helpitem => {
+			helpitem.onmouseover = positionHelpField;
+			helpitem.onmouseout = removeHelpField;
+		});
+	} else {
+		document.querySelectorAll('[data-title]').forEach(helpitem => {
+			helpitem.querySelectorAll('.afterlike').forEach(afterlike => afterlike.remove());
+			helpitem.onmouseover = null;
+			helpitem.onmouseout = null;
+		});
+	}
+}
+
+function positionHelpField(evt) {
+	if ( document.querySelector('#helpModeBtn').checked ) {
+		let helpitem = evt.target.closest('[data-title]')	;
+		let afterlike = document.createElement('div');
+		afterlike.classList.add('afterlike');
+		afterlike.style.top = "calc( "+evt.clientY+"px + 0.5rem )";
+		afterlike.style.left = evt.clientX+"px";
+		afterlike.innerText = helpitem.dataset.title;
+		helpitem.appendChild(afterlike);
+	}
+}
+
+function removeHelpField(evt) {
+	evt.target.closest('[data-title]').querySelectorAll('.afterlike').forEach(afterlike => afterlike.remove());
+	if ( ! document.querySelector('#helpModeBtn').checked ) {
+		evt.target.closest('[data-title]').removeAttribute('onmouseover');
+		evt.target.closest('[data-title]').removeAttribute('onmouseout');
+	}
 }
 
 function styleNotes() {
@@ -710,6 +760,12 @@ function _toggleGraphs(el,_type) {
 	});
 }
 
+function _togglePinnedRolling(_select) {
+	console.log('aha');
+	if ( _select.value == "none" ) { _select.closest('span').querySelector('.toggle').checked = false; }
+	// this does not work: onclick and checked attribute have a race condition...
+	if (  _select.closest('span').querySelector('.toggle').checked == false ) { _select.closest('span').querySelector('select').value = "none"; }
+}
 
 function _hideStat(property) {
 	statGraphics = document.getElementById('statGraphics');

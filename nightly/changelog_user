@@ -1,3 +1,21 @@
+#v1.7.10
+======
+
+* openStatAdmin: Orientierung des Ausdrucks kann als Konfiguration der Funktion printResults gesetzt werden: { "orientation": "portrait|landscape|none" }
+  bei "none" kann im Browsermenu gewählt werden, ungesetzt bleibt wie bisher "landscape"
+* verbesserter (aber stromintensiverer) Helpmode
+* In den Displayeinstellungen kann man nun auch die Anzahl der Spalten in der Anzeige von Einträgen einstellen (1, 2 oder 3)
+  Die Spalten passen sich der aktuellen Länge der Einträge (so, dass alle Spalten gleich voll sind), was zu unpassenden Umbrüchen und
+  Verschiebungen in andere Spalten führen kann.
+* In der Filterauswahl werden zunächst nur die vom Nutzer meistbenutzten angezeigt, alle anderen durch Klick auf "Mehr..."
+* Rollende Datumsfilter: 
+    Tag: Das Suchintervall verschiebt sich jeden Tag einen Tag weiter
+    Monat, Quartal, Halbjahr:
+      Beim Monats-/Quartals-/Halbjahreswechsel verschieben sich die Monate/Quartale/Halbjahre des Suchintervalls um 
+      einen/s weiter; ist das Intervallende gleichzeitig das Monatsende, so ist das neue Intervallende ebenfalls der letzte Tag des neuen Monats
+    Jahr: Beim Jahreswechsel verschieben sich die Jahre des Suchintervalls um eines weiter
+* Aktualisierte Icons: Verwendung von FontAwesome 6 und codecivil Icons (FontCC)
+
 #v1.7.9
 ======
 

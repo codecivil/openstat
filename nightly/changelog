@@ -1,3 +1,18 @@
+#v1.7.10
+======
+?.?.?
+
+* context menu: remove global eventlistener after leaving context menu
+* openStatAdmin: config for printResults possible: { "orientation": "portrait|landscape|none" }
+  no config is "landscape" (backward compatibility), config must be set in first "printResults" and applies to all
+  (due to the assumption of unique function names in getFunctionConfig)
+* helpMode now uses js in order not to jump elemnt widths when displaying help texts
+* display option for number of columns in entry displays (1, 2 or 3) 
+* dynamic choice of filters
+* rolling date filters
+* upgrade to FontAwesome 6.4.0
+* inclusion of FontCC (codecivil's own icon fonts)
+
 #v1.7.9
 ======
 06.05.2023

@@ -323,6 +323,23 @@ CREATE TABLE `os_userprofiles` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 `ENCRYPTED`=YES;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Table structure for table `os_userstats`
+-- profile fields are currently defined in os_function updateProfile; the fields here store json of the profile fields to the respective access level
+
+DROP TABLE IF EXISTS `os_userstats`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `os_userstats` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `userid` int(11) DEFAULT NULL,
+  `tablemachine` VARCHAR(40) DEFAULT NULL,
+  `keymachine` VARCHAR(40) DEFAULT NULL,
+  `unixtimestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 `ENCRYPTED`=YES;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

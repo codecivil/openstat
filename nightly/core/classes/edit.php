@@ -841,6 +841,21 @@ class OpenStatEdit {
 				/>
 				<label class="not" for="<?php html_echo($this->table.'__'.$this->key); ?>not"><i class="fas fa-arrows-alt-h"></i></label>
 			</div>
+			<?php
+			/* "ASC|DESC": */
+			//use index 3501 for the choice between ascending or descending ordering
+			?>
+			<div class="desc">
+				<input 
+					hidden
+					name="<?php html_echo($this->table.'__'.$this->key); ?>[3501]"
+					id="<?php html_echo($this->table.'__'.$this->key); ?>desc"
+					type="checkbox"
+					value="&#91;absteigend&#93;"
+					<?php if ( isset($checked[3501]) ) { ?> checked <?php } ?>
+				/>
+				<label class="desc" for="<?php html_echo($this->table.'__'.$this->key); ?>desc"><i class="fas fa-arrows-alt-h"></i></label>
+			</div>
 		<?php }	
 		if ( $_result['multiple'] OR $_result['edittype'] == "CHECKBOX" OR $_result['edittype'] == "EXTENSIBLE CHECKBOX" ) {
 			//use index 2001 for the choice of OR or AND
@@ -913,8 +928,14 @@ class OpenStatEdit {
 					case 'NOTE':
 						?>
 							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
-							<?php foreach ( $checked as $searchterm ) {
-								if ( sizeof($checked) > 1 AND ( $searchterm == "_not" OR $searchterm == "_all" OR $searchterm == "-500" OR $searchterm == "-499" ) ) { continue; }
+							<?php 
+							$_actuallychecked = array();
+							foreach ( $checked as $searchterm ) {
+								if ( sizeof($checked) > 1 AND ( $searchterm == "[absteigend]" OR $searchterm == "_not" OR $searchterm == "_all" OR $searchterm == "-500" OR $searchterm == "-499" ) ) { continue; }
+								array_push($_actuallychecked,$searchterm);
+							}
+							if ( sizeof($_actuallychecked) == 0 ) { $_actuallychecked = array(""); }
+							foreach ( $_actuallychecked as $searchterm ) {
 								?>
 								<div class="searchfield<?php echo($_searchfieldcompound); ?>">
 									<input 
@@ -930,9 +951,47 @@ class OpenStatEdit {
 							break;
 					case 'DATETIME':
 					case 'DATE':
-						//use index 1001,1002,1003 for date and datetime values
+						//use index 1001,1002,1003,1004,1005 for date and datetime values
+						//1003: name
+						//1001: begin
+						//1002: end
+						//1004; begin rolling
+						//1005: end rolling
+						//1006: current date (for rolling)
+						$_rolling_options = array(
+							array(
+								"display" => "nein",
+								"value" => "none",
+								"extras" => "selected"
+							),
+							array(
+								"display" => "Tag",
+								"value" => "day",
+								"extras" => ""
+							),
+							array(
+								"display" => "Monat",
+								"value" => "month",
+								"extras" => ""
+							),
+							array(
+								"display" => "Quartal",
+								"value" => "quarter",
+								"extras" => ""
+							),
+							array(
+								"display" => "Halbjahr",
+								"value" => "semiyear",
+								"extras" => ""
+							),
+							array(
+								"display" => "Jahr",
+								"value" => "year",
+								"extras" => ""
+							),
+						)
 						?>
-							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
+							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this,<?php echo($rnd); ?>);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 
 							<?php 
 		// before 20200525:						if ( ! is_array($checked) OR sizeof($checked) <= 1) {
@@ -947,6 +1006,12 @@ class OpenStatEdit {
 										value="Periode 1"
 										required
 									/>
+									<input 
+										name="<?php html_echo($this->table.'__'.$this->key); ?>[1006][]" 
+										type="date" 
+										value="<?php html_echo(date('Y-m-d')); ?>"
+										hidden
+									/>
 									<br />
 									<label>von</label>
 									<input 
@@ -954,18 +1019,136 @@ class OpenStatEdit {
 										type="date" 
 										value=""
 									/>
+									<span>
+										<input 
+											id="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollstart"
+											type="checkbox" 
+											class="toggle" 
+											onchange="_togglePinnedRolling(this)"
+											hidden
+										>
+										<label for="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollstart">
+											<span data-title="rollend" class="open"><i class="fcc fcc-calendar-rolling"></i></span>
+											<span data-title="fixiert" class="closed"><i class="fas fa-map-pin"></i></span>
+										</label>
+										<select 
+											name="<?php html_echo($this->table.'__'.$this->key); ?>[1004][]"
+											class="db_formbox form inline" 
+											onchange="_togglePinnedRolling(this)"
+										>
+										<?php foreach( $_rolling_options as $_rolling_option ) {
+										?>
+											<option value="<?php echo($_rolling_option["value"]); ?>" <?php echo($_rolling_option["extras"]); ?>><?php echo($_rolling_option["display"]); ?></option>
+										<?php } ?>
+										</select>
+									</span>
+									<br />
 									<label>bis</label>
 									<input 
 										name="<?php html_echo($this->table.'__'.$this->key); ?>[1002][]" 
 										type="date" 
 										value=""
 										/>
+									<span>
+										<input 
+											id="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollend"
+											type="checkbox" 
+											class="toggle" 
+											onchange="_togglePinnedRolling(this)"
+											hidden
+										>
+										<label for="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollend">
+											<span data-title="rollend" class="open"><i class="fcc fcc-calendar-rolling"></i></span>
+											<span data-title="fxiert" class="closed"><i class="fas fa-map-pin"></i></span>
+										</label>
+										<select 
+											name="<?php html_echo($this->table.'__'.$this->key); ?>[1005][]"
+											class="db_formbox form inline" 
+											onchange="_togglePinnedRolling(this)"
+										>
+										<?php foreach( $_rolling_options as $_rolling_option ) {
+										?>
+											<option value="<?php echo($_rolling_option["value"]); ?>" <?php echo($_rolling_option["extras"]); ?>><?php echo($_rolling_option["display"]); ?></option>
+										<?php } ?>
+										</select>
+									</span>
 									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 									<br />
 									<br />
 								</div>					
 							<?php } else {
 								for ( $i = 0; $i < sizeof($checked[1001]); $i++ ) {
+									//roll dates if set
+									foreach ( [1004,1005] as $_roll ) {
+										if ( isset($checked[$_roll][$i]) AND $checked[$_rol][$i] != "none" AND isset($checked[1006][$i]) ) {
+											switch($checked[$_roll][$i]) {
+												case "day":
+													$_difftime = floor(time()/86400)*86400-DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('U');
+													$_diffinterval = DateInterval::createFromDateString($_difftime.' seconds');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+												case "month":
+													$_diffyear = date('Y') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('Y');
+													$_diffmonth = date('m') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('m');
+													//$_diffday: if end day is last of month, let the new end day also be the last day of the month
+													//so: push it one day ahead
+													$_diffinterval = DateInterval::createFromDateString('1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													//do years
+													$_diffinterval = DateInterval::createFromDateString($_diffyear.' years');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													//do months
+													$_diffinterval = DateInterval::createFromDateString($_diffmonth.' months');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													//push one day back
+													$_diffinterval = DateInterval::createFromDateString('-1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+												case "quarter":
+													$_diffyear = date('Y') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('Y');
+													$_diffmonth = 3*( floor((date('n')-1)/3) - floor((DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('n')-1)/3) );
+													//$_diffday: if end day is last of month, let the new end day also be the last day of the month
+													//so: push it one day ahead
+													$_diffinterval = DateInterval::createFromDateString('1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													//do years
+													$_diffinterval = DateInterval::createFromDateString($_diffyear.' years');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													//do quarters
+													$_diffinterval = DateInterval::createFromDateString($_diffmonth.' months');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													//push one day back
+													$_diffinterval = DateInterval::createFromDateString('-1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+												case "semiyear":
+													$_diffyear = date('Y') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('Y');
+													$_diffmonth = 6*( floor((date('n')-1)/6) - floor((DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('n')-1)/6) );
+													//$_diffday: if end day is last of month, let the new end day also be the last day of the month
+													//so: push it one day ahead
+													$_diffinterval = DateInterval::createFromDateString('1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													//do years
+													$_diffinterval = DateInterval::createFromDateString($_diffyear.' years');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													//do quarters
+													$_diffinterval = DateInterval::createFromDateString($_diffmonth.' months');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													//push one day back
+													$_diffinterval = DateInterval::createFromDateString('-1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+												case "year":
+													//$_diffday: if end day last of feb, it should also be last of feb in the new year
+													//so: push it one day ahead
+													$_diffinterval = DateInterval::createFromDateString('1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													//do years
+													$_diffyear = date('Y') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('Y');
+													$_diffinterval = DateInterval::createFromDateString($_diffyear.' years');
+													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													//push one day back
+													$_diffinterval = DateInterval::createFromDateString('-1 day');
+													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+											}
+										}
+									}
 								?>
 									<div class="searchfield<?php echo($_searchfieldcompound); ?>">
 										<label>Kürzel</label>
@@ -975,6 +1158,12 @@ class OpenStatEdit {
 											value="<?php html_echo($checked[1003][$i]); ?>"
 											required
 										/>
+										<input 
+											name="<?php html_echo($this->table.'__'.$this->key); ?>[1006][]" 
+											type="date" 
+											value="<?php html_echo(date('Y-m-d')); ?>"
+											hidden
+										/>
 										<br />
 										<label>von</label>
 										<input 
@@ -982,12 +1171,59 @@ class OpenStatEdit {
 											type="date" 
 											value="<?php html_echo($checked[1001][$i]); ?>"
 										/>
+										<span>
+											<input 
+												id="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollstart"
+												type="checkbox" 
+												class="toggle" 
+												onchange="_togglePinnedRolling(this)"
+												hidden
+												<?php if ( $checked[1004][$i] != "none" ) { ?>checked<?php } ?>>
+											<label for="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollstart">
+												<span data-title="rollend" class="open"><i class="fcc fcc-calendar-rolling"></i></span>
+												<span data-title="fixiert" class="closed"><i class="fas fa-map-pin"></i></span>
+											</label>
+											<select 
+												name="<?php html_echo($this->table.'__'.$this->key); ?>[1004][]"
+												class="db_formbox form inline" 
+												onchange="_togglePinnedRolling(this)"
+											>
+											<?php foreach( $_rolling_options as $_rolling_option ) {
+											?>
+												<option value="<?php echo($_rolling_option["value"]); ?>" <?php if ( $checked[1004][$i] == $_rolling_option["value"] ) { echo("selected"); } ?>><?php echo($_rolling_option["display"]); ?></option>
+											<?php } ?>
+											</select>
+										</span>
+										<br />
 										<label>bis</label>
 										<input 
 											name="<?php html_echo($this->table.'__'.$this->key); ?>[1002][]" 
 											type="date" 
 											value="<?php html_echo($checked[1002][$i]); ?>"
 										/>
+										<span>
+											<input 
+												id="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollend"
+												type="checkbox" 
+												class="toggle" 
+												onchange="_togglePinnedRolling(this)"
+												hidden
+												<?php if ( $checked[1005][$i] != "none" ) { ?>checked<?php } ?>>
+											<label for="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollend">
+												<span data-title="rollend" class="open"><i class="fcc fcc-calendar-rolling"></i></span>
+												<span data-title="fixiert" class="closed"><i class="fas fa-map-pin"></i></span>
+											</label>
+											<select 
+												name="<?php html_echo($this->table.'__'.$this->key); ?>[1005][]"
+												class="db_formbox form inline" 
+												onchange="_togglePinnedRolling(this)"
+											>
+											<?php foreach( $_rolling_options as $_rolling_option ) {
+											?>
+												<option value="<?php echo($_rolling_option["value"]); ?>" <?php if ( $checked[1005][$i] == $_rolling_option["value"] ) { echo("selected"); } ?>><?php echo($_rolling_option["display"]); ?></option>
+											<?php } ?>
+											</select>
+										</span>
 										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 										<br />
 										<br />

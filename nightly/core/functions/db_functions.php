@@ -436,7 +436,6 @@ function getDetails($PARAMETER,$conn)
 	$_config['_openids'] = $_SESSION['os_opennow'];
 	updateConfig($_config,$conn);
 	?>
-
 	<div class="hidden"><div class="_table_"><?php html_echo($table); ?></div><div class="_id_"><?php if ( sizeof($id) == 1 ) { html_echo($id[0]); } else { echo('-1'); }; ?></div></div>
 	<div class="content section" onclick="_disableClass(this,'noupdate'); this.onclick = ''; ">
 		<?php $rnd=rand(0,2147483647); ?>
@@ -685,6 +684,12 @@ function includeFunctions(string $scope, mysqli $conn)
 				foreach ( $_result as $_function )
 				{
 					if ( in_array($_SESSION['os_role'],json_decode($_function['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_function['allowed_roles'])) ) { 
+						//distinguish FontAwesome and FontCC icons: FontCC iconnames start with 'fcc-'
+						if ( substr($_function['iconname'],0,4) == "fcc-" ) {
+							$_function['iconclass'] = "fcc ".$_function['iconname'];
+						} else {
+							$_function['iconclass'] = "fas fa-".$_function['iconname'];
+						}
 						if ( $_function['functionflags'] == '' OR $_function['functionflags'] == null ) { $_function['functionflags'] = '[]'; } ?>
 					<li><label 
 						class="unlimitedWidth"
@@ -693,7 +698,7 @@ function includeFunctions(string $scope, mysqli $conn)
 						data-name="<?php echo($_function['functionmachine']); ?>"
 						data-flags="<?php html_echo($_function['functionflags']); ?>"
 						<?php if ( in_array('HIDDEN',json_decode($_function['functionflags'],true)) ) { ?>hidden<?php } ?>
-						><i class="fas fa-<?php echo($_function['iconname']); ?>"></i></label></li>
+						><i class="<?php echo($_function['iconclass']); ?>"></i></label></li>
 					<?php } 
 				}				
 			?>

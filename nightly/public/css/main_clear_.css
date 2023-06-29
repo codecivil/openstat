@@ -8,6 +8,7 @@ label[for^="logout"]:hover { cursor: pointer; }
 label[for^="stat"]:hover { cursor: pointer; }
 label[for^="config"]:hover { cursor: pointer; }
 label.not:hover { cursor: pointer; }
+label.desc:hover { cursor: pointer; }
 label.shownot:hover { cursor: pointer; }
 label.show:hover,label.openentry:hover { cursor: pointer; }
 label.openentry:hover b { text-decoration: underline; }
@@ -126,6 +127,8 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar label[for="helpModeBtn"] { top: 0; }
 #statusbar .functions { background: initial; }
 #statusbar #usermenu #display_options div { border: 1px solid var(--color-statusbar); border-radius: 5px; margin: 0.2rem 0; }
+#statusbar #columnsSelect { width: 3rem; }
+
 /* HelpMode specifics */
 #helpModeBtn:checked ~ div .sliderframe {
 	fill: var(--background-slider-checked);
@@ -136,6 +139,7 @@ textarea.FREELONGER { min-height: 10rem; }
 }
 
 /*This does not work for db_headlinewrappers: they have z-index 501 but need at least 1001 but then they scroll over statusbar; how to remedy?*/
+/*
 #helpModeBtn:checked ~ div [data-title]::after {
 	content: attr(data-title);
 	position: fixed;
@@ -156,8 +160,28 @@ textarea.FREELONGER { min-height: 10rem; }
 	hyphens: auto;
 	box-shadow: 0 2px 5px #444;
 }
+*/
 
-#helpModeBtn:checked ~ div [data-title]:hover::after {
+#helpModeBtn:checked ~ div .afterlike {
+	position: fixed;
+	display: inline-block;
+	margin: 0;
+	padding: 0.5rem;
+	opacity: 1;
+	background: var(--background-helpmode);
+	color: var(--color-helpmode);
+	max-width: 8rem;
+	border: 1px solid var(--color-sidebar-changed);
+	border-radius: 5px;
+	font: 1rem sans-serif;
+	padding: 0.5rem;
+	transition: 1s ease;
+	hyphens: auto;
+	box-shadow: 0 2px 5px #444;
+	z-index: 1002;
+}
+
+/*#helpModeBtn:checked ~ div [data-title]:hover::after {
 	position: sticky;
 	float: right;
 	top: 1.2rem;
@@ -165,6 +189,7 @@ textarea.FREELONGER { min-height: 10rem; }
 	opacity: 1;
 }
 
+*/
 /* #helpModeBtn:checked ~ div .details .db_headline_wrapper:hover { z-index: 1500; } */
 /**/
 
@@ -237,6 +262,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #sidebar {float: left; font: 0.7rem sans-serif; padding: 0.2rem; color: var(--color-sidebar); }
 #sidebar .form { display: none; border: 1px solid black; border-radius: 5px; padding: 0.2rem; }
 #sidebar .toggle:checked ~ .form { display: block; }
+#sidebar .toggle:checked ~ .form.inline { display: inline; }
 #sidebar .toggle:checked ~ label .open { display: inline; }
 #sidebar .toggle:checked ~ label .closed { display: none; }
 #sidebar .toggle:not(:checked) ~ label .open { display: none; }
@@ -244,12 +270,22 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #sidebar label.not { top: 0; }
 #sidebar label.not::before { content: 'Finde:'; }
 #sidebar :checked + label.not::before { content: 'Schließe aus:'; color: var(--color-sidebar); }
+#sidebar div.desc {
+	position: relative;
+	top: -0.9rem;
+	left: calc(100% - 5rem);
+}
+#sidebar label.desc { top: 0; right: 0;}
+#sidebar label.desc::before { content: 'Aufsteigend'; }
+#sidebar :checked + label.desc::before { content: 'Absteigend'; color: var(--color-sidebar); font-weight: bold; }
 
 #sidebar .empty { height: 1rem; margin: 0; padding: 0; }
 .disabled { color: var(--color-sidebar-inactive); cursor: initial; }
 #sidebar .unsaved { color: var(--color-sidebar-changed); }
 #sidebar .fontToggle + label { color: var(--color-sidebar-inactive); cursor: initial; font-size: 1rem; padding: 0.5rem; }
 #sidebar .fontToggle:checked + label { color: var(--color-sidebar); cursor: initial; }
+#sidebar .more { padding: 0.4rem; line-height: 1.7rem; }
+#sidebar .more:hover { cursor: pointer; }
 
 /* config */
 #config,#showHistory {  
@@ -380,6 +416,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details .action { float: left; margin: 0.5rem; background: var(--background-action); border-radius: 5px; width: auto; }
 .details .actionwrapper { position: sticky; top: 5.8rem; overflow: hidden; z-index: 500; margin: 0.5rem; background: var(--background-action); border-radius: 5px; border-bottom: 1px solid black; 	box-shadow: 0 2px 5px #444; width: auto; }
 .details.new .actionwrapper { top: 5.2rem; }
+.details .fieldset { column-rule-width: thin; column-rule-style: dashed; }
 /* sticky for assignments? takes too much space? */
 .details .assignment { position: sticky; top: 5.0rem; overflow: hidden; z-index: 500; margin: 0.5rem; padding: 0.5rem; background: var(--background-details); border-radius: 5px; border-bottom: 1px solid black; box-shadow: 0 2px 5px #444; width: auto; }
 .details .db_headline_wrapper { position: sticky; top: 1.0rem; overflow: hidden; z-index: 501; background: var(--background-details); }
@@ -523,4 +560,4 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 /* context menu*/
 #contextmenu { background: var(--background-helpmode); }
 #contextmenu menu { list-style-type: none; font-family: system-ui; font-size: small; margin: 0; padding: 0.5rem; border: 0.1rem solid var(--color-statusbar); border-radius: 5px; }
-#contextmenu menu li:hover { background: var(--background-filters); }
+#contextmenu menu li:hover { background: var(--background-filters); cursor: pointer; }

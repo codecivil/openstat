@@ -257,19 +257,23 @@ function removeContainingDiv(el) {
 		//was > 2 and getElementsByTagName('div') 
 		div.parentNode.removeChild(div);
 	} else {
-		if ( div.getElementsByTagName('input').length > 0 ) { div.getElementsByTagName('input')[0].value = ''; };
-		if ( div.getElementsByTagName('select').length > 0 ) { div.getElementsByTagName('select')[0].value = ''; };
-		if ( div.getElementsByTagName('textarea').length > 0 ) { div.getElementsByTagName('textarea')[0].value = ''; };
+		div.querySelectorAll('input,select,textarea').forEach(_input => _input.value = '');
+		//if ( div.getElementsByTagName('input').length > 0 ) { div.getElementsByTagName('input')[0].value = ''; };
+		//if ( div.getElementsByTagName('select').length > 0 ) { div.getElementsByTagName('select')[0].value = ''; };
+		//if ( div.getElementsByTagName('textarea').length > 0 ) { div.getElementsByTagName('textarea')[0].value = ''; };
 	}
 	return false;
 }
 
 function reloadCSS(el) {
 	if ( ! el ) { el = this; } else { el = el.contentWindow; }
-	var fontSize = document.querySelector('input[name="_fontSize"]:checked').value;
-	var colors = document.getElementById('colorsSelect').value;
-	el.document.getElementById('cssFontSize').href = "/css/fontsize_"+fontSize+".css";
-	el.document.getElementById('cssColors').href = "/css/config_colors_"+colors+".css";
+	var fontsize, colors, columns;
+	if (document.querySelector('input[name="_fontSize"]:checked')) { fontSize = document.querySelector('input[name="_fontSize"]:checked').value; }
+	if (document.getElementById('colorsSelect')) { colors = document.getElementById('colorsSelect').value; }
+	if (document.getElementById('columnsSelect')) { columns = document.getElementById('columnsSelect').value; }
+	if ( fontSize != undefined && el.document.getElementById('cssFontSize')) { el.document.getElementById('cssFontSize').href = "/css/fontsize_"+fontSize+".css"; }
+	if ( colors != undefined && el.document.getElementById('cssColors')) { el.document.getElementById('cssColors').href = "/css/config_colors_"+colors+".css"; }
+	if ( columns != undefined && el.document.getElementById('cssColumns')) { el.document.getElementById('cssColumns').href = "/css/config_columns_"+columns+".css"; }
 	return false;
 }
 
@@ -401,7 +405,10 @@ function _date2calString(_datetime) {
 */
 
 function printResults(form,arg,responsetext) {
-	_print = window.open("/html/print.html","print");
+	let printurl;
+	console.log(responsetext);
+	if ( responsetext != undefined && responsetext != '' ) { printurl = "/html/print.php?o="+responsetext; } else { printurl = "/html/print.php"; }
+	_print = window.open(printurl,"print");
 	_print.document.body.onload = function () {
 		if (form.closest('.section')) {
 			el = form.closest('.section');

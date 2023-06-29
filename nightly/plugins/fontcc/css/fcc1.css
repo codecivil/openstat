@@ -1,0 +1,21 @@
+@font-face {
+  font-family: 'Font CC 1';
+  font-style: italic; /*only then it is normal. Why? */
+  font-weight: 900;
+  font-display: block;
+  src: url("../webfonts/cc1.woff2") format("woff2"), url("../webfonts/cc1.ttf") format("truetype"); }
+
+.fcc {
+  font-family: 'Font CC 1';
+  font-weight: 900; }
+ 
+ /* 'calendar-rolling' is derived form 'calendar' and 'forward' of FontAwesome 6.4.0 */ 
+.fcc-calendar-rolling::before {
+  content: "\f270"; }
+
+.fcc-codecivil-icon::before {
+  content: "\f1ca"; }
+
+ /* 'refukey-export' is derived form the refuKey logo and 'file-export' of FontAwesome 6.4.0 */ 
+.fcc-refukey-export::before {
+  content: "\f1cb"; }

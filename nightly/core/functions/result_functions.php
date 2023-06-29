@@ -1,78 +1,108 @@
 <?php
+function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$keyreadable,$index,$value,$tmpvalue = '',$separator = '',$emptyisall = false) {
+	switch($index) {
+		case 1001:  
+			if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
+//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
+			$tmpvalue = $value;
+			break;
+		case 1002:  
+			if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
+			if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
+			$value_combined = array_combine($tmpvalue,$value);
+			foreach ( $value_combined as $von=>$bis ) {
+				$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
+			}
+			unset($tmpvalue);
+			break;
+		case 5001:  	
+//				if ( json_encode($value) == '[""]' ) { $value = array('0'); };
+			if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
+//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
+			$tmpvalue = $value;
+			break;
+		case 5002:  
+//				if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
+			if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
+			if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
+			$value_combined = array_combine($tmpvalue,$value);
+			foreach ( $value_combined as $von=>$bis ) {
+				$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
+			}
+			unset($tmpvalue);
+			break;
+		case 6001:
+			$cmp_index = 0;
+			$cmp_values = array();
+			while ( array_key_exists(6001+$cmp_index,$values) ) {
+				array_push($cmp_values,$values[6001+$cmp_index]);
+				$cmp_index++;					
+			}
+			$filter_length = _len($cmp_values);
+			$separator = ' + ';
+			for ( $j = 0; $j < $filter_length; $j++ ) { // $j is item nunmber
+				$item_values = array();
+				for ( $i = 0; $i < $cmp_index; $i++ ) { // $i is compound number
+					array_push($item_values,_extract($cmp_values,$i,$j));
+				}
+				foreach ( $item_values as $compound ) {
+					foreach ( $compound as $cmpindex=>$cmpvalue ) 
+					{
+						$_tmpresult = _addToFilterStatement($compound,$filter_results,$komma,$_newkomma,$keyreadable,$cmpindex,$cmpvalue,$tmpvalue,$separator,true); // 'true': empty is 'all'
+						$separator = ' + ';
+						$filter_results = $_tmpresult[0]; $tmpvalue = $_tmpresult[1]; $komma = $_tmpresult[2];
+					}
+				}
+				$komma = $_newkomma.' <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>';
+			}
+			break;
+		case 1003:
+		case 1004:
+		case 1005:
+		case 1006:
+		case 5003:
+		case 2001:
+		case 3001:
+			break;
+		default: 
+			if ( $emptyisall AND $value == '' ) { $value = '[ungefiltert]'; }
+			if ( $value != '_all' AND $index < 6001 ) { 
+				$filter_results .= $komma . _cleanup($value); 
+				if ( $separator == '' ) { $komma = $_newkomma; } else { $komma = $separator; }
+			}; 
+			break;
+	}
+	return array($filter_results,$tmpvalue,$komma);
+}
+
+function _generateFilterStatementForKey($values) {
+	$tmpvalue = '';
+	$filter_results = '';
+	$komma = '';
+	$newkomma = '';
+	$tmpvalue = '';
+	$keyreadable = '';
+	$_old_filter_results = $filter_results;
+	foreach ( $values as $index=>$value ) 
+	{
+		$_tmpresult = _addToFilterStatement($values,$filter_results,$komma,$_newkomma,$keyreadable,$index,$value,$tmpvalue);
+		$filter_results = $_tmpresult[0]; $tmpvalue = $_tmpresult[1]; $komma = $_tmpresult[2];
+	}
+	//now remove filters only containing 'unbestimmt' and 'ungefiltert'
+	$_diff_results = str_replace($_old_filter_results,'',$filter_results);
+	$_diff_results = str_replace('<b>'.$keyreadable.'</b> = ','',$_diff_results);
+	$_diff_results = str_replace('<b>'.$keyreadable.'</b> &#8800; ','',$_diff_results);
+	preg_match('/[^(\[ungefiltert\])(\[unbestimmt\])(von)(bis) +]/',$_diff_results,$_foundfilters);
+	if ( ! isset($_foundfilters[0]) ) {
+		$filter_results = $_old_filter_results;
+	} else {
+		$filter_results .= '<br />';
+	}
+	return $filter_results;
+}
+
 function generateFilterStatement(array $parameters, mysqli $conn, string $_table = 'os_all', bool $complement = false, bool $searchinresults = false)
 {
-	function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$keyreadable,$index,$value,$tmpvalue = '',$separator = '',$emptyisall = false) {
-		switch($index) {
-			case 1001:  
-				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
-//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
-				$tmpvalue = $value;
-				break;
-			case 1002:  
-				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
-				if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
-				$value_combined = array_combine($tmpvalue,$value);
-				foreach ( $value_combined as $von=>$bis ) {
-					$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
-				}
-				unset($tmpvalue);
-				break;
-			case 5001:  
-//				if ( json_encode($value) == '[""]' ) { $value = array('0'); };
-				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
-//						$filter_results .= $komma . ' von '. _cleanup(json_encode($value)) . '<br>'; $komma = ' ';
-				$tmpvalue = $value;
-				break;
-			case 5002:  
-//				if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
-				if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
-				if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
-				$value_combined = array_combine($tmpvalue,$value);
-				foreach ( $value_combined as $von=>$bis ) {
-					$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
-				}
-				unset($tmpvalue);
-				break;
-			case 6001:
-				$cmp_index = 0;
-				$cmp_values = array();
-				while ( array_key_exists(6001+$cmp_index,$values) ) {
-					array_push($cmp_values,$values[6001+$cmp_index]);
-					$cmp_index++;					
-				}
-				$filter_length = _len($cmp_values);
-				$separator = ' + ';
-				for ( $j = 0; $j < $filter_length; $j++ ) { // $j is item nunmber
-					$item_values = array();
-					for ( $i = 0; $i < $cmp_index; $i++ ) { // $i is compound number
-						array_push($item_values,_extract($cmp_values,$i,$j));
-					}
-					foreach ( $item_values as $compound ) {
-						foreach ( $compound as $cmpindex=>$cmpvalue ) 
-						{
-							$_tmpresult = _addToFilterStatement($compound,$filter_results,$komma,$_newkomma,$keyreadable,$cmpindex,$cmpvalue,$tmpvalue,$separator,true); // 'true': empty is 'all'
-							$separator = ' + ';
-							$filter_results = $_tmpresult[0]; $tmpvalue = $_tmpresult[1]; $komma = $_tmpresult[2];
-						}
-					}
-					$komma = $_newkomma.' <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>';
-				}
-				break;
-			case 1003:
-			case 5003:
-			case 2001:
-			case 3001:
-				break;
-			default: 
-				if ( $emptyisall AND $value == '' ) { $value = '[ungefiltert]'; }
-				if ( $value != '_all' AND $index < 6001 ) { 
-					$filter_results .= $komma . _cleanup($value); 
-					if ( $separator == '' ) { $komma = $_newkomma; } else { $komma = $separator; }
-				}; 
-				break;
-		}
-		return array($filter_results,$tmpvalue,$komma);
-	}
 	$_config = getConfig($conn);
 	$_TABLES = $_config['table'];
 	$filter_results = '';
