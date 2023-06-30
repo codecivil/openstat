@@ -1,8 +1,7 @@
 #v1.7.10
 ======
 
-* openStatAdmin: Orientierung des Ausdrucks kann als Konfiguration der Funktion printResults gesetzt werden: { "orientation": "portrait|landscape|none" }
-  bei "none" kann im Browsermenu gewählt werden, ungesetzt bleibt wie bisher "landscape"
+* Sortierung aufsteigend/absteigend kann nun auch in den Filtern gesetzt werden
 * verbesserter (aber stromintensiverer) Helpmode
 * In den Displayeinstellungen kann man nun auch die Anzahl der Spalten in der Anzeige von Einträgen einstellen (1, 2 oder 3)
   Die Spalten passen sich der aktuellen Länge der Einträge (so, dass alle Spalten gleich voll sind), was zu unpassenden Umbrüchen und
@@ -15,6 +14,8 @@
       einen/s weiter; ist das Intervallende gleichzeitig das Monatsende, so ist das neue Intervallende ebenfalls der letzte Tag des neuen Monats
     Jahr: Beim Jahreswechsel verschieben sich die Jahre des Suchintervalls um eines weiter
 * Aktualisierte Icons: Verwendung von FontAwesome 6 und codecivil Icons (FontCC)
+* openStatAdmin: Orientierung des Ausdrucks kann als Konfiguration der Funktion printResults gesetzt werden: { "orientation": "portrait|landscape|none" }
+  bei "none" kann im Browsermenu gewählt werden, ungesetzt bleibt wie bisher "landscape"
 
 #v1.7.9
 ======
