@@ -1086,6 +1086,7 @@ class OpenStatEdit {
 													$_difftime = floor(time()/86400)*86400-DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('U');
 													$_diffinterval = DateInterval::createFromDateString($_difftime.' seconds');
 													$checked[$_roll-3][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[$_roll-3][$i]),$_diffinterval)->format('Y-m-d');
+													break;
 												case "month":
 													$_diffyear = date('Y') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('Y');
 													$_diffmonth = date('m') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('m');
@@ -1102,6 +1103,7 @@ class OpenStatEdit {
 													//push one day back
 													$_diffinterval = DateInterval::createFromDateString('-1 day');
 													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													break;
 												case "quarter":
 													$_diffyear = date('Y') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('Y');
 													$_diffmonth = 3*( floor((date('n')-1)/3) - floor((DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('n')-1)/3) );
@@ -1118,6 +1120,7 @@ class OpenStatEdit {
 													//push one day back
 													$_diffinterval = DateInterval::createFromDateString('-1 day');
 													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													break;
 												case "semiyear":
 													$_diffyear = date('Y') - DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('Y');
 													$_diffmonth = 6*( floor((date('n')-1)/6) - floor((DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('n')-1)/6) );
@@ -1134,6 +1137,7 @@ class OpenStatEdit {
 													//push one day back
 													$_diffinterval = DateInterval::createFromDateString('-1 day');
 													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													break;
 												case "year":
 													//$_diffday: if end day last of feb, it should also be last of feb in the new year
 													//so: push it one day ahead
@@ -1146,6 +1150,7 @@ class OpenStatEdit {
 													//push one day back
 													$_diffinterval = DateInterval::createFromDateString('-1 day');
 													if ( $_roll == 1005 ) { $checked[1002][$i] = date_add(DateTime::createFromFormat('Y-m-d',$checked[1002][$i]),$_diffinterval)->format('Y-m-d'); }
+													break;
 											}
 										}
 									}
