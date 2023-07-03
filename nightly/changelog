@@ -18,7 +18,7 @@
 * display option for number of columns in entry displays (1, 2 or 3) 
 * dynamic choice of filters
 * rolling date filters
-* upgrade to FontAwesome 6.4.0
+* upgrade to FontAwesome 6.4.0 (bundled only in this update!)
 * inclusion of FontCC (codecivil's own icon fonts)
 
 #v1.7.9
