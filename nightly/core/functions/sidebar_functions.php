@@ -126,7 +126,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	}
 	?>
 	<div id="config" class="section">
-		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;" >
+		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;" >
 		<?php //save button and load input like in openStat.plan explained ?>
 			<label 
 				for="config_save" 
@@ -136,13 +136,13 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			><i class="fas fa-save"></i></label>
 			<input hidden type="submit" id="config_save">
 			<label class="load <?php echo($config_save_class); ?>" for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
-			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ return result; });">
+			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ toggleHelpTexts(); return result; });">
 			<label class="<?php echo($config_remove_class); ?> " for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
-			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ return false; }); return false;">
+			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;">
 			<div class="unite">
 				<label for="db__config__list"></label>
 				<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
-				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ return result; });">
+				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ toggleHelpTexts(); return result; });">
 <!--				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig'); callFunction('_','updateSidebarCustom','sidebar'); setTimeout(function(){callFunction(document.querySelector('form#formChooseTables'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');},500);"> -->
 				<!--	<option value="none"></option> -->
 					<?php foreach ( $options as $value ) { 
@@ -162,7 +162,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<?php updateTime(); includeFunctions('TABLES',$conn); ?>
 		<label for="notoggleTables"><h1 class="center"><i class="fas fa-table"></i></h1></label>
 		<input type="checkbox" hidden id="notoggleTables" class="notoggle">
-		<form id="formChooseTables" class="noform function" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ processFunctionFlags(this.closest('.section')); return false; });return false;" >
+		<form id="formChooseTables" class="noform function" method="post" action="" onsubmit="callFunction(this,'changeConfig').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ processFunctionFlags(this.closest('.section')); toggleHelpTexts(); return false; });return false;" >
 			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
 			<input type="text" hidden value="_none_" name="subtable[]">
 			<input type="text" hidden value="_none_" name="showSubtablesOf[]">
@@ -328,7 +328,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			</form>
 		</div>
 		<hr>
-		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); myScrollIntoView(document.getElementById('results_wrapper')); return false; }); return false; ">
+		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); myScrollIntoView(document.getElementById('results_wrapper')); toggleHelpTexts(); return false; }); return false; ">
 			<input hidden id="formFiltersSearchInResults" type="checkbox" value="searchinresults" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_searchinresults); ?>>
 			<label for="formFiltersSearchInResults" class="unlimitedWidth"><i class="fas fa-list"></i></label>
 			<input hidden id="formFiltersComplement" type="checkbox" value="complement" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_complement); ?>>

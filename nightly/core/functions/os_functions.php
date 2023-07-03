@@ -362,7 +362,7 @@ function importCSV(array $PARAM,$conn) {
 				<th>Importiert</th><td class="importImported">0</td>
 			</tr>
 			<tr>
-				<th>Bereits vorhanden</th><td class="importExists">0</td>
+				<th>Aktualisiert</th><td class="importExists">0</td>
 			</tr>
 			<tr>
 				<th>Nicht importiert</th><td class="importProblems">0</td>
@@ -377,6 +377,7 @@ function importCSV(array $PARAM,$conn) {
 		</div>
 		<div class="gotID" hidden></div>
 		<div class="importFinished" hidden></div>
+		<div><b>Bitte schließe dieses Fenster nach dem Import. Für einen weiteren Import drücke dann den Importbutton erneut.</b></div>
 	</div>	
 <?php
 }

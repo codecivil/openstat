@@ -1,9 +1,11 @@
-#v1.7.11
+#v1.7.11-3
 ======
 03.07.2023
 
 * fix: activation of helpmode directly at button
 * create_structure.php: permission for os_userstats at role creation
+* fix: edit.php had no choose config for data model FREELONGER
+* fix: importJS wrongly mapped existent entries to problem entries
 
 #v1.7.10
 ======

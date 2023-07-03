@@ -450,19 +450,20 @@ function displayImportSuccess(_form,_arg,_result) {
 	var _importedDetails = el.querySelector('.importImportedDetails');
 	var _existsDetails = el.querySelector('.importExistsDetails');
 	var _problemsDetails = el.querySelector('.importProblemsDetails');
+	console.log(_result);
 	if ( _result.indexOf('Eintrag wurde neu hinzugefügt') > -1 && _importedDetails.textContent.indexOf(_arg.log) == -1 ) { 
 		_imported.innerText = parseInt(_imported.innerText) + 1;
 		var _newlog = document.createElement('li'); 
 		_newlog.textContent = _arg.log;
 		_importedDetails.appendChild(_newlog);
 	}
-	else if ( _result.indexOf('{"id') > -1 && _existsDetails.textContent.indexOf(_arg.log) == -1 ) { 
+	else if ( _result.indexOf('wurde geändert') > -1 && _existsDetails.textContent.indexOf(_arg.log) == -1 ) { 
 		_exists.innerText = parseInt(_exists.innerText) + 1;
 		var _newlog = document.createElement('li'); 
 		_newlog.textContent = _arg.log;
 		_existsDetails.appendChild(_newlog);
 	}
-	else if ( _result.indexOf('Eintrag wurde neu hinzugefügt') == -1 &&  _result.indexOf('{"id') == -1 && _problemsDetails.textContent.indexOf(_arg.log) == -1 ) { 
+	else if ( _result.indexOf('Eintrag wurde neu hinzugefügt') == -1 &&  _result.indexOf('wurde geändert') == -1 && _problemsDetails.textContent.indexOf(_arg.log) == -1 ) { 
 		_problems.innerText = parseInt(_problems.innerText) + 1;
 		var _newlog = document.createElement('li'); 
 		_newlog.textContent = _arg.log;
