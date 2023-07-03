@@ -162,7 +162,7 @@ $_v = time();
 <!-- HelpMode Button must be topmost in content! -->
 <input form="helpModeForm" name="helpmode" value="off" hidden>
 <?php $_helpmode = ''; if ( isset($_config['helpmode']) AND $_config['helpmode'] == "on" ) { $_helpmode = "checked";} ?>
-<input form="helpModeForm" type="checkbox" <?php echo($_helpmode); ?> hidden id="helpModeBtn" name="helpmode" class="helpMode" value="on" onchange="callFunction(document.getElementById('helpModeForm'),'changeConfig').then(()=>{ return false; });" >
+<input form="helpModeForm" type="checkbox" <?php echo($_helpmode); ?> hidden id="helpModeBtn" name="helpmode" class="helpMode" value="on" onchange="callFunction(document.getElementById('helpModeForm'),'changeConfig').then(()=>{ toggleHelpTexts(); return false; });" >
 <!-- End HelpModeHack -->
 <div id="loginfunctions" hidden>
 	<?php html_echo(json_encode($_loginfunctions)); ?>

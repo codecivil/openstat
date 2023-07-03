@@ -363,6 +363,9 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					$_stmt_array['stmt'] = "GRANT SELECT, UPDATE, INSERT ON os_userprofiles TO ".$PARAMETER['rolename'].";";
 					_execute_stmt($_stmt_array,$conn); 
 					unset($_stmt_array); $_stmt_array = array();
+					$_stmt_array['stmt'] = "GRANT SELECT, UPDATE, INSERT, DELETE ON os_userstats TO ".$PARAMETER['rolename'].";";
+					_execute_stmt($_stmt_array,$conn); 
+					unset($_stmt_array); $_stmt_array = array();
 					$_stmt_array['stmt'] = "FLUSH PRIVILEGES;";
 					_execute_stmt($_stmt_array,$conn);  
 					unset($_stmt_array); $_stmt_array = array();
