@@ -923,6 +923,7 @@ class OpenStatEdit {
 					case 'EMAIL':
 					case 'PHONE':
 					case 'FREE':
+					case 'FREELONGER':
 					case 'EDITOR':
 					case 'FILESPATH':
 					case 'NOTE':
