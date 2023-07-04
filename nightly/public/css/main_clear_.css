@@ -253,12 +253,13 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 	top: 0.5rem;
 	z-index: 1000;
 	bottom: 0;
-	left: calc(-50% + 1rem);
+	right: calc(100% - 1rem);
 	overflow-y: auto;
+	padding-right: 1rem;
 	background: var(--background-body-transparent);
-	width: 50%;
+	width: auto;
 }
-#wrapper_handle:hover + #wrapper, #wrapper:hover { left: 0; }
+#wrapper_handle:hover + #wrapper, #wrapper:hover, #wrapper:focus-within { left: 0; right: initial; width: auto; overflow-x: hidden; }
 #sidebar {float: left; font: 0.7rem sans-serif; padding: 0.2rem; color: var(--color-sidebar); }
 #sidebar .form { display: none; border: 1px solid black; border-radius: 5px; padding: 0.2rem; }
 #sidebar .toggle:checked ~ .form { display: block; }

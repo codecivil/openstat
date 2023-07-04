@@ -1,3 +1,12 @@
+
+#v1.7.12
+======
+04.07.2023
+
+* main.css now also adapted for new features
+* style '_clear_': sidebar now inherits focus from its content
+* sidebar width is now auto computed
+
 #v1.7.11-3
 ======
 03.07.2023

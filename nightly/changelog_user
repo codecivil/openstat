@@ -1,3 +1,10 @@
+#v1.7.12
+======
+
+* Die Seitenleiste bleibt sichtbar, solange darin gearbeitet wird (Felder ausgefüllt, Tabellen angeklickt etc.); Klicken außerhalb der Seitenliste
+  lässt sie stets verschwinden
+* Die Seitenleiste erhält nun nur noch die gerade nötige Breite
+
 #v1.7.11
 ======
 
