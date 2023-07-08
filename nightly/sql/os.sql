@@ -335,6 +335,7 @@ CREATE TABLE `os_userstats` (
   `userid` int(11) DEFAULT NULL,
   `tablemachine` VARCHAR(40) DEFAULT NULL,
   `keymachine` VARCHAR(40) DEFAULT NULL,
+  `filtercount` int(11) DEFAULT 1,
   `unixtimestamp` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 `ENCRYPTED`=YES;

@@ -522,6 +522,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	$_komma_cmp_entry = ' OR '; //a certain index has to match every compound
 	$SHOWNOTALL = false;
 	$EXT_ORDER_BY = array(); //order in case not all fields are going to be displayed
+	if ( ! isset($_SESSION['filterlog']) ) { $_SESSION['filterlog'] = '[]'; }
+	$filterlog = json_decode($_SESSION['filterlog'],true);
 	foreach ($PARAMETER as $key=>$values) 
 	{
 		if ( in_array($key,array('table')) ) { continue; };
@@ -529,18 +531,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 		$table = explode('__',$key,2)[0];
 		$key = explode('__',$key,2)[1];
 		if ( ! in_array($table,$TABLES) ) { continue; };
-		//record users filter statistics
-		$_stmt_array = array();
-		$_stmt_array['stmt'] = "INSERT INTO os_userstats (userid,tablemachine,keymachine) VALUES (?,?,?)";
-		$_stmt_array['str_types'] = "iss";
-		$_stmt_array['arr_values'] = array($_SESSION['os_user'],$table,$key);
-		$tmpresult = execute_stmt($_stmt_array,$conn);
-		//and keep only last 1000 filters
-		unset($_stmt_array); $_stmt_array = array();
-		$_stmt_array['stmt'] = "DELETE FROM os_userstats WHERE userid=? AND id NOT IN ( SELECT id FROM os_userstats us1 WHERE ( SELECT count(*) FROM os_userstats us2 WHERE userid=? AND us1.id <= us2.id ) <= 1000 );"; //use of LIMIT & IN not yet possible
-		$_stmt_array['str_types'] = "ii";
-		$_stmt_array['arr_values'] = array($_SESSION['os_user'],$_SESSION['os_user']);
-		$tmpresult = execute_stmt($_stmt_array,$conn);
+		//record users filter statistics in session variable
+		if ( ! isset($filterlog[$table.'__'.$key]) ) { $filterlog[$table.'__'.$key] = 1; } else { $filterlog[$table.'__'.$key]++; }
 		//sort ascending or descending
 		$_sort = "";
 		if ( array_key_exists(3501,$values) )
@@ -837,6 +829,9 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 			if ( $komma2 != ' WHERE (' ) { $komma2 = ') AND ('; }
 		}
 	}
+	//update filterlog session variable
+	$_SESSION['filterlog'] = json_encode($filterlog);
+	//
 	$_WHERE .= $bracket;
 	$_WHERE = preg_replace('/\(\)/',"(0=0)",$_WHERE);
 	$_main_stmt_array = array();
@@ -925,12 +920,7 @@ function applyFiltersOnlyChangeConfig(array $parameter, mysqli $conn)
 function jenks(int $userid, string $tablemachine, array $key_array, array $already_chosen, mysqli $conn) {
 	//return array($key_array,array());
 	//collect stats
-	$_stmt_array = array();
-	$_stmt_array['stmt'] = "select keymachine,count(*) AS _count from os_userstats where userid=? and tablemachine=? group by tablemachine,keymachine order by _count desc";
-	$_stmt_array['str_types'] = "is";
-	$_stmt_array['arr_values'] = array($_SESSION['os_user'],$tablemachine);
-	$_fullstats = execute_stmt($_stmt_array,$conn)['result'];
-	$_keystats = array_combine($_fullstats['keymachine'],$_fullstats['_count']);
+	$_keystats = json_decode($_SESSION['filterstats'],true)[$tablemachine];
 	foreach ( $key_array as $key ) {
 		if ( ! isset($_keystats[$key['keymachine']]) ) { $_keystats[$key['keymachine']] = 0; }
 		if ( isset($already_chosen[$table.'__'.$key['keymachine']])	 ) { unset($_keystats[$key['keymachine']]); } //disregard already chosen keys

@@ -21,6 +21,36 @@ function logout(string $redirect = 'login.php') {
 	}
 }
 
+
+function saveFilterLog(array $PARAM, $conn) {
+	//adapt: read $_SESSION['filterlog'] (JSON) and put into database
+	//record users filter statistics
+	if ( ! isset($_SESSION['filterlog']) OR $_SESSION['filterlog'] == '[]' ) { return; }
+	$filterlog = json_decode($_SESSION['filterlog']);
+	$_stmt_array = array();
+	$_stmt_array['stmt'] = "INSERT INTO os_userstats (userid,tablemachine,keymachine,filtercount) VALUES ";
+	$_stmt_array['str_types'] = "";
+	$_stmt_array['arr_values'] = array();
+	$komma = '';
+	foreach ( $filterlog as $tablekey => $filtercount ) {
+		$tablekey_array = explode('__',$tablekey,2);
+		$table = $tablekey_array[0];
+		$key = $tablekey_array[1];
+		$_stmt_array['stmt'] .= $komma."(?,?,?,?)";
+		$_stmt_array['str_types'] .= "issi";
+		array_push($_stmt_array['arr_values'],$_SESSION['os_user'],$table,$key,$filtercount);
+		$komma = ",";
+	}
+	$tmpresult = execute_stmt($_stmt_array,$conn);
+	$_SESSION['filterlog'] = '[]';
+	//and keep only last 50 entries
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "DELETE FROM os_userstats WHERE userid=? AND id NOT IN ( SELECT id FROM os_userstats us1 WHERE ( SELECT count(*) FROM os_userstats us2 WHERE userid=? AND us1.id <= us2.id ) <= 50 );"; //use of LIMIT & IN not yet possible
+	$_stmt_array['str_types'] = "ii";
+	$_stmt_array['arr_values'] = array($_SESSION['os_user'],$_SESSION['os_user']);
+	$tmpresult = execute_stmt($_stmt_array,$conn);
+}
+
 function newEntry(array $PARAM,$conn) {
 	if ( isset($PARAM['trash']) ) { 
 		$_array = json_decode($PARAM['trash'],true);
@@ -154,8 +184,14 @@ function newEntry(array $PARAM,$conn) {
 				foreach( $PARAMETER as $key )
 				{
 					if ( substr($key,0,3) == 'id_' OR $key == 'table' ) { continue; }
+					//take transferred $PARAMs as default values
+					if ( isset($PARAM[$key]) ) { 
+						$default = $PARAM[$key];
+					} else {
+						$default = "";
+					}
 					$edit = new OpenStatEdit($table[0],$key,$conn);
-					$PARAMTYPE[$table[0].'__'.$key] = $edit->edit('');
+					$PARAMTYPE[$table[0].'__'.$key] = $edit->edit($default);
 					unset($edit);
 				}
 				

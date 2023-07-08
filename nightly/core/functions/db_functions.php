@@ -1,8 +1,6 @@
 <?php
 //returns raw result
 //logs if $_SESSION['log'] is set and true (in order to avoid changing all execute_stmts), or if parameter $log is set and true
-$debugpath = "/var/www/test/openStat/v1.0/";
-$debugfilename = "openPSZ-debug-".date('d.m.Y H:i:s');
 function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 {
 	global $debugpath, $debugfilename;
@@ -512,7 +510,7 @@ function getDetails($PARAMETER,$conn)
 		-->
 				<div class="actionwrapper">
 					<label for="_action<?php echo($table.$id[0]); ?>_sticky" class="action">Aktion</label>
-					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ callFunction(this.closest('form'),'FUNCTIONAction','').then(()=>{ return false; }); return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; myScrollIntoView(this); }; return false; }); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
+					<select id="_action<?php echo($table.$id[0]); ?>_sticky" name="dbAction" class="db_formbox" onchange="tinyMCE.triggerSave(); invalid = validate(this,this.closest('form').getElementsByClassName('paramtype')[0].innerText); colorInvalid(this,invalid); if (invalid.length == 0) { updateTime(this); _onAction(this.value,this.closest('form'),'dbAction','message<?php echo($table.$id[0]); ?>'); callFunction(this.closest('form'),'calAction','').then(()=>{ callFunction(this.closest('form'),'FUNCTIONAction','FUNCTIONresults').then(()=>{ return false; }); return false; }); }; callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper',false,'','scrollTo',this).then(()=>{ if ( document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky') ) { document.getElementById('_action<?php echo($table.$id[0]); ?>_sticky').value = ''; myScrollIntoView(this); }; return false; }); return false;" title="Aktion bitte erst nach der Bearbeitung der Inhalte wählen.">
 						<option value="" selected>[Bitte erst nach Bearbeitung wählen]</option>
 						<?php if ( isset($PARAM['id_'.$table]) ) { ?>
 							<option value="edit">Eintrag ändern</option>

@@ -24,7 +24,10 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 				$param = json_decode($functionjson)['status'];
 				foreach ( $functions as $function ) {
 					if ( $function != '' ) {
-						$function($param,$PARAM,$conn);
+						$passtojs = "'".json_encode($function($param,$PARAM,$conn))."'";
+						?>
+						<img src="" onerror="<?php html_echo($function.'('.$passtojs.')'); ?>(">
+						<?php
 					}
 				}
 			}

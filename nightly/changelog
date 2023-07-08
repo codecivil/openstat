@@ -1,3 +1,9 @@
+#v1.7.13
+======
+08.07.2023
+
+* rewrite of dynamic filter choice: write to db only twice per hour and at logout
+  (was too resource hungry)
 
 #v1.7.12
 ======
@@ -21,6 +27,7 @@
 30.06.2023
 
 * sorting ascending/descending is now also a filter switch
+* sidebar filters: filter dialog opens automatically if it is not empty
 * context menu: remove global eventlistener after leaving context menu
 * openStatAdmin: config for printResults possible: { "orientation": "portrait|landscape|none" }
   no config is "landscape" (backward compatibility), config must be set in first "printResults" and applies to all

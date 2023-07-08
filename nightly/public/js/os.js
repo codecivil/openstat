@@ -474,7 +474,6 @@ function _setIdCal(el) {
 
 function newEntryFromEntry(el,tableto) {
 	var formobj = JSON.parse(el.parentElement.parentElement.querySelector('.attribution').innerText);
-	console.log(formobj);
 	formobj.table = new Array();
 	formobj.table[0] = tableto;
 	document.getElementById('trash').value = JSON.stringify(formobj);
@@ -650,6 +649,11 @@ function _saveState() {
 		var _form = _el.querySelector('.db_options');
 		sessionStorage.setItem(JSON.stringify(key),JSON.stringify(_form2obj(_form)));
 	});
+}
+
+function _saveFilterLog() {
+	callFunction('_','saveFilterLog','').then( () => { return false; });
+	return false;
 }
 
 function _toggleColumn(el,key) {
@@ -1447,17 +1451,18 @@ function _FUNCTIONStatus(el,statusname) {
 	if ( inputfield.querySelector('div[id$=_conditions]') ) { 
 		_conditions_element = el.closest('.edit_wrapper').querySelector('div[id$=_conditions]');
 	}
-	if ( _conditions_element == undefined ) { return false; }
-	let _conditions = JSON.parse(_conditions_element.textContent);
 	let _status = new Object();
-	for ( let _condition of _conditions ) {
-		if ( _condition.depends_on_key != '' ) {
-			if ( el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])') ) {
-				value = el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])');
-			} else {
-				value = '';
+	if ( _conditions_element != undefined ) {
+		let _conditions = JSON.parse(_conditions_element.textContent);
+		for ( let _condition of _conditions ) {
+			if ( _condition.depends_on_key != '' ) {
+				if ( el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])') ) {
+					value = el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])').value;
+				} else {
+					value = '';
+				}
+				_status[_condition.depends_on_key] = value;
 			}
-			_status[_condition.depends_on_key] = value;
 		}
 	}
 	try {
@@ -1470,7 +1475,12 @@ function _FUNCTIONStatus(el,statusname) {
 	function_field_obj.status[statusname] = _status;
 	function_field_obj.functions = new Array();
 	function_field_obj.type = 'FUNCTION';
-	for ( let option of inputfield.querySelector('.db_function_functions').options ) { if (! option.disabled) {function_field_obj.functions.push(option.value);} }
+	//functions must be empty if execution box is not checked
+	if ( inputfield.querySelector('.db_function_check').checked ) {
+		for ( let option of inputfield.querySelector('.db_function_functions').options ) { if (! option.disabled) {function_field_obj.functions.push(option.value);} }
+	} else {
+		function_field_obj.functions = ["none"];
+	}
 	inputfield.querySelector('.db_function_field').value = JSON.stringify(function_field_obj);
 	return false
 }

@@ -128,7 +128,22 @@ foreach ( $_result as $_function )
 	if ( in_array($_SESSION['os_role'],json_decode($_function['allowed_roles'])) OR in_array($_SESSION['os_parent'],json_decode($_function['allowed_roles'])) ) { 
 		$_loginfunctions[] = array($_function['functionmachine'] => $_function['functionscope']);
 	}
-}	
+}
+
+//collect filter stats
+//to do: do it per table...
+$_stmt_array = array();
+$_stmt_array['stmt'] = "select tablemachine,keymachine,sum(filtercount) AS _count from os_userstats where userid=? group by tablemachine,keymachine order by _count desc";
+$_stmt_array['str_types'] = "i";
+$_stmt_array['arr_values'] = array($_SESSION['os_user']);
+$_fullstats = execute_stmt($_stmt_array,$conn,true)['result'];
+$_fullstats_array = array();
+foreach ( $_fullstats as $_item ) {
+	if ( ! isset($_fullstats_array[$_item['tablemachine']]) ) { $_fullstats_array[$_item['tablemachine']] = array(); }
+	$_fullstats_array[$_item['tablemachine']][$_item['keymachine']] = $_item['_count'];
+}
+$_SESSION['filterstats'] = json_encode($_fullstats_array);
+
 //get timestamp for forcing fresh ressource loading
 $_v = time();
 ?>
@@ -183,7 +198,7 @@ $_v = time();
 				</form>
 			</div>
 			<div id="logout" data-title="Abmelden">
-				<form method="post" id="logoutForm">
+				<form method="post" id="logoutForm" onsubmit="callFunction('_','saveFilterLog','').then( () => { window.location = '?submit=logout'; return false; }); return false;">
 					<input type="submit" name="submit" value="logout" id="logoutBtn" hidden />
 					<label for="logoutBtn"> 
 						<i class="fas fa-power-off"></i>
@@ -446,6 +461,8 @@ $_v = time();
 	/>
 </form>
 
+<div id="FUNCTIONresults" hidden></div>
+
 <script>
 	async function standard500 () {
 		var t0 = performance.now();
@@ -462,7 +479,8 @@ $_v = time();
 		var _standard500 = 20*(t1-t0);
 		return _standard500
 	}
-	_saveStateInterval = setInterval(_saveState,300000);
+	_saveStateInterval = setInterval(_saveState,300000); //save state every 5min
+	_logFiltersInterval = setInterval(_saveFilterLog,1800000); //save filter usage every 30min
 	const pxperrem = document.querySelector('#logo img').height/2.5;  //CSS sets logo image to 2.5rem
 
 	async function restrictResultWidth () {

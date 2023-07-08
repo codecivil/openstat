@@ -33,6 +33,7 @@ foreach ( $core as $component )
 //include some system scripts and data
 require_once('../../core/data/serverdata.php');
 require_once('../../core/data/filedata.php');
+require_once('../../core/data/debugdata.php');
 require_once('../../core/scripts/getParameters.php');
 
 $username = $_SESSION['os_rolename'];

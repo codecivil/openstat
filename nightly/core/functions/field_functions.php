@@ -28,7 +28,7 @@ function emailToClient($trigger,$PARAM,$conn) {
 		foreach ( $matches[1] as $pattern ) {
 			$pattern_array = explode('][',$pattern,2);
 			if ( isset($trigger[$pattern_array[0]][$pattern_array[1]]) ) {
-				$value = preg_replace('/\$trigger\['.$pattern.'\]/g',$triggger[$pattern_array[0]][$pattern_array[1]],$value);
+				$value = preg_replace('/\$trigger\['.$pattern.'\]/g',$trigger[$pattern_array[0]][$pattern_array[1]],$value);
 			}
 		}
 		$_tmpconfig[$header] = $value;
