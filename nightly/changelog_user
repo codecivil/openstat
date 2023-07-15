@@ -1,3 +1,10 @@
+#v1.7.14
+======
+
+* Ergebnisse der Ampelfunktion sind nun auch auf geöffneten Einträgen sichtbar; auf Grund der hohen Ressourcenanforderungen der Ampelfunktion muss, 
+  um dies zu aktualisieren, die Ampelfunkion erneut ausgeführt und der Eintrag neu geladen werden. Dies passiert natürlich bei jedem neuen Login.
+* Login-"Vorhang" mit Statusinformationen zum Loginprozess
+
 #v1.7.13
 ======
 

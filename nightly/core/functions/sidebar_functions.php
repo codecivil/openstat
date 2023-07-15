@@ -916,7 +916,11 @@ function applyFiltersOnlyChangeConfig(array $parameter, mysqli $conn)
 }
 
 // returns top and bottom array of filters of given table for given user and given already chosen filters
-// this is a slight variationf of jenks natural breaks or two classes: we stop at first *local* minimum of total class variations
+// this is a slight variation of jenks natural breaks of two classes: we order descendingly and stop at first *local* minimum of total class
+// variations (weighted by class sizes); this saves us some storage and computing time.
+// indeed, it is possible to have several local minima and the index of the absolute minimum not being the index of the first local minimum, e.g.
+// array(5,5,4,4,3,3,3,3,0,0) has two local minima at indices 4 and 8 (after second and third block of identical numbers), but: 
+// jenks_functional(4) = 1.3 and jenks_functional(8) = 0.55
 function jenks(int $userid, string $tablemachine, array $key_array, array $already_chosen, mysqli $conn) {
 	//return array($key_array,array());
 	//collect stats
@@ -936,7 +940,7 @@ function jenks(int $userid, string $tablemachine, array $key_array, array $alrea
 		//test if jenks value increases again:
 //		if ( ! $_break AND pow($_value - $_mu,2)/pow($_value-$_mubar,2) <= $_m*($_n-$_m+1)/($_m-1)/($_n-$_m) ) { $_break = true; } //check this formula...
 		if ( ! $_break AND $_m < $_n AND ($_m-1)/$_m*pow($_value - $_mu,2) >= ($_n-$_m+1)/($_n-$_m)*pow($_value-$_mubar,2) ) { $_break = true; } //check this formula...
-		if ( ! $_break ) { array_push($jenks_top_stats,$_key); }
+		if ( ! $_break ) { array_push($jenks_top_stats,$_key); } else { break; }
 		$_mu += 1/$_m*($_value-$_mu);
 		$_mubar -= 1/($_n-$_m)*($_value-$_mubar);
 	}

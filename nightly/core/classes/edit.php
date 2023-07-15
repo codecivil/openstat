@@ -1060,7 +1060,7 @@ class OpenStatEdit {
 										>
 										<label for="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollend">
 											<span data-title="rollend" class="open"><i class="fcc fcc-calendar-rolling"></i></span>
-											<span data-title="fxiert" class="closed"><i class="fas fa-map-pin"></i></span>
+											<span data-title="fixiert" class="closed"><i class="fas fa-map-pin"></i></span>
 										</label>
 										<select 
 											name="<?php html_echo($this->table.'__'.$this->key); ?>[1005][]"

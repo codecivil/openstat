@@ -496,7 +496,29 @@ function getDetails($PARAMETER,$conn)
 			updateTime(); ?>
 				<h2 class="db_headline clear"><i class="fas fa-<?php html_echo($iconname); ?>"></i>&nbsp; <?php echo(sizeof($id)); ?> Einträge </h2></div>
 		<?php } 
-		?>	
+		//show trafficLight warnings
+		?>
+		<div class="trafficLight">
+		<?php
+			if ( isset($_SESSION['trafficLight']) ) {
+				$trafficLight = json_decode($_SESSION['trafficLight'],true);
+				foreach ( $id as $singleid ) {
+					if ( isset($trafficLight[$table][$singleid]) ) {
+						if ( $trafficLight[$table][$singleid]['urgency'] == 1 ) { $_trafficClass = "yellow"; }
+						if ( $trafficLight[$table][$singleid]['urgency'] == 2 ) { $_trafficClass = "orange"; }
+						if ( $trafficLight[$table][$singleid]['urgency'] == 3 ) { $_trafficClass = "red"; }
+						?>
+						<div class="<?php echo($_trafficClass); ?>">
+							<?php
+							html_echo(implode(' | ',$trafficLight[$table][$singleid]['criteria']));
+							?>
+						</div>
+						<?php
+					}
+				}
+			}
+		?>
+		</div>	
 		<div class="message" id="message<?php echo($table.$id[0]); ?>"><div class="dbMessage" class="<?php echo($dbMessageGood); ?>"><?php echo($dbMessage); ?></div></div>
 		<form class="db_options function" method="POST" action="" onsubmit="callFunction(this,'dbAction','message').then(()=>{ return false; }); return false;">
 			<input type="text" hidden value="<?php echo($table); ?>" name="table" class="inputtable" />

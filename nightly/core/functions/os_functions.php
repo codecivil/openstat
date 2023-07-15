@@ -714,6 +714,10 @@ function trafficLight(array $PARAM, mysqli $conn)
 				}
 			}
 		}
+		//save result as session variable (so we can use this when opening such an item)
+		$_SESSION['trafficLight'] = json_encode($ids);
+		//for debug: $_SESSION['trafficLight'] = '{"opsz_aufnahme": { "568": { "urgency": 2, "criteria": ["Test nicht bestanden"] } } }';
+		//
 		if ( sizeof($ids) > 0 ) {
 			$result_size = 0;
 			foreach ( $ids as $ids_in_table ) { 

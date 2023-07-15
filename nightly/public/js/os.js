@@ -508,7 +508,9 @@ function newEntry(form,arg,response) {
 	}
 	var _form = el.querySelector('.db_options');
 	if ( sessionStorage.getItem(JSON.stringify(key)) != null && sessionStorage.getItem(JSON.stringify(key)) !== JSON.stringify(_form2obj(_form)) ) {
-		if( window.confirm('Es gibt eine ungespeicherte Version dieses Eintrags. Wollen Sie sie wiederherstellen?') ) {
+		let _recover = sessionStorage.getItem('recoverentries');
+		if( _recover == 'true' || ( _recover == null && window.confirm('Es gibt ungespeicherte Daten. Willst Du diese wiederherstellen?') ) ) {
+			sessionStorage.setItem('recoverentries','true');
 			var obj = JSON.parse(sessionStorage.getItem(JSON.stringify(key)));
 			for (var k in obj) {
 				try { var _fields = el.querySelectorAll(':not(:disabled)[name="'+k+'"]'); } catch(err) { var _fields = new Array(); }
@@ -535,8 +537,9 @@ function newEntry(form,arg,response) {
 					try { _fields[i].value = obj[k][i]; } catch(err) { continue; }
 				}
 			}
-		}
+		} else { sessionStorage.setItem('recoverentries','false'); }
 		sessionStorage.removeItem(JSON.stringify(key));
+		setTimeout(function(){ sessionStorage.removeItem('recoverentries'); },120000); //forget choice after 2 minutes
 	}
 	//process function flags
 	processFunctionFlags(el);

@@ -173,7 +173,7 @@ $_v = time();
 </head>
 <body>
 <div hidden id="generator"></div>
-<div id="veil" oncontextmenu="return false"></div>
+<div id="veil" class="veiled solid" oncontextmenu="return false"></div>
 <!-- HelpMode Button must be topmost in content! -->
 <input form="helpModeForm" name="helpmode" value="off" hidden>
 <?php $_helpmode = ''; if ( isset($_config['helpmode']) AND $_config['helpmode'] == "on" ) { $_helpmode = "checked";} ?>
@@ -198,7 +198,7 @@ $_v = time();
 				</form>
 			</div>
 			<div id="logout" data-title="Abmelden">
-				<form method="post" id="logoutForm" onsubmit="callFunction('_','saveFilterLog','').then( () => { window.location = '?submit=logout'; return false; }); return false;">
+				<form method="post" id="logoutForm" onsubmit="callFunction('_','saveFilterLog','').then( () => { sessionStorage.removeItem('recoverentries'); 	window.location = '?submit=logout'; return false; }); return false;">
 					<input type="submit" name="submit" value="logout" id="logoutBtn" hidden />
 					<label for="logoutBtn"> 
 						<i class="fas fa-power-off"></i>
@@ -509,8 +509,14 @@ $_v = time();
 			}
 		},st500);
 		setTimeout(function () {
+			document.getElementById('veil').classList.add('sidebar');
 			callFunction('_','updateSidebar','sidebar',false,'','restrictResultWidth').then(()=>{
-				callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ executeLoginFunctions(); return false; });
+				callFunction(document.getElementById('formFilters'),'applyFilters','results_wrapper').then(()=>{ 
+					document.getElementById('veil').classList.remove('sidebar');
+					document.getElementById('veil').classList.add('loginfunctions');
+					executeLoginFunctions();
+					return false;
+				});
 		//	processForm(document.getElementById('formAddFilters'),'../php/updateSidebar.php','sidebar');
 			<?php 
 				unset($value);
@@ -518,6 +524,7 @@ $_v = time();
 				{
 					$alreadyopen = array();
 			?>
+				document.getElementById('veil').classList.add('openids');
 			<?php	foreach ( $_config['_openids'] as $value ) { 
 						if ( isset($value) ) {
 							foreach( $value as $tablekey => $number ) {
@@ -543,7 +550,18 @@ $_v = time();
 				}
 			},3*st500);
 		<?php } ?>
-		
+		function areWeReadyQ(_size) {
+			if ( ! _size ) { _size = 0; }
+			let _newsize = document.body.textContent.length;
+			if ( _newsize != _size ) { 
+//			if ( _newsize != -1 ) { 
+				setTimeout(function(){ areWeReadyQ(_newsize); },st500);
+			} else { 
+				document.getElementById('veil').classList = "";
+			}
+		}
+		setTimeout(areWeReadyQ,3*st500);
+			
 	});	
 </script> 
 </body>

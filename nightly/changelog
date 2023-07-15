@@ -1,3 +1,10 @@
+#v1.7.14
+======
+15.07.2023
+
+* trafficLight results now also appear on entries; updated only after running trafficLight again and reloading the entry
+* login veil with status info
+
 #v1.7.13
 ======
 08.07.2023

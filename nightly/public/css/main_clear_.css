@@ -55,7 +55,43 @@ textarea { min-height: 6rem; }
 textarea.FREELONGER { min-height: 10rem; }
 
 /* veil */
+
 #veil.veiled { z-index: 1700; opacity: 1; }
+#veil.solid {
+	background: center/15% no-repeat url('../img/veil.svg?v=1235'), center/10% no-repeat url('../img/logo.png'),var(--background-body);
+}
+#veil.solid::before {
+	content: "Deine Sitzung wird geladen...";
+	position: fixed;
+	top: 3rem;
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+	width: 33%;
+	hyphens: none;
+}
+#veil.solid.sidebar::before {
+	content: 'Deine Filtereinstellungen werden eingerichtet...';
+}
+#veil.solid.loginfunctions::before {
+	content: "Loginfunktionen werden ausgeführt...";
+}
+#veil.solid.openids::before {
+	content: "Geöffnete Einträge werden geladen...";
+}
+
+#veil.solid.openids.loginfunctions::before {
+	content: "Loginfunktionen werden ausgeführt und Einträge geöffnet...";
+}
+#veil.solid.sidebar.openids.loginfunctions::before {
+	content: "Filtereinstellungen werden eingerichtet, Loginfunktionen ausgeführt und Einträge geöffnet...";
+}
+#veil.solid.sidebar.openids::before {
+	content: "Filtereinstellungen werden eingerichtet und Einträge geöffnet...";
+}
+#veil.solid.sidebar.loginfunctions::before {
+	content: "Filtereinstellungen werden eingerichtet und Loginfunktionen ausgeführt...";
+}
 #veil{ font: 1rem sans-serif; z-index: -500; opacity: 0; width: 100%; height: 100%; position: fixed; top: 0; left:0; margin: 0; padding: 0; display: flex; flex-direction: row; align-items: center; justify-content: center; }
 #veil > div { width: 100%; height: 100%; background: var(--background-body); z-index: -500; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
@@ -218,9 +254,9 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #important tr:nth-child(odd) { background-color: var(--background-row-even); }
 #important tr:hover { background: var(--background-filters); }
 #important td, #important th { text-align: center; padding: 0.2rem 0.5rem 0.2rem 0.5rem; border: 1px solid var(--color-statusbar); }
-#important tr.yellow { background: yellow; }
-#important tr.orange { background: orange; }
-#important tr.red { background: #FF8787; }
+#important tr.yellow, div.yellow { background: yellow; }
+#important tr.orange, div.orange { background: orange; }
+#important tr.red, div.red { background: #FF8787; }
 #important .imp_close { position: relative; left: calc(100% - 1.2rem); top: 0.2rem; width: 1rem;}
 #important .tableicon { position: relative; font-size: 1.5rem; margin: 0 auto; text-align: center; }
 #important .toggle + div { display: none; }
@@ -416,7 +452,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details .db_formbox {float: left; width: 60%;}
 .details .action { float: left; margin: 0.5rem; background: var(--background-action); border-radius: 5px; width: auto; }
 .details .actionwrapper { position: sticky; top: 5.8rem; overflow: hidden; z-index: 500; margin: 0.5rem; background: var(--background-action); border-radius: 5px; border-bottom: 1px solid black; 	box-shadow: 0 2px 5px #444; width: auto; }
-.details.new .actionwrapper { top: 5.2rem; }
+.details.new .actionwrapper { top: 1rem; }
 .details .fieldset { column-rule-width: thin; column-rule-style: dashed; }
 /* sticky for assignments? takes too much space? */
 .details .assignment { position: sticky; top: 5.0rem; overflow: hidden; z-index: 500; margin: 0.5rem; padding: 0.5rem; background: var(--background-details); border-radius: 5px; border-bottom: 1px solid black; box-shadow: 0 2px 5px #444; width: auto; }
