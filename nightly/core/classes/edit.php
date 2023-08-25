@@ -723,7 +723,7 @@ class OpenStatEdit {
 						if ( ! is_array($default) ) { $default = array('theme',''); }
 						$_cbcolors = array("blue","green","yellow","red","theme");
 						?>
-						<div class="note" data-title="Notiz erstellen oder bearbeiten">
+						<div class="note note_edit" data-title="Notiz erstellen oder bearbeiten">
 							<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 							<input type="checkbox" id="note_delete_cb<?php echo($rnd); ?>" class="note_cb" onclick="note_delete(this)" hidden>
 							<?php foreach ( $_cbcolors as $_cbcolor ) {
@@ -736,7 +736,7 @@ class OpenStatEdit {
 							?>
 								<label for="note_<?php echo($_cbcolor); ?>_cb<?php echo($rnd); ?>" class="unlimitedWidth note_<?php echo($_cbcolor); ?>"><i class="far fa-square"></i></label>
 							<?php } ?>
-								<textarea  <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> onchange="note_synctext(this)" spellcheck="true" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" class="db_formbox db_<?php echo($key.' note_'.$default[0]); ?>"  value="" rows="3" wrap="hard"><?php echo($default[1]); ?></textarea>
+								<textarea  <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> onchange="note_synctext(this)" spellcheck="true" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" class="textarea db_formbox db_<?php echo($key.' note_'.$default[0]); ?>"  value="" rows="3" wrap="hard"><?php echo($default[1]); ?></textarea>
 							</div>
 						</div>
 						<?php break;
@@ -926,7 +926,6 @@ class OpenStatEdit {
 					case 'FREELONGER':
 					case 'EDITOR':
 					case 'FILESPATH':
-					case 'NOTE':
 						?>
 							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 							<?php 
@@ -949,6 +948,72 @@ class OpenStatEdit {
 									<br />
 								</div>
 							<?php }
+							break;
+					case 'NOTE':
+						?>
+							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this,'<?php echo($rnd); ?>');" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
+							<?php 
+							$_cbcolors = array("blue","green","yellow","red","theme");
+							if ( ! isset($checked[7001]) OR sizeof($checked[7001]) == 0 ) {
+								$_index = "0";
+								?>
+								<div class="note note_choose searchfield<?php echo($_searchfieldcompound); ?>">
+									<input type="text" hidden name="<?php echo($this->table.'__'.$this->key); ?>[7001][]" class="note_colors_input" value="[]">
+									<input type="checkbox" onchange="updateNoteColorsInput(this)" value="_all" id="note_all_choose<?php echo($rnd.'_'.$_index); ?>" class="note_cb note_all" hidden checked>
+								<?php foreach ( $_cbcolors as $_cbcolor ) {
+								?>
+									<input type="checkbox" onchange="updateNoteColorsInput(this)" value="<?php echo($_cbcolor); ?>" id="note_<?php echo($_cbcolor); ?>_choose<?php echo($rnd.'_'.$_index); ?>" class="note_cb note_<?php echo($_cbcolor); ?>" hidden>
+								<?php } ?>
+									<div class="note_wrapper">
+										<label for="note_all_choose<?php echo($rnd.'_'.$_index); ?>" class="unlimitedWidth note_all">alle</label>
+									<?php foreach ( $_cbcolors as $_cbcolor ) {
+									?>
+										<label for="note_<?php echo($_cbcolor); ?>_choose<?php echo($rnd.'_'.$_index); ?>" class="unlimitedWidth note_<?php echo($_cbcolor); ?>"><i class="far fa-square"></i></label>
+									<?php } ?>
+										<br />
+										<input 
+											class="searchfield textarea"
+											name="<?php html_echo($this->table.'__'.$this->key); ?>[7002][]" 
+											type="text" 
+											value=""
+										/>
+									</div>
+										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
+										<br />
+								</div>
+							<?php
+							} else {
+								for ( $_index = 0; $_index < sizeof($checked[7001]); $_index++ ) {
+									?>
+								<div class="note note_choose searchfield<?php echo($_searchfieldcompound); ?>">
+									<input type="text" hidden name="<?php echo($this->table.'__'.$this->key); ?>[7001][]" class="note_colors_input" value="<?php html_echo($checked[7001][$_index]); ?>">
+									<input type="checkbox" onchange="updateNoteColorsInput(this)" value="_all" id="note_all_choose<?php echo($rnd.'_'.$_index); ?>" class="note_cb note_all" hidden <?php if ( in_array('_all',json_decode($checked[7001][$_index],true)) ) { echo(" checked "); } ?>>
+								<?php foreach ( $_cbcolors as $_cbcolor ) {
+								?>
+									<input type="checkbox" onchange="updateNoteColorsInput(this)" value="<?php echo($_cbcolor); ?>"  <?php if ( in_array($_cbcolor,json_decode($checked[7001][$_index],true)) ) { echo(" checked "); } ?> id="note_<?php echo($_cbcolor); ?>_choose<?php echo($rnd.'_'.$_index); ?>" class="note_cb note_<?php echo($_cbcolor); ?>" hidden>
+								<?php } ?>
+									<div class="note_wrapper">
+										<label for="note_all_choose<?php echo($rnd.'_'.$_index); ?>" class="unlimitedWidth note_all">alle</label>
+									<?php foreach ( $_cbcolors as $_cbcolor ) {
+									?>
+										<label for="note_<?php echo($_cbcolor); ?>_choose<?php echo($rnd.'_'.$_index); ?>" class="unlimitedWidth note_<?php echo($_cbcolor); ?>"><i class="far fa-square"></i></label>
+									<?php } ?>
+										<br />
+										<input 
+											class="searchfield textarea"
+											name="<?php html_echo($this->table.'__'.$this->key); ?>[7002][]" 
+											type="text" 
+											value="<?php if ( $checked[7002][$_index] != "_all" ) { html_echo($checked[7002][$_index]); } ?>"
+										/>
+									</div>
+										<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
+										<br />
+								</div>
+								<?php }
+								?>
+								<img src="" onerror="updateNoteColorsInput(this.closest('.form').querySelector('.note .note_cb')); return false" />
+								<?php
+							}
 							break;
 					case 'DATETIME':
 					case 'DATE':

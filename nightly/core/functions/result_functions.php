@@ -15,6 +15,25 @@ function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$
 			}
 			unset($tmpvalue);
 			break;
+		case 7001:
+			$tmpvalue = array();
+			foreach ( $value as $colors ) {
+				if ( $colors == '["_all"]' ) { $tmpvalue[] = ''; continue; }
+				$colors = json_decode($colors,true);
+				$tmpstring = '';
+				foreach ($colors as $color) {
+					$tmpstring .= '<span class="note_'.$color.'">&nbsp;&nbsp;&nbsp;</span>';
+				}
+				$tmpvalue[] = $tmpstring;
+			}
+			break;
+		case 7002:
+			$value_combined = array_combine($tmpvalue,$value);
+			foreach ($value_combined as $colors => $text) {
+				$filter_results .= $komma . $colors . _cleanup($text);
+				if ( $separator == '' ) { $komma = $_newkomma; } else { $komma = $separator; }
+			} 
+			break;
 		case 5001:  	
 //				if ( json_encode($value) == '[""]' ) { $value = array('0'); };
 			if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
@@ -79,7 +98,7 @@ function _generateFilterStatementForKey($values) {
 	$tmpvalue = '';
 	$filter_results = '';
 	$komma = '';
-	$newkomma = '';
+	$_newkomma = '';
 	$tmpvalue = '';
 	$keyreadable = '';
 	$_old_filter_results = $filter_results;

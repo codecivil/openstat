@@ -32,20 +32,20 @@ hr, .clear { clear: both; }
 .myidentity { font-size: 6pt; }
 
 /* NOTEs */
-.note { opacity: 0; }
-.note:hover { opacity: 1; }
-.note .note_unfocussed { display: block; }
-.note .note_wrapper textarea { display: none; }
-.note .note_cb:checked ~ div textarea { display: block; height: 10rem; width: 10rem; text-align: center; }
-.note .note_unfocussed, .note .note_wrapper { width: 10rem; height: 10rem; }
-.note .note_wrapper { transform: rotate(2deg); }
-.note div textarea { background: var(--background-functions); border: 1px dashed black; text-align:center; font-family: serif; }
-.note_blue,.note input.note_blue:checked ~ .note_wrapper textarea { background: lightblue; }
-.note_green,.note input.note_green:checked ~ .note_wrapper textarea { background: lightgreen; }
-.note_yellow,.note input.note_yellow:checked ~ .note_wrapper textarea { background: lightyellow; }
-.note_red,.note input.note_red:checked ~ .note_wrapper textarea { background: lightpink; }
+.note_edit { opacity: 0; }
+.note_edit:hover { opacity: 1; }
+.note_edit .note_unfocussed { display: block; }
+.note_edit .note_wrapper .textarea { display: none; }
+.note_edit .note_cb:checked ~ div .textarea { display: block; height: 10rem; width: 10rem; text-align: center; }
+.note_edit .note_unfocussed, .note .note_wrapper { width: 10rem; height: 10rem; }
+.note_edit .note_wrapper { transform: rotate(2deg); }
+.note div .textarea { background: var(--background-functions); border: 1px dashed black; text-align:center; font-family: serif; }
+.note_blue,.note input.note_blue:checked ~ .note_wrapper .textarea { background: lightblue; }
+.note_green,.note input.note_green:checked ~ .note_wrapper .textarea { background: lightgreen; }
+.note_yellow,.note input.note_yellow:checked ~ .note_wrapper .textarea { background: lightyellow; }
+.note_red,.note input.note_red:checked ~ .note_wrapper .textarea { background: lightpink; }
 .note_theme { background: repeating-linear-gradient(45deg,var(--background-functions),var(--background-functions) 0.1rem, #00000080 0.2rem); }
-.note input:checked { border: 2px solid black; }
+.note_choose input.note_all:checked ~ .note_wrapper label.note_all, .note_choose input.note_blue:checked ~ .note_wrapper label.note_blue, .note_choose input.note_green:checked ~ .note_wrapper label.note_green, .note_choose input.note_yellow:checked ~ .note_wrapper label.note_yellow, .note_choose input.note_red:checked ~ .note_wrapper label.note_red, .note_choose input.note_theme:checked ~ .note_wrapper label.note_theme { border-top: 2px solid black; }
 /* end of NOTES */
 
 input,select,textarea { font-size: 1rem;}

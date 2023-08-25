@@ -1,3 +1,10 @@
+#v1.7.15
+======
+24.08.2023
+
+* NOTEs can now be properly filtered; colors "alle" and empty textfield does not filter at all; if you want 
+  to get all entries with a note, choose every color (not "alle") and let the textfield empty
+
 #v1.7.14
 ======
 15.07.2023

@@ -52,6 +52,13 @@ function _cleanup($value,$separator = '<br />')
 		$values = json_decode($value,true);
 		//forget filepaths, take only filedescriptions
 		if ( isset($values[4001]) ) { $values = $values[4001]; }
+		//replace NOTE color names by their colors
+		$_cbcolors = array("blue","green","yellow","red","theme","_all");
+		if ( in_array($values[0],$_cbcolors) ) {
+			if ( $values[0] != '_all' ) {
+				$values[0]= "<span class=note_".$values[0].">&nbsp;&nbsp;&nbsp;</span>";
+			}
+		}
 		//format compound fields
 		if ( is_array($values[0]) ) {
 			$komma = '';
@@ -96,6 +103,9 @@ function _cleanup($value,$separator = '<br />')
 		$value = str_replace('"','',$value);
 		$value = str_replace(',',', ',$value);
 	}
+	//remove newline characters
+	$value = str_replace('\\r','',$value);
+	$value = str_replace('\\n',' ',$value);
 	return $value;
 }
 

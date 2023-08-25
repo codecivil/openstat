@@ -1,3 +1,10 @@
+#v1.7.15
+======
+
+* Es kann nun "richtig" nach Notizen gefiltert werden. Die Farbwauswahl "alle" zusammen mit einem leeren Textfeld ist die Grundeistellung und
+filtert nichts. Um alle Einträge mit einer Notiz zu bekommen, müssen alle Farben (nicht "alle") ausgewählt und das Textfeld leer gelassen werden.
+Bei ausgefülltem Textfeld besteht kein Unterschied zwischen "alle" und der Auswahl aller Farben.
+
 #v1.7.14
 ======
 

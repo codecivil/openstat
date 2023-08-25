@@ -439,7 +439,7 @@ function addSearchfield(el,rnd) {
 	var orig = parent.getElementsByClassName('searchfield')[0];
 	var _allinputs = orig.querySelectorAll('input,select,textarea');
 	_allinputs.forEach(	function(_input) { 
-		if ( ! _input.name.endsWith('[]') ) { _input.name += '[]'; }
+		if ( _input.name != '' && ! _input.name.endsWith('[]') ) { _input.name += '[]'; }
 	});
 	var clone = orig.cloneNode(true);
 	var _newinputs = clone.querySelectorAll('input,select,textarea');
@@ -588,7 +588,7 @@ function removeHelpField(evt) {
 
 function styleNotes() {
 	// implement the NOTEs position and sync
-	document.querySelectorAll('.note').forEach(function(_note){
+	document.querySelectorAll('.note_edit').forEach(function(_note){
 		_note.closest('.edit_wrapper').style.position = "sticky";
 		_note.closest('.edit_wrapper').style.top = "8rem";	
 		_note.closest('.edit_wrapper').style.display = "flex";	
@@ -605,6 +605,21 @@ function styleNotes() {
 		}
 	});	
 }
+
+function updateNoteColorsInput(el) {
+	if ( el.classList.contains('note_all') && el.checked) {
+		el.parentElement.querySelectorAll('.note_cb ~ .note_cb').forEach(note_cb => note_cb.checked = false);
+	} else {
+		el.parentElement.querySelector('.note_all').checked = false;
+	}
+	if ( el.parentElement.querySelectorAll('.note_cb:checked').length == 0 ) {  
+		el.parentElement.querySelector('.note_all').checked = true;
+	}
+	let _value = new Array();
+	el.parentElement.querySelectorAll('.note_cb:checked').forEach(_checked => { _value.push(_checked.value); });
+	el.parentElement.querySelector('.note_colors_input').value = JSON.stringify(_value);
+}
+
 //el: element whose functions child div shall be processed
 function processFunctionFlags(el) {
 	let functionList = el.querySelectorAll('.functions li label');

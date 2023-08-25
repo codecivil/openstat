@@ -330,9 +330,9 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<hr>
 		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); myScrollIntoView(document.getElementById('results_wrapper')); toggleHelpTexts(); return false; }); return false; ">
 			<input hidden id="formFiltersSearchInResults" type="checkbox" value="searchinresults" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_searchinresults); ?>>
-			<label for="formFiltersSearchInResults" class="unlimitedWidth"><i class="fas fa-list"></i></label>
+			<label for="formFiltersSearchInResults" class="unlimitedWidth" data-title="in Ergebnissen suchen"><i class="fas fa-list"></i></label>
 			<input hidden id="formFiltersComplement" type="checkbox" value="complement" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_complement); ?>>
-			<label for="formFiltersComplement" class="unlimitedWidth"><i class="fas fa-puzzle-piece"></i></label>
+			<label for="formFiltersComplement" class="unlimitedWidth" data-title="Komplement"><i class="fas fa-puzzle-piece"></i></label>
 			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>
@@ -811,7 +811,45 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 				} 				
 				$_WHERE .= ') ';
 			} // end of compound extra tests
-			if ( ! array_key_exists(1001,$values) AND ! array_key_exists(5001,$values) AND ! array_key_exists(6001,$values) )
+			elseif ( array_key_exists(7001,$values) ) 
+			{
+				//no multiple notes at the moment...
+				//unset($_stmt_tmp); $_stmt_tmp = array();
+				//$_stmt_tmp['stmt'] = "SELECT MAX(JSON_LENGTH(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`)) AS jsonlength FROM `view__" . $table . "__" . $_SESSION['os_role']."`";
+				//unset($_jsonlength);
+				//$_jsonlength = execute_stmt($_stmt_tmp,$conn)['result']['jsonlength'][0];
+				$_jsonlength = 2; //[color,note]
+				for ( $i = 0; $i < sizeof($values[7001]); $i++ )
+	//			foreach ($values[1001] as $index=>$value)
+				{
+		//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
+					//if ( ! isset($_jsonlength) OR $_jsonlength == 0 ) { $_jsonlength = 1; } 
+					$_WHERE .= $komma2.' (';
+					$komma3 = '';
+					$_nullallowed = false;
+					$_altnull = "";
+					if ( ! isset($values[7001][$i]) OR $values[7001][$i] == '' OR $values[7001][$i] == '["_all"]' ) { $values[7001][$i] = '["_all"]'; $_nullallowed = true; $_altnull = " OR true "; } //select all colors of notes; a bit dirty but quite short...
+					$_WHERE .= $komma3."((";
+					$_WHERE .= "(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[0]') ".$_negation." IN ('".implode("','",json_decode($values[7001][$i],true))."') ".$_altnull." )";
+					$_WHERE .= ')';
+					$komma2 = $_komma_date_multiple_inner;
+//						$komma2 = $_komma_date_inner;
+					$bracket = ')';
+					//_nullallowed is easier here, since '' < any string
+					$_nullallowed = false;
+					if ( ! isset($values[7002][$i]) OR  $values[7002][$i] == '' ) { $values[7002][$i] = ''; $_nullallowed = true; }
+					$_WHERE .= $komma2."(";
+					//the following line is wrong: must not be in but sth like IN LIKE... does REGEXP solve the problem?
+					$_WHERE .= "(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[1]') ".$_negation." REGEXP '".$values[7002][$i]."')";
+					if ( $_nullallowed ) { $_WHERE .= " OR ( `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` IS NULL ) "; }
+					$_WHERE .= '))';
+					$komma2 = $_komma_outer;
+					$komma3 = $_komma_date_multiple;
+					$bracket = ')';
+					$_WHERE .= ') ';
+				}			
+			} //end of NOTES filter
+			if ( ! array_key_exists(1001,$values) AND ! array_key_exists(5001,$values) AND ! array_key_exists(6001,$values)  AND ! array_key_exists(7001,$values) )
 			{
 				//no: just search json entry for searchterm, so no index 4001...
 				//FILESPATH searchable by filedescription field (4001)
