@@ -403,7 +403,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 						$_stmt_array['arr_values'][] = $key;
 						$_tmp_result = execute_stmt($_stmt_array,$conn)['result'];
 						$keyreadable[$key] = explode(': ',$_tmp_result['keyreadable'][0])[0];
-						$edittype[$tablekey] = $_tmp_result['edittype'][0];
+						$edittype[$tablekey] = explode('; ',$_tmp_result['edittype'][0])[0]; //for getting rid of modifiers (MULTIPLE or DERIVED)
 					}
 					$table_results .= '<div class="nextlevel"><div class="unique value header" onclick="_toggleStatColumn('.$ccount0.','.sizeof($result).')">'.$keyreadable[$key].'</div>'; $row_right .= '</div>';
 					$ccount0++;
