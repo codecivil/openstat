@@ -1,3 +1,9 @@
+#v1.7.16
+======
+05.09.2023
+
+* openStatAdmin: date model modifier DERIVED: default value expression is evaluated at each update and the field is ineditable
+
 #v1.7.15
 ======
 24.08.2023

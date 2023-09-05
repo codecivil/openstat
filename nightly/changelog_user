@@ -1,3 +1,9 @@
+#v1.7.16
+======
+
+* openStatAdmin: unbearbeitbere Felder, deren Wert sich aus anderen Feldern derselben Tabelle ableitet, sind mittels Datenmodellmodifikator
+  "DERIVED" implementierbar.
+
 #v1.7.15
 ======
 

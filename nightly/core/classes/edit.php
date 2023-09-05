@@ -207,7 +207,6 @@ class OpenStatEdit {
 		$_addclasses = '';
 		if ( ($_result['role']+$_result['parentrole']) % 4 > 1 ) { $_addclasses .= ' noupdate'; } else { $_addclasses .= ' update'; };
 		if ( ($_result['role']+$_result['parentrole']) % 8 > 3 ) { $_addclasses .= ' noinsert'; } else { $_addclasses .= ' insert'; };
-		
 		/// if restrictions are set, present them as closed list
 		if ( $_result['restrictrole'] != '' OR $_result['restrictparentrole'] != '' ) { $_result['edittype'] = 'LIST'; };
 		//
@@ -217,13 +216,15 @@ class OpenStatEdit {
 			$_maxlength = ' maxlength='.preg_replace('/\)/','',preg_replace('/VARCHAR\(/','',$_result['typelist'])).' ';
 		}
 		//
-		//separate MULTIPLE keyword, e.g. EXTENSIBLE LIST; MULTIPLE
+		//separate MULTIPLE and DERIVED keyword, e.g. EXTENSIBLE LIST; MULTIPLE
 		$_tmp_array = explode('; ',$_result['edittype']);
 		$_result['edittype'] = $_tmp_array[0];
 		//print_r($_tmp_array);
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'MULTIPLE' ) { $_result['multiple'] = true; } else { $_result['multiple'] = false; };
+		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'DERIVED' ) { $_result['derived'] = true; } else { $_result['derived'] = false; };
 		unset($_tmp_array);
-		//
+		//disable if derived
+		if ( $_result['derived'] ) { $_addclasses = " noupdate noinsert"; $_disabled = 'disabled'; } //values of derived fields are determined by other fields
 		//preliminary: compound structures
 		$_tmp_array = explode(' + ',$_result['edittype']);
 		$_result['edittype_array'] = $_tmp_array;

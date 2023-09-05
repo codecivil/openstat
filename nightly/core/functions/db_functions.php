@@ -269,6 +269,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 					$properkey = $properkey_array[sizeof($properkey_array)-1];
 					if ( $value == "_NULL_" OR $value == "0001-01-01" ) {
 						$set .= $komma . "`" . $properkey . "`= NULL";						
+						$komma = ","; //added 20230904; should be correct
 					} //added 20211014; enable entry removal by "_NULL_" or "0001-01-01"
 					else {
 						$set .= $komma . "`" . $properkey . "`= ?";
@@ -278,6 +279,16 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 						if ( substr($key,0,3) == 'id_') { $str_types .= "i"; } else { $str_types .= "s"; } //replace by a proper type query...
 					}
 				}
+			}
+			//get DERIVED fields:
+			unset($_stmt_array);
+			$_stmt_array= array();
+			$_stmt_array['stmt'] = "SELECT keymachine FROM ".$PARAMETER['table']."_permissions WHERE edittype LIKE '%; DERIVED'";
+			$_derivedkeys = execute_stmt($_stmt_array,$conn)['result']['keymachine'];
+			//set DERIVED defaults:
+			foreach($_derivedkeys as $derivedkey) {
+				$set .= $komma . "`" . $derivedkey . "` = DEFAULT(`" . $derivedkey . "`)";
+				$komma = ",";
 			}
 			$stmt = "UPDATE `view__" . $PARAMETER['table'] . "__" . $_SESSION['os_role']. "`" . $set . " WHERE id_".$PARAMETER['table']." IN (" . implode(',',json_decode($PARAMETER['id_'.$PARAMETER['table']])) . ");";
 			if ( sizeof(json_decode($PARAMETER['id_'.$PARAMETER['table']],true)) > 1 ) {
