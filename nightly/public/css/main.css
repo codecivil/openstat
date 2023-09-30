@@ -48,6 +48,11 @@ hr, .clear { clear: both; }
 .note_choose input.note_all:checked ~ .note_wrapper label.note_all, .note_choose input.note_blue:checked ~ .note_wrapper label.note_blue, .note_choose input.note_green:checked ~ .note_wrapper label.note_green, .note_choose input.note_yellow:checked ~ .note_wrapper label.note_yellow, .note_choose input.note_red:checked ~ .note_wrapper label.note_red, .note_choose input.note_theme:checked ~ .note_wrapper label.note_theme { border-top: 2px solid black; }
 /* end of NOTES */
 
+/* JSON */
+.JSON ul { list-style: none; background: white; border: 1px solid black; padding: 0.2rem; }
+.JSON ul ul { border: none;}
+/* end of JSON */
+
 input,select,textarea { font-size: 1rem;}
 input[type='checkbox'] + label, label.orand { position: relative; top: -0.2rem; }
 /*label:active { filter: invert(100%); transition: 0s ease; }*/

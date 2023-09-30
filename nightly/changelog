@@ -1,3 +1,10 @@
+#v1.7.17
+======
+23.09.2023
+
+* field functions are available now
+* emailTo as first standard field function (requires php and MTA configuration on server)
+
 #v1.7.16
 ======
 05.09.2023

@@ -599,6 +599,16 @@ function getFunctionConfig(string $functionname, mysqli $conn)
 	return $_config;
 }
 
+function getFunctionFlags(string $functionname, mysqli $conn)
+{
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "SELECT functionflags from os_functions where functionmachine = ?";
+	$_stmt_array['str_types'] = 's';
+	$_stmt_array['arr_values'] = array($functionname);
+	$_flags = json_decode(execute_stmt($_stmt_array,$conn,true)['result'][0]['functionflags'],true);
+	return $_flags;
+}
+
 function trafficLight(array $PARAM, mysqli $conn)
 {
 	$tables = $PARAM['table'];

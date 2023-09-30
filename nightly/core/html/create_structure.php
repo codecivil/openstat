@@ -1255,7 +1255,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$_stmt_array['stmt'] .= ", T.`id_".$_table."`";
 			}
 		$_stmt_array['stmt'] .= ",', @qry, ' FROM (SELECT 1 AS `subtable_".$_propertable."`) D CROSS JOIN ".$PARAMETER['parentmachine']." AS T WITH CHECK OPTION') INTO @qry2;";
-		file_put_contents('/var/www/test/openStat/mylog.txt',$_stmt_array['stmt'],FILE_APPEND);
+		//debug only: file_put_contents('/var/www/test/openStat/mylog.txt',$_stmt_array['stmt'],FILE_APPEND);
 		$conn->begin_transaction();
 		$conn->query("START TRANSACTION;");
 		$conn->query("SELECT GROUP_CONCAT(CONCAT('T.',keymachine) ORDER BY realid) INTO @qry FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$_propertable."';");

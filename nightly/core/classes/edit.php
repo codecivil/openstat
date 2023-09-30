@@ -741,6 +741,32 @@ class OpenStatEdit {
 							</div>
 						</div>
 						<?php break;
+					case 'JSON': //readonly data model
+						$default = preg_replace('/\n/',' ',$default);
+						$default = json_decode($default,true);
+						function _nest(array $obj) {
+							?>
+							<ul class="json">
+							<?php
+							foreach ( $obj as $_key => $_value ) {
+								?>
+								<li><b><?php html_echo($_key); ?>:</b>
+								<?php
+								if ( gettype($_value) == 'array' ) { _nest($_value); } else { html_echo($_value); }
+								?>
+								</li>
+							<?php
+							}
+							?>
+							</ul>
+							<?php
+						}
+						?>
+						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
+						<div <?php echo($_disabled.' '.$_onchange_text); ?> id="db_<?php echo($key.$rnd); ?>" class="db_formbox db_<?php echo($key.' '.$_result['edittype']); ?> "><?php _nest($default); ?></div>
+						<div class="clear"></div>
+						<?php
+						break;
 					default:
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>

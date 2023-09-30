@@ -1475,7 +1475,8 @@ function _FUNCTIONStatus(el,statusname) {
 		for ( let _condition of _conditions ) {
 			if ( _condition.depends_on_key != '' ) {
 				if ( el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])') ) {
-					value = el.closest('form').querySelector('.db_'+_condition.depends_on_key+':not([disabled])').value;
+					//take last item instead of first (changed at 2023-09-28)
+					value = [...el.closest('form').querySelectorAll('.db_'+_condition.depends_on_key+':not([disabled])')].slice(-1)[0].value;
 				} else {
 					value = '';
 				}

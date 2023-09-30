@@ -2,7 +2,8 @@
 /*
  * $PARAM is the form containing values of table entries
  * $trigger is the initial/changed status info of the function table entry
- * a FIELD function has parameters ($trigger,$PARAM,$conn)
+ * $config is the name of the key of the function config containing the used config; if '', then the whole config is used
+ * a FIELD function has parameters ($config,$trigger,$PARAM,$conn)
  * 
  * and may get profile info by invoking function getProfiles($conn,$profilefieldname='',$searchstring='',$public=false)
  * 
@@ -10,32 +11,30 @@
 */ 
 
 //specify headers like to, subject and body in config using $<TABLE>_<KEY> and $trigger[<STATUSNAME>][<KEY>] as placeholders
-function emailToClient($trigger,$PARAM,$conn) {
-	$_config = getFunctionConfig('emailTo',$conn);
-	$_flags = getFunctionFlags('emailTo',$conn); //to be implemented in os_functions.php
-	$_tmpconfig = array();
-	//determine whether an email has to be sent according to flags
-	//...(return if answer is no)
-	//replace placeholders
-	foreach ( $_config as $header => $value ) {
-		preg_match_all('/\$([^ ,]*)/',$value,$matches);
-		foreach ( $matches[1] as $pattern ) {
-			if ( isset($PARAM[$pattern]) ) {
-				$value = preg_replace('/'.$pattern.'/g',$PARAM[$pattern],$value);
-			}
-		}
-		preg_match_all('/\$trigger\[([^\]+]\]\[[^\]+])\]/',$value,$matches);
-		foreach ( $matches[1] as $pattern ) {
-			$pattern_array = explode('][',$pattern,2);
-			if ( isset($trigger[$pattern_array[0]][$pattern_array[1]]) ) {
-				$value = preg_replace('/\$trigger\['.$pattern.'\]/g',$trigger[$pattern_array[0]][$pattern_array[1]],$value);
-			}
-		}
-		$_tmpconfig[$header] = $value;
+//the field functions gets already preprocessed config!
+function emailTo(array $_config,array $trigger,array $PARAM,mysqli $conn) {
+	//this must be done at the very beginning of EVERY field function
+	//$_config contains the used function config after replacing placeholders by actual values
+	$_return = array('log' => '', 'js' => ''); //log and js may be objects; have to be returned by any field function
+	/* $result = FUNCTIONpreprocess(__FUNCTION__,$configname,$trigger,$PARAM,$conn);
+	if ( ! $result['success']['value'] ) {
+		$_return['log'] = __FUNCTION__ .': '.$result['success']['error']; 
+		$_return['js'] = 'Bitte dem Administrator melden: '.$result['success']['error'];
+		return $_return;
 	}
-	$_config = json_decode(json_encode($_tmpconfig),true);
-	unset($_tmpconfig);
+	*/
 	//construct and send e-mail
-	if ( sendmail($_config) ) { return "e-Mail wurde erfolgreich gesendet."; } else { return "e-Mail konnte nicht gesendet werden."; }
+	//$_config = $result['return'];
+	if ( sendmail($_config) ) {
+		$_return['status'] = "OK"; 
+		$_return['log'] = $_config; //to be changed
+		$_return['js'] = "e-Mail an ".$_config['To']." wurde erfolgreich gesendet."; 
+	} else {
+		$_return['status'] = "Fehler";
+		$_config['error'] = "e-Mail konnte nicht versendet werden.";
+		$_return['log'] = $_config; //to be changed
+		$_return['js'] = "e-Mail konnte nicht gesendet werden.";
+	}
+	return $_return;
 }
 ?>
