@@ -635,37 +635,47 @@ function trafficLight(array $PARAM, mysqli $conn)
 	
 	if (sizeof($tables) == 0) { return; }
 	// expand templates
-	function _expandTemplate($criterion) {
-		$expanded_criterion = json_decode(json_encode($criterion),true);
-		if ( isset($criterion['template']) ) {
-			$expanded_criterion = array();
-			//due to recursion inside the loop we need/must only to use the first template var here
-			foreach ( array_slice($criterion['template'],0,1,true) as $_template_var => $_template_values ) {
-				if ( is_string($_template_values) ) { $_template_values = range(explode('...',$_template_values)[0],explode('...',$_template_values)[1]); }
-				foreach ( $_template_values as $_template_value ) {
-					$expanded_criterion_instance = json_decode(str_replace('--'.$_template_var,$_template_value,json_encode($criterion)),true);
-					unset($expanded_criterion_instance['template'][$_template_var]);
-					if ( sizeof($expanded_criterion_instance['template']) == 0 ) { unset($expanded_criterion_instance['template']); }
-					//recursion: expand the remaining vars for this instance
-					$expanded_criterion_instance = _expandTemplate($expanded_criterion_instance);
-					//
-					$expanded_criterion[] = $expanded_criterion_instance;
+	// returns array of expanded criteria for one criterion
+	// replaces criterion by the array values in $parent if given
+
+
+	function _expandTemplate($criterialist) {
+		$expanded_criterialist = json_decode(json_encode($criterialist),true);
+		foreach ( $criterialist as $_index => $criterion ) {
+			$expanded_criterion = array($criterion);
+			if ( isset($criterion['template']) ) {
+				$expanded_criterion = array();
+				//due to recursion inside the loop we need/must only to use the first template var here
+				foreach ( array_slice($criterion['template'],0,1,true) as $_template_var => $_template_values ) {
+					if ( is_string($_template_values) ) { $_template_values = range(explode('...',$_template_values)[0],explode('...',$_template_values)[1]); }
+					foreach ( $_template_values as $_template_value ) {
+						$expanded_criterion_instance = json_decode(str_replace('--'.$_template_var,$_template_value,json_encode($criterion)),true);
+						unset($expanded_criterion_instance['template'][$_template_var]);
+						if ( sizeof($expanded_criterion_instance['template']) == 0 ) { unset($expanded_criterion_instance['template']); }
+						//recursion: expand the remaining vars for this instance
+						$expanded_criterion_instance_array = _expandTemplate(array($expanded_criterion_instance));
+						//
+						$expanded_criterion = array_merge($expanded_criterion,$expanded_criterion_instance_array);
+					}
 				}
 			}
+			//recursion: look if subcriteria have to be expanded
+			foreach ( $expanded_criterion as $_attribute => $_value ) {
+				if ( is_array($_value) ) { $expanded_criterion[$_attribute] = _expandTemplate($_value); }
+			}
+			//return the expanded criterion
+			if ( gettype($_index) == "integer" ) {
+				$expanded_index = array_search($criterion,$expanded_criterialist);
+				array_splice($expanded_criterialist,$expanded_index,1,$expanded_criterion);
+			}
 		}
-		//recursion: look if subcrteria have to be expanded
-		foreach ( $expanded_criterion as $_attribute => $_value ) {
-			if ( is_array($_value) ) { $expanded_criterion[$_attribute] = _expandTemplate($_value); }
-		}
-		//
-		
-		//return the expanded criterion
-		return $expanded_criterion;
+		return $expanded_criterialist;
 	}
 	
 	//expand the templates
 	$_config['criteria'] = _expandTemplate($_config['criteria']);
 	//end expand the templates
+	$rnd = rand(0,2147483647);
 	?>
 	<div class="imp_wrapper">
 		<div class="imp_close"><i class="fas fa-times-circle" onclick="_close(this,true);"></i></div>
@@ -706,6 +716,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 		<h2 class="center"><i class="fas fa-traffic-light"></i></h2>
 		<br />
 	<?php
+	$_SESSION['trafficLight'] = '[]';
 	foreach ( $tables as $table ) {
 		$ids = array(); $resultin = array(); $_param = array();
 		foreach ( $_config['criteria'] as $criterion ){
@@ -725,7 +736,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 			}
 		}
 		//save result as session variable (so we can use this when opening such an item)
-		$_SESSION['trafficLight'] = json_encode($ids);
+		$_SESSION['trafficLight'] = json_encode(array_merge(json_decode($_SESSION['trafficLight'],true),$ids));
 		//for debug: $_SESSION['trafficLight'] = '{"opsz_aufnahme": { "568": { "urgency": 2, "criteria": ["Test nicht bestanden"] } } }';
 		//
 		if ( sizeof($ids) > 0 ) {
@@ -891,7 +902,8 @@ function _parseCriterion(array $resultin, array $_param, array $criterion, array
 	//proper parsing
 	//the following only works for simple queries: fix it for multiple select, from, where and 'distinct'... keywords
 		$_where_array = preg_split('/ WHERE /i',$criterion['sql'],2);
-		$_where = $_where_array[1];
+		//added 2023-10-10
+		if ( isset($_where_array[1]) ) { $_where = $_where_array[1]; } else { $_where = ''; }
 		if ( isset($_where) AND $_where != '' ) { $_where = " WHERE ".$_where; }
 		$_from_array = preg_split('/ FROM /i',$_where_array[0],2);
 		$_from = $_from_array[1];
@@ -901,53 +913,61 @@ function _parseCriterion(array $resultin, array $_param, array $criterion, array
 		$_resultout = array (); $_param = array ();
 //was:		$_stmt_array['stmt'] = "SELECT id_".$criterion['table'].",".$_select." AS PARAM FROM view__".$_from."__".$_SESSION['os_role']." WHERE ".$_where." GROUP BY id_".$criterion['table']." ORDER BY PARAM DESC";
 		$_stmt_array['stmt'] = "SELECT id_".$criterion['table'].",".$_select." AS PARAM FROM ".$_from.$_where." GROUP BY id_".$criterion['table']." ORDER BY PARAM DESC";
-		foreach ( execute_stmt($_stmt_array,$conn,true)['result'] as $_maybe ) {
-			$value = $_maybe['PARAM'];
-			if ( $key == 'id_'.$criterion['table'] ) { continue; }
-			$_push = false;
-			switch($criterion['relation']) {
-				case '>':
-					if ( $value > $criterion['benchmark'] ) { $_push = true; }
-					break;
-				case '>=':
-					if ( $value >= $criterion['benchmark'] ) { $_push = true; }
-					break;
-				case '<':
-					if ( $value < $criterion['benchmark'] ) { $_push = true; }
-					break;
-				case '<=':
-					if ( $value <= $criterion['benchmark'] ) { $_push = true; }
-					break;
-				case '=':
-					if ( $value == $criterion['benchmark'] ) { $_push = true; }
-					break;
-				case '!=':
-					if ( $value != $criterion['benchmark'] ) { $_push = true; }
-					break;
-				case 'contains':
-					if ( strpos($value,$criterion['benchmark']) ) { $_push = true; }
-					break;
-				case 'beginswith':
-					if ( strpos($value,$criterion['benchmark']) == 0 ) { $_push = true; }
-					break;
-				case 'endswith':
-					if ( strpos($value,$criterion['benchmark']) == strlen($value) - strlen($criterion['benchmark']) ) { $_push = true; }
-					break;
-				case 'notcontains':
-					if ( ! strpos($value,$criterion['benchmark']) ) { $_push = true; }
-					break;
-				case 'notbeginswith':
-					if ( strpos($value,$criterion['benchmark']) !== 0 ) { $_push = true; }
-					break;
-				case 'notendswith':
-					if ( strpos($value,$criterion['benchmark']) !== strlen($value) - strlen($criterion['benchmark']) ) { $_push = true; }
-					break;
-			}
-			if ( $_push ) { 
-				array_push($_resultout,$_maybe['id_'.$criterion['table']]);
-				if ( isset($criterion['display']) ) {
-					//need non-numeric keys for array_merge to do what we want
-					$_param['id'.$_maybe['id_'.$criterion['table']]] .= $value.' '.$criterion['display'];
+		$_return = execute_stmt($_stmt_array,$conn,true);
+		if ( isset($_return['result']) ) { 
+			foreach ( $_return['result'] as $_maybe ) {
+				$value = $_maybe['PARAM'];
+				//what was this for? residue of a loop?
+				//if ( $key == 'id_'.$criterion['table'] ) { continue; }
+				$_push = false;
+				switch($criterion['relation']) {
+					case '>':
+						if ( $value > $criterion['benchmark'] ) { $_push = true; }
+						break;
+					case '>=':
+						if ( $value >= $criterion['benchmark'] ) { $_push = true; }
+						break;
+					case '<':
+						if ( $value < $criterion['benchmark'] ) { $_push = true; }
+						break;
+					case '<=':
+						if ( $value <= $criterion['benchmark'] ) { $_push = true; }
+						break;
+					case '=':
+						if ( $value == $criterion['benchmark'] ) { $_push = true; }
+						break;
+					case '!=':
+						if ( $value != $criterion['benchmark'] ) { $_push = true; }
+						break;
+					case 'contains':
+						if ( strpos($value,$criterion['benchmark']) ) { $_push = true; }
+						break;
+					case 'beginswith':
+						if ( strpos($value,$criterion['benchmark']) == 0 ) { $_push = true; }
+						break;
+					case 'endswith':
+						if ( strpos($value,$criterion['benchmark']) == strlen($value) - strlen($criterion['benchmark']) ) { $_push = true; }
+						break;
+					case 'notcontains':
+						if ( ! strpos($value,$criterion['benchmark']) ) { $_push = true; }
+						break;
+					case 'notbeginswith':
+						if ( strpos($value,$criterion['benchmark']) !== 0 ) { $_push = true; }
+						break;
+					case 'notendswith':
+						if ( strpos($value,$criterion['benchmark']) !== strlen($value) - strlen($criterion['benchmark']) ) { $_push = true; }
+						break;
+				}
+				if ( $_push ) { 
+					array_push($_resultout,$_maybe['id_'.$criterion['table']]);
+					if ( isset($criterion['display']) ) {
+						//need non-numeric keys for array_merge to do what we want
+						if ( isset($_param['id'.$_maybe['id_'.$criterion['table']]]) ) {
+							$_param['id'.$_maybe['id_'.$criterion['table']]] .= $value.' '.$criterion['display'];
+						} else {
+							$_param['id'.$_maybe['id_'.$criterion['table']]] = $value.' '.$criterion['display'];
+						}
+					}
 				}
 			}
 		}
@@ -994,8 +1014,14 @@ function unlock(array $PARAM, ?mysqli $conn) {
 }
 
 //thanks to https://newbedev.com/php-function-to-generate-v4-uuid and https://www.uuidgenerator.net/dev-corner/php
-function uuid() {
-    $data = random_bytes(16);
+function uuid(string $seed='') {
+	//if seed given, make it exactly 16 bytes
+	if (isset($seed) AND strlen($seed) > 0) {
+		$data = substr($seed,0,16);
+		while ( strlen($data) < 16 ) { $data = substr($data.'#'.$data,0,16); }		
+	} else {
+		$data = random_bytes(16);
+	}
 	$data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
 	$data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
 	return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
@@ -1100,4 +1126,16 @@ function updateProfile(array $PARAM, mysqli $conn) {
 		$_result = _execute_stmt($_stmt_array,$conn);
 	}
 	return json_encode($_result);
+}
+
+function datetime2icsTime(string $_datetime) {
+	preg_match('/(\d*)\.(\d*)\.(\d*)/',$_datetime,$matches);
+	if ( isset($matches[1]) ) {
+		$_datetime = str_replace($matches[0],$matches[3].$matches[2].$matches[1],$_datetime);
+	}
+	return str_replace('-','',str_replace(':','',str_replace(' ','T',$_datetime)));
+}
+
+function randomString(int $length) {
+	return substr(str_replace('["+","/","="]','o',base64_encode(random_bytes(floor(0.75*$length)+1))),0,$length);
 }

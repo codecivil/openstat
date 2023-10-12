@@ -743,6 +743,7 @@ class OpenStatEdit {
 						<?php break;
 					case 'JSON': //readonly data model
 						$default = preg_replace('/\n/',' ',$default);
+						//$default = preg_replace('/\\/','',$default);
 						$default = json_decode($default,true);
 						function _nest(array $obj) {
 							?>
@@ -1173,7 +1174,7 @@ class OpenStatEdit {
 								for ( $i = 0; $i < sizeof($checked[1001]); $i++ ) {
 									//roll dates if set
 									foreach ( [1004,1005] as $_roll ) {
-										if ( isset($checked[$_roll][$i]) AND $checked[$_rol][$i] != "none" AND isset($checked[1006][$i]) ) {
+										if ( isset($checked[$_roll][$i]) AND $checked[$_roll][$i] != "none" AND isset($checked[1006][$i]) ) {
 											switch($checked[$_roll][$i]) {
 												case "day":
 													$_difftime = floor(time()/86400)*86400-DateTime::createFromFormat('Y-m-d',$checked[1006][$i])->format('U');

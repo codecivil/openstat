@@ -105,7 +105,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 			}
 			//replace fields
 			unset($matches);
-			preg_match_all('/\$([^ ,\$]*)/',$value,$matches);
+			preg_match_all('/\$([^ ,\$\"\'\.\;\:\!\?]*)/',$value,$matches);
 			$need = array("select" => array(), "from" => array("view__".$PARAM['table']."__".$_SESSION['os_role']), "on" => array(), "where" => array());
 			foreach ( $matches[1] as $pattern ) {
 				if ( strpos($pattern,'PROFILE') === 0 ) { $needProfiles = true; continue; }
@@ -120,8 +120,8 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					} else {
 						//$value = preg_replace('/\$'.$pattern.'/','(ungesetzt)',$value);
 						//better: get that value; this makes it compatible to mass editing
-						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern) ) { $need['select'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern; }
-						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')') ) { $need['where'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')'; }					
+						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern,$need['select']) ) { $need['select'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern; }
+						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')',$need['where']) ) { $need['where'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')'; }					
 					}
 				}
 			}
@@ -387,17 +387,23 @@ function similarity(string $string1,string $string2) {
 
 //sends mail as txt and html with customer logo
 function sendmail(array $headers) {
+	$boundary = '=-'.randomString(24);
+	$boundary_text = '=-'.randomString(24);
 	$additional_headers = array(
-		"Content-Type"  => "multipart/alternative; boundary=\"=-nEwq7ZLdmq7gg7KoqWYj\"",
+//		"Content-Type"  => "multipart/alternative; boundary=\"=-nEwq7ZLdmq7gg7KoqWYj\"",
+		"Content-Type"  => "multipart/mixed; boundary=\"".$boundary."\"",
 		"MIME-Version" => "1.0"
 	);
 	$argument = array();
 	$argument[2] = <<< EndOfBody
---=-nEwq7ZLdmq7gg7KoqWYj
+--_boundary_
+Content-Type: multipart/alternative; boundary="_boundary_inner_";
+
+--_boundary_inner_
 Content-Type: text/plain; charset="UTF-8"
 
 _body.txt_
---=-nEwq7ZLdmq7gg7KoqWYj
+--_boundary_inner_
 Content-Type: text/html; charset="utf-8"
 
 <!DOCTYPE html>
@@ -415,7 +421,8 @@ Content-Type: text/html; charset="utf-8"
 </div>
 </body>
 </html>
---=-nEwq7ZLdmq7gg7KoqWYj--
+--_boundary_inner_--
+
 EndOfBody;
 	foreach ( $headers as $header => $value ) {
 		$processed = false;
@@ -425,10 +432,30 @@ EndOfBody;
 			$argument[2] = str_replace('_body.txt_',$value,$argument[2]);
 			$argument[2] = str_replace('_body.html_',preg_replace('/[\r\n]+/','</p><p>',$value),$argument[2]);
 			$argument[2] = str_replace('_logo.b64_',base64_encode(file_get_contents('../../vendor/img/logo.png')),$argument[2]);
-			$value; $processed = true;
+			$processed = true;
+		}
+		if ( $header == "Attachment" ) {
+			$attach = <<< EndOfBody
+--_boundary_
+Content-Type: _mimetype_; charset="utf-8"; method=REQUEST; name="_filename_"
+Content-Disposition: attachment; filename="_filename_"
+Content-Transfer-Encoding: base64
+
+_attachmentbody_
+
+EndOfBody;
+			$attach = str_replace('_mimetype_',$value['mimetype'],$attach);
+			$attach = str_replace('_filename_',$value['filename'],$attach);
+			$attach = str_replace('_attachmentbody_',base64_encode($value['body']),$attach);
+//			$attach = str_replace('_attachmentbody_',json_encode($value),$attach);
+			$argument[2] .= $attach;
+			$processed = true;
 		}
 		if ( ! $processed ) { $additional_headers[$header] = $value; }
 	}
+	$argument[2] .= '--_boundary_--';
+	$argument[2] = str_replace('_boundary_inner_',$boundary_text,$argument[2]);
+	$argument[2] = str_replace('_boundary_',$boundary,$argument[2]);
 	return mail($argument[0],$argument[1],$argument[2],$additional_headers);
 }
 ?>

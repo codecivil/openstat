@@ -27,9 +27,9 @@ mysqli_set_charset($conn,"utf8");
 
 //get user's fileroot
 $_config = getConfig($conn);
-$_fileroot = $_config['fileroot'];
 $conn->close();
 
+if ( isset($_config['fileroot']) ) { $_fileroot = $_config['fileroot']; } else { $_fileroot = ''; }
 if ( isset($_fileroot) AND $_fileroot != '' ) { $fileroot .= '/'.$_fileroot; }
 //scan fileserverdir, go one level deeper with every clicked dir, select file at last
 //save current path in div?

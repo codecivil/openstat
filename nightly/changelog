@@ -1,9 +1,16 @@
 #v1.7.17
 ======
-23.09.2023
+11.10.2023
 
 * field functions are available now
+* they log to os_events which is a system table AND a user table and thus has to be created by a script import (s. below)
 * emailTo as first standard field function (requires php and MTA configuration on server)
+* openStatAdmin: script import available; e.g. for new structures interacting with user tables
+  calls links with GET instead of POST parameters and thus executes all necessary steps automatically
+  (if implemented in sql import the vendor has to know all user tables in advance, e.g. for adding new id_ entries, so via sql
+  import you cannot serve different table schemes)
+* fix in template treatment in function configs
+* smaller fixes here und there
 
 #v1.7.16
 ======

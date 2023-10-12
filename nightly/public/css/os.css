@@ -29,8 +29,8 @@ input[type="button"] { margin: 0 auto; float: left; }
 #backbtn { display: none; }
 
 #message { margin: 0 auto; }
-#message.true { background: var(--background-goodmessage); color: #000000; }
-#message.false { background: var(--background-badmessage); color: #ffffff; }
+#message.true, .message.true { background: var(--background-goodmessage); color: #000000; }
+#message.false, .message.false { background: var(--background-badmessage); color: #ffffff; }
 
 #title {
 	text-align: center;

@@ -2,6 +2,8 @@
 ======
 
 * openStatAdmin: Feldfunktionen können nun eingesetzt werden; emailTo ist als erste Standardfeldfunktion verfügbar.
+* openStatAdmin: Scriptimport implementiert
+* Templates in Funktionskonfigurationen repariert (betrifft z.B. Ampelfunkion)
 
 #v1.7.16
 ======

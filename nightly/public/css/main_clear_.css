@@ -300,7 +300,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 	background: var(--background-body-transparent);
 	width: auto;
 }
-#wrapper_handle:hover + #wrapper, #wrapper:hover, #wrapper:focus-within { left: 0; right: initial; width: auto; overflow-x: hidden; }
+#wrapper_handle:hover + #wrapper, #wrapper:hover, #wrapper:focus-within, #wrapper.hover { left: 0; right: initial; width: auto; overflow-x: hidden; }
 #sidebar {float: left; font: 0.7rem sans-serif; padding: 0.2rem; color: var(--color-sidebar); }
 #sidebar .form { display: none; border: 1px solid black; border-radius: 5px; padding: 0.2rem; }
 #sidebar .toggle:checked ~ .form { display: block; }

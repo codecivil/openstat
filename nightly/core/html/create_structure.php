@@ -7,7 +7,8 @@ require_once('../../core/classes/auth.php');
 require_once('../../core/functions/db_functions.php');
 require_once('../../core/functions/frontend_functions.php');
 require_once('../../core/functions/display_functions.php');
-
+require_once('../../settings.php');
+require_once('../../core/data/debugdata.php');
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="de-DE">
@@ -1427,6 +1428,24 @@ function recreateView(string $_propertable, mysqli $conn) {
 	}
 }
 
+//currently, this function is unused; in futurre this should log the script import in osadm_sqlimport (better: call it osadm_import)
+function importScript(array $PARAMETER, mysqli $conn) {
+	if ( ! isset($PARAMETER['scriptfile']) ) { return; }
+	if ( $_return['dbMessageGood'] == 'true' ) { $_return['dbMessage'] = "Import erfolgreich. "; }
+	// log import and result in osadm_sqlimport
+	unset($_stmt_array); $_stmt_array = array();
+	$_stmt_array['stmt'] = "INSERT INTO osadm_sqlimport (sqlfilename,importresult) VALUES (?,?) ON DUPLICATE KEY UPDATE sqlfilename=?, importresult=?;";
+	$_stmt_array['str_types'] = "ssss";
+	$_stmt_array['arr_values'] = array();
+	$_stmt_array['arr_values'][] = $PARAMETER['scriptfile'];
+	$_stmt_array['arr_values'][] = $_return['dbMessage'];	
+	$_stmt_array['arr_values'][] = $PARAMETER['scriptfile'];
+	$_stmt_array['arr_values'][] = $_return['dbMessage'];	
+	execute_stmt($_stmt_array,$conn); 
+	//
+	return $_return;
+}
+
 function importSQL(array $PARAMETER,mysqli $conn) {
 	if ( ! isset($PARAMETER['sqlfile']) ) { return; }
 	$_return = array('dbMessage' => '', 'dbMessageGood' => 'true');
@@ -1478,7 +1497,7 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 	$conn->query("START TRANSACTION;");
 	foreach( $_sqllines  as $_index => $_sqlline ) {
 		$_lineno = $_index + 1;
-		if (substr(trim($_sqlline), 0, 1) != '#' AND substr(trim($line), 0, 2) != '--') {
+		if (substr(trim($_sqlline), 0, 1) != '#' AND substr(trim($_sqlline), 0, 2) != '--') {
 			$_tmpline .= $_sqlline;
 		}
 		if (substr(trim($_tmpline), -1, 1) == ';') {
@@ -1504,6 +1523,7 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 }
 
 $result_sql = importSQL($PARAMETER,$conn);
+//$result_script = importScript($PARAMETER,$conn);
 $result_admin_before = _adminActionBefore($PARAMETER,$conn);
 $result_array = _dbAction($PARAMETER,$conn);
 $result_admin_after = _adminActionAfter($PARAMETER,$conn);
@@ -1583,6 +1603,7 @@ $tableel .= "</table>";
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_functions"><i class="fas fa-briefcase" title="Funktionen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_secrets"><i class="fas fa-mask" title="Geheimnisse"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_sql"><i class="fas fa-database" title="SQL Import"></i></a></li>
+			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_script"><i class="fas fa-scroll" title="Script Import"></i></a></li>
 			<li class="separate"></li>
 			<li>
 				<a>
@@ -1653,6 +1674,46 @@ $tableel .= "</table>";
 				$_content = preg_replace('/\n/','<br />',file_get_contents('../../sql/'.$_sqlfile));
 				?>
 				<div class="sqlfile hidden" id="<?php html_echo(preg_replace('/\./','',$_sqlfile)); ?>"><?php echo($_content); ?></div>
+				<?php
+			}
+			break;
+		case 'os_script':
+			$_scripts = scandir('../../scripts',SCANDIR_SORT_DESCENDING);
+			$_warning = "Importieren Sie nur Script-Dateien, denen Sie vertrauen!";
+			?>
+			<div id="message" class="<?php echo($result_script['dbMessageGood']); ?>"><?php echo($result_script['dbMessage']); ?></div>
+			<form id="script_options" method="POST" action="" onsubmit="importScript(); return false;">
+				<fieldset>
+					<legend>Script-Import</legend>
+					<label for="submitScript" class="reset">Importieren</label>
+					<input id="submitScript" type="submit" class="db_formbox" hidden>
+					<br><br>
+					<div class="warning"><?php echo($_warning); ?></div>
+					<select class="db_formbox" name="scriptfile" onchange="_displayFile(this.value)">
+						<option value="_none_">[Bitte Datei wählen]</option>
+ 						<?php
+ 						foreach ( $_scripts as $_scriptfile ){
+							$_title = ''; $_date = '';
+							$osadm_index = false;
+							if ( is_array($osadm_result) ) {$osadm_index = array_search($_scriptfile,$osadm_result['sqlfilename']); }
+							if ( $osadm_index !== false ) {
+								$_date = ': importiert am '.DateTime::createFromFormat('Y-m-d H:i:s', $osadm_result['importtimestamp'][$osadm_index])->format('d.m.Y');
+								$_title = $osadm_result['importresult'][$osadm_index];
+							}
+ 						?>
+							<option value="<?php html_echo($_scriptfile); ?>" title="<?php html_echo($_title); ?>"><?php html_echo($_scriptfile.$_date); ?></option>
+						<?php	
+						}
+						?>
+					</select>
+				</fieldset>
+			</form>
+			<?php
+			foreach ( $_scripts as $_scriptfile ){
+				//$_content = file_get_contents('../../sql/'.$_sqlfile);
+				$_content = '<div class="scriptline">'.preg_replace('/\n/','</div><div class="scriptline">',file_get_contents('../../scripts/'.$_scriptfile)).'</div>';
+				?>
+				<div class="scriptfile hidden" id="<?php html_echo(preg_replace('/\./','',$_scriptfile)); ?>"><?php echo($_content); ?></div>
 				<?php
 			}
 			break;

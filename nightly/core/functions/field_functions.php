@@ -24,17 +24,84 @@ function emailTo(array $_config,array $trigger,array $PARAM,mysqli $conn) {
 	}
 	*/
 	//construct and send e-mail
+	//handle attachments: set internal header "Attachment" to process what and how to attach
+	//currently, only ICS-generator
+	if ( isset($_config['Attachment']) ) {
+		if ( strpos($_config['Attachment'],'ics(') === 0 ) {
+			$_attach = json_decode(str_replace(')','',str_replace('ics(','',$_config['Attachment'])),true);
+			if ( isset($_attach) and $_attach != null ) {
+				//get uid in proper uuid form (and do not leak internal openStat data...)
+				if ( isset($_attach['uid']) ) { $_attach['uid'] = uuid($_attach['uid']); }
+				$_ics = _generateICS($_attach);
+				//modify Body...
+				if ( isset($_ics) AND $_ics != '' ) {
+					$_config['Attachment'] = array("mimetype" => "text/calendar", "filename" => $_attach['uid'].'.ics', "body" => $_ics);
+				} else {
+					unset($_config['Attachment']);
+				}
+			} else {
+				unset($_config['Attachment']);
+			}			
+		}
+	}
 	//$_config = $result['return'];
+	$_return['log'] = array( "From" => $_config['From'], "To" => $_config['To'], "Subject" => $_config['Subject'], "Body" => $_config['Body']);
+	if ( isset($_config['Attachment']) ) {
+		$_return['log']['Anhang'] = $_config['Attachment']['filename'];
+	}
 	if ( sendmail($_config) ) {
 		$_return['status'] = "OK"; 
-		$_return['log'] = $_config; //to be changed
 		$_return['js'] = "e-Mail an ".$_config['To']." wurde erfolgreich gesendet."; 
 	} else {
 		$_return['status'] = "Fehler";
-		$_config['error'] = "e-Mail konnte nicht versendet werden.";
-		$_return['log'] = $_config; //to be changed
+		$_return['log']['error'] = "e-Mail konnte nicht versendet werden.";
 		$_return['js'] = "e-Mail konnte nicht gesendet werden.";
 	}
 	return $_return;
+}
+
+function _generateICS(array $_ics_array) {
+	//retun nothing if start or end time is not set
+	if ( ! isset($_ics_array['dtstart']) ) { return; }
+	if ( ! isset($_ics_array['dtend']) ) { return; }
+	//
+	$_body = "BEGIN:VCALENDAR
+VERSION:2.0
+CALSCALE:GREGORIAN
+PRODID:-//openstat//openStat-v1.7.17+//DE
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
+END:STANDARD
+END:VTIMEZONE
+";
+	$_created = date('Ymd\Thms');
+	if ( ! isset($_ics_array['uid']) ) { $_ics_array['uid'] = uuid(); }
+	if ( ! isset($_ics_array['summary']) ) { $_ics_array['summary'] = ''; }
+	$_body .= "BEGIN:VEVENT
+CREATED:".$_created."
+LAST-MODIFIED:".$_created."
+UID:".$_ics_array['uid']."
+DTSTAMP:".$_created."
+SUMMARY:".$_ics_array['summary']."
+DTSTART;TZID=Europe/Berlin:".datetime2icsTime($_ics_array['dtstart'])."
+DTEND;TZID=Europe/Berlin:".datetime2icsTime($_ics_array['dtend'])."
+TRANSP:OPAQUE
+END:VEVENT
+";
+	$_body .= "END:VCALENDAR";
+	return $_body;
 }
 ?>

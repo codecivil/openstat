@@ -5,6 +5,7 @@ function allowDrop(ev) {
 function drag(ev) {
     ev.dataTransfer.setData("text", ev.target.id);
     ev.target.style.opacity="0.5";
+    document.querySelector('#wrapper').classList.add('hover');
 }
 
 function dragOnDetails(ev) {
@@ -25,6 +26,7 @@ function dragend(ev) {
 //    ev.target.style.margin="0 0 0 0";	
     var data = ev.dataTransfer.getData("text");
     if (document.getElementById(data)) {document.getElementById(data).style.opacity="1";}
+    setTimeout(function(){document.querySelector('#wrapper').classList.remove('hover');},1000);
 }
 
 function drop(ev,el) {
@@ -36,6 +38,7 @@ function drop(ev,el) {
 //	ev.target.parentNode.insertBefore(document.getElementById(data),ev.target);
 	el.parentNode.insertBefore(document.getElementById(data),el);
 	updateTime(el);
+    setTimeout(function(){document.querySelector('#wrapper').classList.remove('hover');},1000);
 }
 
 function dropOnDetails(ev,el) {
