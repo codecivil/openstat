@@ -1,10 +1,11 @@
+# DO NOT SUBMIT EMPTY FIELDS! SORRY!
 #
 # create os_events as ineditable user table with 
 # select and insert permissions for all
 # (without insert permission also the function cannot insert logs)
 #
-?table=os_tables&iconname=circle-exclamation&tablemachine=os_events&tablereadable=Ereignisse&allowed_roles=%5B0%5D&delete_roles=%5B%5D&displayforeign=&tietotables=&parentmachine=&calendarfields=&identifiers=&dbAction=insert
-?table=os_events_permissions&keymachine=eventlog&keyreadable=Log&subtablemachine=&realid=5.000&typelist=TEXT&edittype=JSON&defaultvalue=&referencetag=&role_0=2&restrictrole_0=&dbAction=insert
-?table=os_events_permissions&keymachine=eventdate&keyreadable=Datum&subtablemachine=&realid=4.500&typelist=DATETIME&edittype=DATETIME&defaultvalue=(CONCAT(CURRENT_DATE()%2C'%20'%2CCURRENT_TIME()))&referencetag=&role_0=2&restrictrole_0=&dbAction=insert
-?table=os_events_permissions&dbAction=insert&keymachine=eventstatus&keyreadable=Status&subtablemachine=&realid=4.000&typelist=VARCHAR(8)&edittype=TEXT&defaultvalue=&referencetag=&role_0=2&restrictrole_0=
-?table=os_events_permissions&dbAction=insert&keymachine=eventfunction&keyreadable=Funktion&subtablemachine=&realid=4.700&typelist=VARCHAR(40)&edittype=TEXT&defaultvalue=&referencetag=&role_0=2&restrictrole_0=
+?table=os_tables&iconname=circle-exclamation&tablemachine=os_events&tablereadable=Ereignisse&allowed_roles=%5B0%5D&delete_roles=%5B%5D&dbAction=insert
+?table=os_events_permissions&keymachine=eventlog&keyreadable=Log&realid=5.000&typelist=TEXT&edittype=JSON&role_0=2&dbAction=insert
+?table=os_events_permissions&keymachine=eventdate&keyreadable=Datum&realid=4.500&typelist=DATETIME&edittype=DATETIME&defaultvalue=(CONCAT(CURRENT_DATE()%2C'%20'%2CCURRENT_TIME()))&role_0=2&dbAction=insert
+?table=os_events_permissions&dbAction=insert&keymachine=eventstatus&keyreadable=Status&realid=4.000&typelist=VARCHAR(8)&edittype=TEXT&referencetag=&role_0=2
+?table=os_events_permissions&dbAction=insert&keymachine=eventfunction&keyreadable=Funktion&realid=4.700&typelist=VARCHAR(40)&edittype=TEXT&role_0=2
