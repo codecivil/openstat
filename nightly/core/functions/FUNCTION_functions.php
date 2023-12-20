@@ -53,7 +53,35 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 					//execute only if a entry was inserted
 					if ( $PARAM['dbAction'] == "edit" ) { $_goon = true; }
 				}
-				$_goon = ( $_goon == $_onflag ); //go on if there is no ON*-flag or if any ON-flag-condition has evaluated to true
+				//test for ONTABLES array:
+				$_ontables = true;
+				if ( ! empty(array_filter($_flags, function($value) { return is_array($value); })) ) {
+					foreach ( array_filter($_flags, function($value) { return is_array($value); }) as $_flagarray ) {
+						foreach ( $_flagarray as $_flagname => $_flagvalue ) {
+							if ( $_flagname == "ONTABLES" AND is_array($_flagvalue) ) {
+								//$_flagvalue can either be a list of tablemachines or an array with confignames as keys and lists of 
+								//tablemachines as values
+								//case: no confignames
+								if ( ! isset($_flagvalue[$configname]) ) {
+									foreach ( $_flagvalue as $_flagtable ) {
+										if ( ! isset($PARAM['id_'.$_flagtable]) OR $PARAM['id_'.$_flagtable] == '' ) {
+											$_ontables = false;
+										}
+									}
+								} else {
+									foreach ( $_flagvalue[$configname] as $_flagtable ) {
+										if ( ! isset($PARAM['id_'.$_flagtable]) OR $PARAM['id_'.$_flagtable] == '' ) {
+											$_ontables = false;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				
+				$_goon = ( $_goon == $_onflag ) AND $_ontables; // go on if there is no ON*-flag or if any ON-flag-condition has evaluated to true
+																// and all necessary tables are activated
 				if ( ! $_goon ) { continue; } //pun intended
 				//save origingal PARAM
 				$ORIGPARAM = json_decode(json_encode($PARAM),true);
@@ -65,13 +93,16 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 					$result = FUNCTIONpreprocess($function,$configname,$param,$PARAM,$conn);
 					if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($GLOBALS["debugpath"].$GLOBALS["debugfilename"],__FUNCTION__ .json_encode($result).PHP_EOL,FILE_APPEND); }
 					if ( ! $result['success']['value'] ) {
-						$_return['log'] = $function .': '.$result['success']['error']; 
+						$_return['status'] = "Fehler";
+						$_return['log'] = array("Error" => $result['success']['error']); 
 						$_return['js'] = 'Bitte dem Administrator melden: '.$result['success']['error'];
-						return $_return;
+						$return = $_return;
+						//return $_return;
+					} else {
+						$config = $result['return'];
+						//execute function
+						$return = $function($config,$param,$PARAM,$conn);
 					}
-					$config = $result['return'];
-					//execute function
-					$return = $function($config,$param,$PARAM,$conn);
 					//log event
 					FUNCTIONeventlog($function,$return,$PARAM,$conn);
 					//prepare pass to js
@@ -92,8 +123,8 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 	foreach ( $_config as $header => $value ) {
 		if ( gettype($value) == "array" ) { $value = FUNCTIONreplacePlaceholders($value,$trigger,$PARAM,$conn); }
 		else {
-			$needProfiles = false; //initialize if we need to look up orofiles
-			//reolace triggers
+			$needProfiles = false; //initialize if we need to look up profiles
+			//replace triggers
 			preg_match_all('/\$trigger\[([^\]]+\]\[[^\]]+)\]/',$value,$matches);
 			foreach ( $matches[1] as $pattern ) {
 				$pattern_array = explode('][',$pattern,2);
@@ -105,7 +136,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 			}
 			//replace fields
 			unset($matches);
-			preg_match_all('/\$([^ ,\$\"\'\.\;\:\!\?]*)/',$value,$matches);
+			preg_match_all('/\$([^ ,\$\"\'\.\;\:\!\?\)]*)/',$value,$matches);
 			$need = array("select" => array(), "from" => array("view__".$PARAM['table']."__".$_SESSION['os_role']), "on" => array(), "where" => array());
 			foreach ( $matches[1] as $pattern ) {
 				if ( strpos($pattern,'PROFILE') === 0 ) { $needProfiles = true; continue; }
@@ -132,7 +163,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 				$stmt_array['stmt'] = "SELECT DISTINCT " . implode(',',$need['select']) . " FROM " . implode(' LEFT JOIN ',$need['from']) . " WHERE " . implode(' AND ',$need['where']); 
 				$foreignfields = execute_stmt($stmt_array,$conn,true);
 				if (! isset($foreignfields['result'])) {
-					$success['value'] == false; $success['error'] = __FUNCTION__ . ": Ein oder mehrere Felder konnten nicht gelesen werden.";
+					$success['value'] = false; $success['error'] = __FUNCTION__ . ": Ein oder mehrere Felder konnten nicht gelesen werden";
 				} else {
 					$foreignfields = $foreignfields['result'][0]; //multiple ids are handled by FUNCTIONAction, here there must be only one table id
 					foreach ( $foreignfields as $pattern => $foreignvalue ) {
@@ -168,7 +199,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 									$replaceby = $profile_array[$profilefield[$i]];
 									$sim = $newsim; 
 								} else {
-									$success['value'] == false; $success['error'] = __FUNCTION__ . ": nötige Profildaten sind nicht gesetzt.";
+									$success['value'] = false; $success['error'] = __FUNCTION__ . ": nötige Profildaten sind nicht gesetzt";
 									$replaceby = '';
 								}
 							}
@@ -260,6 +291,7 @@ function FUNCTIONpreprocess(string $functionname,string $config,array $trigger,a
 	} else {
 		$_config = getFunctionConfig($functionname,$conn);
 	}
+	//use dbAction values as possible config keys
 	if ( isset($_config[$PARAM['dbAction']]) ) {
 		$_config = $_config[$PARAM['dbAction']];
 	} else {
@@ -411,7 +443,13 @@ Content-Type: text/html; charset="utf-8"
 <head>
 </head>
 <body style="text-align:left; direction:ltr;">
-<div class="logo" style="width: 100px; position: fixed; right: 100px">
+<style>
+.logo, .text { float: left; font-family: sans-serif; }
+.logo { width: 100px; margin: 10px; }
+.text { width: calc(100vw - 200px); }
+.text p:first-child { font-size: 30px; line-height: 100px; display: inline; }
+</style>
+<div class="logo">
 <picture>
 <img src="data:image/png;base64,_logo.b64_" width="100%">
 </picture>
@@ -422,7 +460,7 @@ Content-Type: text/html; charset="utf-8"
 </body>
 </html>
 --_boundary_inner_--
-
+	
 EndOfBody;
 	foreach ( $headers as $header => $value ) {
 		$processed = false;

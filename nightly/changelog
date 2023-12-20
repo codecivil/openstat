@@ -1,3 +1,14 @@
+#v1.7.18
+======
+20.12.2023
+
+* new function flags ONINSERT, ONEDIT, ONDELETE for field functions
+* new function flag for field functions
+  { "ONTABLES": Array(configname => array(tablenames)) || array(tablenames) }
+  executes the functions associated to the field only if the listed tables are set (for the configuration)
+* new edit type modifier ; CHECKED and ; UNCHECKED, but only for FUNCTION fields
+  checks/unchecks the "execute function" checkbox by default; otherwise the user's stored choice prevails  
+
 #v1.7.17-2
 ======
 19.10.2023

@@ -216,12 +216,15 @@ class OpenStatEdit {
 			$_maxlength = ' maxlength='.preg_replace('/\)/','',preg_replace('/VARCHAR\(/','',$_result['typelist'])).' ';
 		}
 		//
-		//separate MULTIPLE and DERIVED keyword, e.g. EXTENSIBLE LIST; MULTIPLE
+		//separate MULTIPLE, DERIVED, CHECKED, UNCHECKED keywords, e.g. EXTENSIBLE LIST; MULTIPLE or FUNCION; CHECKED
 		$_tmp_array = explode('; ',$_result['edittype']);
 		$_result['edittype'] = $_tmp_array[0];
 		//print_r($_tmp_array);
-		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'MULTIPLE' ) { $_result['multiple'] = true; } else { $_result['multiple'] = false; };
-		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'DERIVED' ) { $_result['derived'] = true; } else { $_result['derived'] = false; };
+		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'MULTIPLE' ) { $_result['multiple'] = true; } else { $_result['multiple'] = false; };//multiple entries
+		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'DERIVED' ) { $_result['derived'] = true; } else { $_result['derived'] = false; }; //compute values from other fields
+		$_result['FUNCTIONchecked'] = "user";
+		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'CHECKED' ) { $_result['FUNCTIONchecked'] = "true"; } //only for FUNCTIONS: automatically checked
+		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'UNCHECKED' ) { $_result['FUNCTIONchecked'] = "false"; } //only for FUNCTIONS: automatically checked
 		unset($_tmp_array);
 		//disable if derived
 		if ( $_result['derived'] ) { $_addclasses = " noupdate noinsert"; $_disabled = 'disabled'; } //values of derived fields are determined by other fields
@@ -370,9 +373,56 @@ class OpenStatEdit {
 						<div class="clear"></div>
 						<?php break;
 					case 'FUNCTION':
-						?>
+						$_show_option = array();
+						foreach ( $options as $value ) {
+							//check if all necessary tables are activated
+							if ( $value == "none" ) { continue; }
+							if ( $value != '' ) {
+								//separate functionname and config part
+								$function_array = explode('(',$value,2);
+								$function = $function_array[0];
+								if ( isset($function_array[1]) ) {
+									$configname = str_replace(')','',$function_array[1]);
+								}
+								else {
+									$configname = '';
+								}
+								//$ontablesflag is an array with one element containing under "ONTABLES" the array of tables or confignames and the tables..
+								$ontablesflag = array_filter(getFunctionFlags($function,$this->connection), function($_flag) { return is_array($_flag) AND isset($_flag['ONTABLES']); });
+								$necessary_tables_array = array();
+								foreach ( $ontablesflag as $ontables_array ) {
+									if ( $configname != '' AND isset($ontables_array['ONTABLES'][$configname]) ) {
+										$necessary_tables_array = $ontables_array['ONTABLES'][$configname];
+									} else {
+										$necessary_tables_array = $ontables_array['ONTABLES'];
+									}
+								}
+								$tables_array = array();
+								if ( ! empty($necessary_tables_array) ) { //save a db query if there is nothing to test  
+									$tables_array = getConfig($this->connection)['table'];
+								}
+								//compare those two arrays:
+								if ( $necessary_tables_array == array_intersect($necessary_tables_array,$tables_array) ) {
+									$_show_option[] = $value;
+								}
+							}
+						}
+						if ( empty($_show_option) ) { break; }
+						//check checked status
+						//function field was checked when "functions" of $default is not ["none"]
+						if ( $_result['FUNCTIONchecked'] == "false" ) { $_checked = ""; }
+						if ( $_result['FUNCTIONchecked'] == "true" ) { $_checked = "checked"; }
+						if ( $_result['FUNCTIONchecked'] == "user" ) {
+							$default_array = json_decode($default,true);
+							if ( isset($default_array) AND isset($default_array['functions']) AND $default_array['functions'] != array("none") ) {
+								$_checked = "checked";
+							} else {
+								$_checked = "";
+							}
+						}	
+						?>				
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
-						<input type="checkbox" <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>" class="db_function_check db_<?php echo($key); ?>" onchange="_FUNCTIONobserveChanges(this)">
+						<input type="checkbox" <?php echo($_disabled.' '.$_checked); ?> id="db_<?php echo($key.$rnd); ?>" class="db_function_check db_<?php echo($key); ?>" onchange="_FUNCTIONobserveChanges(this)">
 						<select hidden <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd); ?>_functions" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_<?php echo($key); ?>  db_function_functions" onchange="_FUNCTIONobserveChanges(this)">
 							<option value="none" selected ></option> 
 						<!--
@@ -384,10 +434,14 @@ class OpenStatEdit {
 							
 							but I admit, it's a bit shaky and not good to maintain...
 						-->
-							<?php foreach ( $options as $value ) { 
+							<?php foreach ( $_show_option as $value ) {
+								if ( $value == "none" ) { continue; }
+								if ( $value != '' ) {
 								?>				
 								<option value="<?php echo($value); ?>"><?php echo($value); ?></option>
-							<?php } ?>
+							<?php }
+							}
+							 ?>
 						</select>
 						<input type="number" hidden <?php echo($_disabled); ?> class="db_function_changes" value="0">
 						<input type="text" hidden <?php echo($_disabled); ?> class="db_function_field" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" value="<?php echo($default); ?>">

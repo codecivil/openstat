@@ -1,7 +1,7 @@
 <?php
 $author = "codecivil Dr. Marco Kühnel ICT Services";
 $license = "GPLv3";
-$versiondate = "05.09.2023";
-$versionnumber = "1.7.16";
+$versiondate = "20.12.2023";
+$versionnumber = "1.7.18";
 $contact = "openstat@codecivil.de";
 ?>
