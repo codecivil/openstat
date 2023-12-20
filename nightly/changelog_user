@@ -1,4 +1,4 @@
-#v1.7.18
+#v1.7.19
 
 * openStatAdmin: Feldfunktionen können nun mit den Modifizierern ; CHECKED und ; UNCHECKED versehen werden, sowie
   mit den Verhaltensflaggen ONINSERT, ONEDIT, ONDELETE und ONTABLES (Details. s techn. Changelog)
