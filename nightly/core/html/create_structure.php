@@ -1157,6 +1157,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 function _dbAction(array $PARAMETER,mysqli $conn) {
 	$message = "";
 	if ( ! isset($PARAMETER['dbAction']) ) { $PARAMETER['dbAction'] = ''; }
+	//if ( ! isset($PARAMETER['table']) OR $PARAMETER['table'] == '' ) { $PARAMETER['table'] = 'os_tables'; }
 	switch($PARAMETER['dbAction']) {
 		case 'insert':
 			$into = " INTO `" . $PARAMETER['table'] . "` ";
@@ -1166,7 +1167,7 @@ function _dbAction(array $PARAMETER,mysqli $conn) {
 			$values = " VALUES ";
 			foreach($PARAMETER as $key=>$value)
 			{
-				if ( $value != 'none' AND $value != '' AND $key != 'id' AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
+				if ( $value != 'none' AND $value != '' AND $key != 'id' AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd' AND $key != 'site') {
 					$into .= $komma . "`" . str_replace("_","_",$key) . "`";
 					$values .= $komma. "?";
 					$arr_values[] = rtrim($value);
@@ -1228,9 +1229,12 @@ function _dbAction(array $PARAMETER,mysqli $conn) {
 			break;
 	}
 	unset($_stmt_array);
-	$_stmt_array = array(); $_stmt_array['stmt'] = $stmt; $_stmt_array['str_types'] = $str_types; $_stmt_array['arr_values'] = $arr_values; $_stmt_array['message'] = $message;  
-	$_return=_execute_stmt($_stmt_array,$conn);
-	return $_return;
+	//query only if parameter table is set
+	if ( isset($PARAMETER['table']) AND $PARAMETER['table'] != '' ) {
+		$_stmt_array = array(); $_stmt_array['stmt'] = $stmt; $_stmt_array['str_types'] = $str_types; $_stmt_array['arr_values'] = $arr_values; $_stmt_array['message'] = $message;  
+		$_return=_execute_stmt($_stmt_array,$conn);
+		return $_return;
+	}
 }
 
 function recreateView(string $_propertable, mysqli $conn) {
@@ -1428,7 +1432,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 	}
 }
 
-//currently, this function is unused; in futurre this should log the script import in osadm_sqlimport (better: call it osadm_import)
+//currently, this function is unused; in future this should log the script import in osadm_sqlimport (better: call it osadm_import)
 function importScript(array $PARAMETER, mysqli $conn) {
 	if ( ! isset($PARAMETER['scriptfile']) ) { return; }
 	if ( $_return['dbMessageGood'] == 'true' ) { $_return['dbMessage'] = "Import erfolgreich. "; }
@@ -1636,6 +1640,7 @@ $tableel .= "</table>";
 		</ul>
 	</div>
 	<?php
+	if ( ! isset($PARAMETER['site']) ) { $PARAMETER['site'] = ''; }
 	switch($PARAMETER['site']) {
 		case 'os_sql':
 			$_sql = scandir('../../sql',SCANDIR_SORT_DESCENDING);

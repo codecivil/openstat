@@ -109,6 +109,7 @@ class OpenStatEdit {
 					$_here_key = "JSON_QUERY(`".$this->key."`,'$[" .$compound."]')";
 				}		
 				$options = execute_stmt($_stmt_array,$this->connection)['result'][$_here_key];
+				if ( ! isset($options) ) { $options=array(); }
 				$_splice = array();
 				foreach ( $options as $_index=>$option ) {
 					if ( is_array(json_decode($option,true)) ) {
@@ -869,7 +870,7 @@ class OpenStatEdit {
 			$_stmt_array['str_types'] = 's';
 			$_stmt_array['arr_values'] = array($this->key);
 			$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
-			//return if user is not allowed
+			//return if user is not explicitly allowed (no parent heritage...)
 			if ( ! in_array($_SESSION['os_role'],json_decode($_result['allowed_roles'])) ) { return; }
 			$_result['edittype'] = 'INTEGER';
 			$_result['role'] = '0';

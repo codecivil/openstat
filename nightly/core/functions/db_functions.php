@@ -29,7 +29,7 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 				$dbMessage = $message; $dbMessageGood = "true";
 				$result = $statement->get_result();
 				//log if log is enabled and stmt is not internal (grants, revokes, selects...)
-				if ( strpos($stmt,'view__') === false AND strpos($stmt,'GRANT') === false AND strpos($stmt,'FLUSH') === false AND strpos($stmt,'SELECT') !== 0 AND strpos($stmt,'REVOKE') === false AND isset($_SESSION['log']) AND ( $_SESSION['log'] OR $log ) ) {
+				if ( strpos($stmt,'view__') === false AND strpos($stmt,'GRANT') === false AND strpos($stmt,'FLUSH') === false AND strpos($stmt,'SELECT') !== 0 AND strpos($stmt,'REVOKE') === false AND strpos($stmt,'CREATE OR REPLACE') === false AND isset($_SESSION['log']) AND ( $_SESSION['log'] OR $log ) ) {
 					//test for unchanging ALTER TABLE statements
 					$_stmt_exploded = explode('`',$stmt); // index 3 aand 5 are the old and new id_-names
 					if ( ! isset($_stmt_exploded[3]) OR ! isset($_stmt_exploded[5]) OR $_stmt_exploded[3] != $_stmt_exploded[5] ) {
@@ -61,7 +61,7 @@ function execute_stmt(array $stmt_array, mysqli $conn, bool $flip = false)
 	$_result_array = _execute_stmt($stmt_array,$conn);
 	//if ( ! isset($_result_array['result']) ) { print_r($stmt_array); }; //for debug only
 	$return = array(); $return['dbMessage'] = $_result_array['dbMessage']; $return['dbMessageGood'] = $_result_array['dbMessageGood']; $return['result'] = array(); $return['insert_id'] = $_result_array['insert_id']; $index = 0;
-	if ( $_result = $_result_array['result'] AND $_result->num_rows > 0 ) {
+	if ( isset($_result_array['result']) AND $_result = $_result_array['result'] AND $_result->num_rows > 0 ) {
 		while ($row=$_result->fetch_assoc()) {
 			if ( isset($flip) AND $flip ) { $return['result'][$index] = array(); }
 			unset($value);

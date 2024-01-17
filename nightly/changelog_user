@@ -1,4 +1,13 @@
+#v1.7.20
+======
+
+* Einträge öffnen sich nur noch einmal; bei weiteren Versuchen scrollt der Eintrag ins Blickfeld.
+* Ergebnisse werden nach ID sortiert wenn keine alternative Filtersortierung vorgegeben ist
+* openStatAdmin: Funktionen können eigene Scopes für ihre Ausgabe erzeugen, die von anderen Funktionen
+  genutzt werden können, wenn sie unter diesem Scope registriert sind (Beispiel: printResults)
+
 #v1.7.19
+======
 
 * openStatAdmin: Feldfunktionen können nun mit den Modifizierern ; CHECKED und ; UNCHECKED versehen werden, sowie
   mit den Verhaltensflaggen ONINSERT, ONEDIT, ONDELETE und ONTABLES (Details. s techn. Changelog)

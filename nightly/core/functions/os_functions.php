@@ -203,8 +203,10 @@ function newEntry(array $PARAM,$conn) {
 	</div>
 <?php }
 
-function printResults(array $PARAM, $conn) { 
-	$_config = getFunctionConfig('printResults',$conn);
+function printResults(array $PARAM, $conn) {
+	//determine additional _scope_ from $PARAM, e.g. '::PORTRAIT'
+	if ( ! isset($PARAM['_scope_']) ) { $PARAM['_scope_'] = ''; }
+	$_config = getFunctionConfig('printResults'.$PARAM['_scope_'],$conn);
 	if ( isset($_config['orientation']) ) { return $_config['orientation']; } else { return ''; }
 }
 
@@ -589,22 +591,40 @@ function changeUserName(array $PARAM, $conn) {
 	return $_SESSION['os_username'];			
 }
 
-function getFunctionConfig(string $functionname, mysqli $conn)
+//$functionnamescope="functionname::scope"
+function getFunctionConfig(string $functionnamescope, mysqli $conn)
 {
+	$functionnamescope_array = explode('::',$functionnamescope);
+	$functionname = $functionnamescope_array[0];
+	if ( sizeof($functionnamescope_array) > 1 ) { $functionscope = $functionnamescope_array[1]; }
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = "SELECT functionconfig from os_functions where functionmachine = ?";
 	$_stmt_array['str_types'] = 's';
 	$_stmt_array['arr_values'] = array($functionname);
+	if (isset($functionscope)) {
+		$_stmt_array['stmt'] .= " AND functionscope = ?";
+		$_stmt_array['str_types'] .= 's';
+		$_stmt_array['arr_values'][] = $functionscope;
+	}
 	$_config = json_decode(execute_stmt($_stmt_array,$conn,true)['result'][0]['functionconfig'],true);
 	return $_config;
 }
 
-function getFunctionFlags(string $functionname, mysqli $conn)
+//$functionnamescope="functionname::scope"
+function getFunctionFlags(string $functionnamescope, mysqli $conn)
 {
+	$functionnamescope_array = explode('::',$functionnamescope);
+	$functionname = $functionnamescope_array[0];
+	if ( sizeof($functionnamescope_array) > 1 ) { $functionscope = $functionnamescope_array[1]; }
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = "SELECT functionflags from os_functions where functionmachine = ?";
 	$_stmt_array['str_types'] = 's';
 	$_stmt_array['arr_values'] = array($functionname);
+	if (isset($functionscope)) {
+		$_stmt_array['stmt'] .= " AND functionscope = ?";
+		$_stmt_array['str_types'] .= 's';
+		$_stmt_array['arr_values'][] = $functionscope;
+	}
 	$_flags = json_decode(execute_stmt($_stmt_array,$conn,true)['result'][0]['functionflags'],true);
 	return $_flags;
 }
@@ -616,6 +636,9 @@ function trafficLight(array $PARAM, mysqli $conn)
 	
 	$_config = getFunctionConfig('trafficLight',$conn);
 
+	// return if no criteria are set
+	if ( ! isset($_config['criteria']) ) { return; }
+	
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = 'SELECT iconname,tablemachine,identifiers from os_tables';
 	/*$_stmt_array['str_types'] = 's';

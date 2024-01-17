@@ -8,7 +8,6 @@ require_once('../../core/data/logindata.php');
 require_once('../../core/data/info.php');
 $PARAMETER = array(); 
 $action = '';
-
 foreach($_GET as $key=>$value)
 {
 	if ( $value != 'none' ) {
@@ -39,6 +38,7 @@ if ( isset($_SESSION['e']) ) { $disabled = "disabled"; }
 try {
 	$conn = new mysqli($servername, $username, $password, $dbname); 
 } catch(Exception $e) {
+	print_r($e);
 	exit;
 }
 mysqli_set_charset($conn,"utf8");

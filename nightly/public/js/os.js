@@ -814,16 +814,37 @@ function _toggleStat(property) {
 
 
 function editEntries(form,tablename) {
-	//also use it outside the result set then w/o mass editing)
-	if ( ! form.closest('tr') ) { callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(form,'',''); return false; }); return false; }
-	//
-	thecheckbox = form.closest('tr').querySelector('td').getElementsByTagName('input')[0];
-	if ( thecheckbox.checked ) {
-		document.getElementById('editTableName').value = tablename;
-		callFunction(document.getElementById('formMassEdit'),'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ return false; });
-	} else {
-		callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(form,'',''); return false; });
-	}
+	//check if single entry is already open and then scroll to it and exit
+	let _notopen = new Promise((resolve,reject) => {
+		let _maybe;
+		if ( _maybe = form.querySelector('input[name=id_'+tablename+']') ) {
+			let _value = _maybe.value;
+			let _allpopups = document.querySelectorAll('.popup');
+			let _checked = 0;
+			_allpopups.forEach(popup => {
+				if ( popup.querySelector('._id_') && popup.querySelector('._id_').textContent == _value && popup.querySelector('._table_') && popup.querySelector('._table_').textContent == tablename ) {
+					popup.scrollIntoView();
+					reject();
+				} else {
+					_checked++;
+					if ( _checked == _allpopups.length ) { resolve(); }
+				}
+			});
+		}
+	});
+	_notopen.then(() => {
+		//also use it outside the result set then w/o mass editing)
+		if ( ! form.closest('tr') ) { callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(form,'',''); return false; }); return false; }
+		//
+		thecheckbox = form.closest('tr').querySelector('td').getElementsByTagName('input')[0];
+		if ( thecheckbox.checked ) {
+			document.getElementById('editTableName').value = tablename;
+			callFunction(document.getElementById('formMassEdit'),'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ return false; });
+		} else {
+			callFunction(form,'getDetails','_popup_',false,'details','updateSelectionsOfThis').then(()=>{ newEntry(form,'',''); return false; });
+		}
+		return false
+	},() => { return false; });
 	return false
 }
 

@@ -70,6 +70,8 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	if ( isset($_config_array['configname']) ) {
 		$_config_custom = getConfig($conn,$_config_array['configname']);
 		if ( $custom != '' ) { $_config_array = $_config_custom; }
+		if ( ! isset($_config_array['table_hierarchy']) ) { $_config_array['table_hierarchy'] = array(); }
+		if ( ! isset($_config_custom['table_hierarchy']) ) { $_config_custom['table_hierarchy'] = array(); }
 		$_compare1 = array(); $_compare2 = array();
 		//compare filters, tables and hierarchy
 		$_compare1['filters'] = $_config_array['filters']; $_compare2['filters'] = $_config_custom['filters'];
@@ -83,7 +85,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	$_config = $_config_array['filters'];
 	//parse filter options
 	$option_complement = '';
-	$option_searchinsresults = '';
+	$option_searchinresults = '';
 	if ( isset($_config['os_OPTIONS']) ) {
 			if ( is_array($_config['os_OPTIONS']) AND in_array('complement',$_config['os_OPTIONS']) ) { $option_complement = 'checked'; }
 			if ( is_array($_config['os_OPTIONS']) AND in_array('searchinresults',$_config['os_OPTIONS']) ) { $option_searchinresults = 'checked'; }
@@ -438,7 +440,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 		$PARAMETER = $parameter;
 	}
 	$TABLES = $_config['table'];
-	$HIERARCHY = $_config['table_hierarchy'];
+	if ( isset($_config['table_hierarchy']) ) { $HIERARCHY = $_config['table_hierarchy']; } else { $HIERARCHY = array(); }
 	$maintable = $TABLES[0];
 	
 	//handle options (like complement, searchinresults, <more to come>)
@@ -875,6 +877,10 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	$_main_stmt_array = array();
 	$_main_stmt_array['stmt'] = 'SELECT '.$_SELECT.$_FROM.$_WHERE.$_ORDER_BY; //do not order by id!
 //	if ( $SHOWNOTALL ) {
+		//order by ids as last ressort, e.g. if there are no other fields in this table
+		foreach ( $TABLES as $activetablemachine ) {
+			$EXT_ORDER_BY[] = $activetablemachine."__id_".$activetablemachine;
+		}
 		$_main_stmt_array['stmt'] = 'SELECT DISTINCT '.implode(',',$SHOWME).' FROM ('.$_main_stmt_array['stmt'].') AS T ORDER BY '.implode(',',$EXT_ORDER_BY);
 //	}
 	//generate complementary statement if desired
@@ -962,14 +968,19 @@ function applyFiltersOnlyChangeConfig(array $parameter, mysqli $conn)
 function jenks(int $userid, string $tablemachine, array $key_array, array $already_chosen, mysqli $conn) {
 	//return array($key_array,array());
 	//collect stats
-	$_keystats = json_decode($_SESSION['filterstats'],true)[$tablemachine];
+	$_allkeystats = json_decode($_SESSION['filterstats'],true);
+	if ( isset($_allkeystats[$tablemachine]) ) {
+		$_keystats = $_allkeystats[$tablemachine];
+	} else {
+		$_keystats = array();
+	}
 	foreach ( $key_array as $key ) {
 		if ( ! isset($_keystats[$key['keymachine']]) ) { $_keystats[$key['keymachine']] = 0; }
 		if ( isset($already_chosen[$table.'__'.$key['keymachine']])	 ) { unset($_keystats[$key['keymachine']]); } //disregard already chosen keys
 	}
 	arsort($_keystats); //ensure descending order of frequency
 	//recursively compute means and jenks value differences
-	$_mu = 0; $_mubar = array_sum($_keystats)/sizeof($_keystats); $_m = 0; $_n = sizeof($_keystats);
+	$_mu = 0; $_mubar = 0; if ( sizeof($_keystats) > 0 ) { $_mubar = array_sum($_keystats)/sizeof($_keystats); }; $_m = 0; $_n = sizeof($_keystats);
 	$_break = false;
 	$jenks_top_stats = array();
 	foreach ( $_keystats as $_key => $_value ) {
