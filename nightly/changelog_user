@@ -1,8 +1,9 @@
-#v1.7.20
+#v1.7.20-2
 ======
 
 * Einträge öffnen sich nur noch einmal; bei weiteren Versuchen scrollt der Eintrag ins Blickfeld.
 * Ergebnisse werden nach ID sortiert wenn keine alternative Filtersortierung vorgegeben ist
+* rollende Termine für mehrfache Perioden in Filtern korrigiert
 * openStatAdmin: Funktionen können eigene Scopes für ihre Ausgabe erzeugen, die von anderen Funktionen
   genutzt werden können, wenn sie unter diesem Scope registriert sind (Beispiel: printResults)
 

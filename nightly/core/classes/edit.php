@@ -1328,13 +1328,13 @@ class OpenStatEdit {
 										/>
 										<span>
 											<input 
-												id="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollstart"
+												id="<?php html_echo($this->table.'__'.$this->key.$rnd.'_'.$i); ?>__rollstart"
 												type="checkbox" 
 												class="toggle" 
 												onchange="_togglePinnedRolling(this)"
 												hidden
 												<?php if ( $checked[1004][$i] != "none" ) { ?>checked<?php } ?>>
-											<label for="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollstart">
+											<label for="<?php html_echo($this->table.'__'.$this->key.$rnd.'_'.$i); ?>__rollstart">
 												<span data-title="rollend" class="open"><i class="fcc fcc-calendar-rolling"></i></span>
 												<span data-title="fixiert" class="closed"><i class="fas fa-map-pin"></i></span>
 											</label>
@@ -1358,13 +1358,13 @@ class OpenStatEdit {
 										/>
 										<span>
 											<input 
-												id="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollend"
+												id="<?php html_echo($this->table.'__'.$this->key.$rnd.'_'.$i); ?>__rollend"
 												type="checkbox" 
 												class="toggle" 
 												onchange="_togglePinnedRolling(this)"
 												hidden
 												<?php if ( $checked[1005][$i] != "none" ) { ?>checked<?php } ?>>
-											<label for="<?php html_echo($this->table.'__'.$this->key.$rnd); ?>__rollend">
+											<label for="<?php html_echo($this->table.'__'.$this->key.$rnd.'_'.$i); ?>__rollend">
 												<span data-title="rollend" class="open"><i class="fcc fcc-calendar-rolling"></i></span>
 												<span data-title="fixiert" class="closed"><i class="fas fa-map-pin"></i></span>
 											</label>
