@@ -281,7 +281,7 @@ class OpenStatEdit {
 			if ( ! $_single AND $_result['edittype'] != 'NONE') {
 				?>
 				<label class="unlimitedWidth" onclick="_toggleEnabled(<?php echo($rnd); ?>);"><i class="fas fa-pen-square"></i></label>
-				<div id="enablable<?php echo($rnd); ?>" class="disabled">
+				<div id="enablable<?php echo($rnd); ?>" class="enablable disabled">
 				<?php
 			}
 			for ($indexedit = 0; $indexedit < $_editsize; $indexedit++ ) {
@@ -350,6 +350,7 @@ class OpenStatEdit {
 						?>
 						<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 						<textarea <?php echo($_disabled.' '.$_onchange_text); ?> id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="editor db_formbox db_<?php echo($key); ?>"  value=""><?php echo($default); ?></textarea>
+						<img hidden src="" onerror="if (_enablable = this.closest('.enablable')) { _waitForEditorThenToggle(_enablable); };">
 						<div class="clear"></div>
 						<?php break;
 					case 'SUGGEST':

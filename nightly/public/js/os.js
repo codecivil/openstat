@@ -325,6 +325,7 @@ function updateSelection(el) {
 			}
 		}
 	}
+	//console.log(id,conditions_met,_show_matched,_hide_matched);
 	if ( el.querySelectorAll('option:checked:disabled').length > 0 ) {
 		el.querySelectorAll('option:checked:disabled')[0].selected = false;
 	}
@@ -708,6 +709,26 @@ function _toggleEnabled(number) {
 		if ( el.id.split('_')[1] ) { _toggleOption(el.id.split('_')[1]); _toggleOption(el.id.split('_')[1]); }
 	});
 	div.querySelectorAll('textarea').forEach(function(el){ el.disabled = ! el.disabled; });
+	//for tinymce editors:
+	//to be continued
+	_waitForEditorThenToggle(div);
+}
+
+function _waitForEditorThenToggle(div,_counter) {
+	//give up after 10 tries
+	if ( ! _counter ) { _counter = 0; }
+	if ( _counter >= 10 ) { return; }
+	//
+	if ( ! div.querySelector('iframe') ) {
+		_counter++; 
+		setTimeout(function(){ console.log("waiting for TinyMCE: "+_counter); _waitForEditor(div,_counter); },500); 
+	} else {
+		console.log("found TinyMCE editor");
+		div.querySelectorAll('iframe').forEach(function(_iframe){
+			let _editor = _iframe.contentDocument.body;
+			_editor.setAttribute("contenteditable", _editor.getAttribute("contenteditable")==="false"); 
+		});
+	}
 }
 
 function _toggleStatColumn(columnnumber,numberofrows) {
@@ -1312,6 +1333,10 @@ function transportAttribution(el) {
 		_info._id = infoel.value;
 		if ( sessionStorage.getItem('attribution_clipboard') != null ) { _copy = false; }
 	}
+	//
+	// do nothing if disabled
+	//
+	if ( infoel.disabled ) { return false; }
 	//
 	// now do the action 
 	//
