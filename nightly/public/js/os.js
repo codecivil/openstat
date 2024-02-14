@@ -550,6 +550,8 @@ function newEntry(form,arg,response) {
 	document.querySelector('#helpModeBtn').removeEventListener('click',toggleHelpTexts);
 	document.querySelector('#helpModeBtn').addEventListener('click',toggleHelpTexts);
 	toggleHelpTexts();
+    //execute show/hide for new entries
+    if ( key._id_ == "new" )  { updateSelectionOfClasses(el.querySelector('.section')); }
 }
 
 function toggleHelpTexts(evt) {
