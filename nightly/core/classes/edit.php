@@ -782,10 +782,11 @@ class OpenStatEdit {
 						?>
 						<div class="note note_edit" data-title="Notiz erstellen oder bearbeiten">
 							<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
-							<input type="checkbox" id="note_delete_cb<?php echo($rnd); ?>" class="note_cb" onclick="note_delete(this)" hidden>
+							<input type="checkbox" id="note_delete_cb<?php echo($rnd); ?>" class="note_cb" onclick="note_delete(this)" hidden <?php echo($_disabled); ?>>
+							<input type="radio" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" value="" <?php if ( $default[0] == '' ) { echo(" checked "); } ?> id="note_empty_cb<?php echo($rnd); ?>" class="note_cb note_empty" hidden <?php echo($_disabled); ?>>
 							<?php foreach ( $_cbcolors as $_cbcolor ) {
 							?>
-							<input type="radio" onclick="note_show(this)" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" value="<?php echo($_cbcolor); ?>" <?php if ( $default[0] == $_cbcolor ) { echo(" checked "); } ?> id="note_<?php echo($_cbcolor); ?>_cb<?php echo($rnd); ?>" class="note_cb note_<?php echo($_cbcolor); ?>" hidden>
+							<input type="radio" onclick="note_show(this)" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" value="<?php echo($_cbcolor); ?>" <?php if ( $default[0] == $_cbcolor ) { echo(" checked "); } ?> id="note_<?php echo($_cbcolor); ?>_cb<?php echo($rnd); ?>" class="note_cb note_<?php echo($_cbcolor); ?>" hidden <?php echo($_disabled); ?>>
 							<?php } ?>
 							<div class="note_wrapper">
 								<label for="note_delete_cb<?php echo($rnd); ?>" class="unlimitedWidth note_delete"><i class="fas fa-minus-square"></i></label>

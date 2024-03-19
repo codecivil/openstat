@@ -59,6 +59,8 @@ function _cleanup($value,$separator = '<br />')
 				$values[0]= "<span class=note_".$values[0].">&nbsp;&nbsp;&nbsp;</span>";
 			}
 		}
+        //replace array of empty strings by empty string, e.g for NOTES
+        if ( implode('',$values) == '' ) { $values = array(''); } //triggers warning when $values entries are again arrays
 		//format compound fields
 		if ( is_array($values[0]) ) {
 			$komma = '';

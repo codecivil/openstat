@@ -1,3 +1,13 @@
+#v1.7.23
+======
+
+* Bei Wechsel des Benutzernamens wird das Feld danach unfokussiert
+* Beim Filtern kann "nur Statistik" ausgewählt werden; es wird dann keine Detailtabelle angezeigt.
+* Komplemente können bezüglich jeder ausgewählten Tabelle ausgeführt werden. Damit können nun Einträge ohne
+  Zuordnungen gefunden werden: Z.B. Tabellenhierarchie A > B und Filterfunktion 'Komplement in B' findet alle
+  Einträge von B, die keinem Eintrag in A zugeordnet sind.
+* Fix: Masseneditierte Einträge haben leere Notizen falsch abgespeichert
+
 #v1.7.22
 ======
 

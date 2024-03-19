@@ -23,7 +23,7 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 		//clone included iframes
 //		var _iframes = new Object();
 //		el.querySelectorAll('iframe').forEach(function(_iframe){_iframes[_iframe.id] = document.importNode(_iframe.contentWindow.document.body,true).outerHTML;});
-		var _before = new Object();
+		let _before = new Object();
 		switch(val) {
 			case 'insert':
 				_before = _disableClass(el,'noinsert');
@@ -60,7 +60,7 @@ function _onAction(val,el,fct,div,add,classes,callback,arg) {
 
 //disables all elements of class _className inside el
 function _disableClass(el,_className) {
-	var _before = new Object();
+	let _before = new Object();
 	_elements = el.getElementsByClassName(_className);
 	for ( i = 0; i < _elements.length; i++ ) {
 		_inputs = _elements[i].getElementsByTagName('input');
@@ -703,17 +703,17 @@ function _toggleEnabled(number) {
 	div.querySelectorAll('input').forEach(function(el){ 
 		el.disabled = ! el.disabled;
 		//generate the correct initial disabled setting for EXTENSIBLE LIST, LIST THEN SUGGEST...
-		if ( el.id.split('_')[1] ) { _toggleOption(el.id.split('_')[1]); _toggleOption(el.id.split('_')[1]); }
+		if ( el.id.split('_')[2] ) { _toggleOption(el.id.split('_')[1]); _toggleOption(el.id.split('_')[1]); }
 	});
 	div.querySelectorAll('select').forEach(function(el){ 
 		el.disabled = ! el.disabled;
 		//generate the correct initial disabled setting for EXTENSIBLE LIST, LIST THEN SUGGEST...
-		if ( el.id.split('_')[1] ) { _toggleOption(el.id.split('_')[1]); _toggleOption(el.id.split('_')[1]); }
+		if ( el.id.split('_')[2] ) { _toggleOption(el.id.split('_')[1]); _toggleOption(el.id.split('_')[1]); }
 	});
 	div.querySelectorAll('textarea').forEach(function(el){ el.disabled = ! el.disabled; });
 	//for tinymce editors:
 	//to be continued
-	_waitForEditorThenToggle(div);
+	//_waitForEditorThenToggle(div);
 }
 
 function _waitForEditorThenToggle(div,_counter) {
@@ -723,7 +723,7 @@ function _waitForEditorThenToggle(div,_counter) {
 	//
 	if ( ! div.querySelector('iframe') ) {
 		_counter++; 
-		setTimeout(function(){ console.log("waiting for TinyMCE: "+_counter); _waitForEditor(div,_counter); },500); 
+		setTimeout(function(){ console.log("waiting for TinyMCE: "+_counter); _waitForEditorThenToggle(div,_counter); },500); 
 	} else {
 		console.log("found TinyMCE editor");
 		div.querySelectorAll('iframe').forEach(function(_iframe){
@@ -875,7 +875,9 @@ function editEntries(form,tablename) {
 function updateSelectionsOfThis(form,arg,responsetext) {
 	// identify new entry window by reload div
 	if ( ! responsetext ) { return false; }
-	_reloadid = responsetext.match(/form=\"(reload[^\"]*)\"/)[1];
+    if ( responsetext.match(/form=\"(reload[^\"]*)\"/) ) {
+    	_reloadid = responsetext.match(/form=\"(reload[^\"]*)\"/)[1];
+    }
 	// updateSelections in the parent edit_wrapper
 	el = document.getElementById(_reloadid).closest('.section');
 	updateSelectionOfClasses(el);
@@ -902,6 +904,7 @@ function note_delete(el) {
 	let _textarea = el.parentElement.querySelector('.note_wrapper textarea');
 	_textarea.value = '';
 	_textarea.style.visibility = 'hidden';
+    el.parentElement.querySelector('.note_empty').checked = true;
 	el.parentElement.style.opacity = "";
 // This prevents that the note flows awkwardly into next entry, but creates a 14rem space at entry location; but only if there is a note...
 	el.closest('.edit_wrapper').style.height = "0";
@@ -1243,6 +1246,7 @@ function exportCSV() { return false; }
 
 function changeUserName(form,arg,_response) {
 	document.getElementById('userName').value = _response;
+	document.getElementById('userName').blur();
 /*	if ( _response.indexOf('false') > -1 ) {
 		document.getElementById('userName').classList.add("error");
 		setTimeout(function(){document.getElementById('userName').value = _response;},3000);

@@ -1,3 +1,12 @@
+#v1.7.23
+======
+19.03.2024
+
+* username change is now confirmed by blur
+* statsonly option for filtering
+* complement for any selected table
+* fix: mass edited entries had wrongly formatted empty NOTE entries
+* fix: mass editing showed NOTEs at wrong place rendering them unselectable
 
 #v1.7.22
 ======

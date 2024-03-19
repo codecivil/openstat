@@ -86,9 +86,17 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	//parse filter options
 	$option_complement = '';
 	$option_searchinresults = '';
+    $option_statsonly = '';
 	if ( isset($_config['os_OPTIONS']) ) {
-			if ( is_array($_config['os_OPTIONS']) AND in_array('complement',$_config['os_OPTIONS']) ) { $option_complement = 'checked'; }
+			if ( is_array($_config['os_OPTIONS']) AND in_array('complement',$_config['os_OPTIONS']) ) { $option_complement = 'checked'; $option_complement_table = $table; }
+			//complement may now also be an array 'complement' => tablemachine
+            if ( $option_complement == '' AND is_array($_config['os_OPTIONS']) ) {
+                if ( array_key_exists('complement',$_config['os_OPTIONS']) AND isset($_config['os_OPTIONS']['complement']['checked']) ) {
+                    $option_complement = 'checked'; $option_complement_table = $_config['os_OPTIONS']['complement']['table'];
+                }
+            }
 			if ( is_array($_config['os_OPTIONS']) AND in_array('searchinresults',$_config['os_OPTIONS']) ) { $option_searchinresults = 'checked'; }
+			if ( is_array($_config['os_OPTIONS']) AND in_array('statsonly',$_config['os_OPTIONS']) ) { $option_statsonly = 'checked'; }
 	}
 	$_config_tables = $_config_array['table'];
 	$_config_hierarchy = $_config_array['table_hierarchy'];
@@ -230,7 +238,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 				} 			
 			?>
 			<hr>
-			<label for="formTablesSubmit" class="submitAddFilters" ><h2 class="center"><i class="fas fa-arrow-circle-down"></i></h2></label>
+			<label for="formTablesSubmit" class="submitAddFilters" data-title="Tabellenauswahl speichern und anwenden"><h2 class="center"><i class="fas fa-arrow-circle-down"></i> anwenden</h2></label>
 			<input hidden id="formTablesSubmit" type="submit" value="Aktualisieren">
 		</form>
 	</div>
@@ -333,9 +341,28 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 		<form id="formFilters" class="function" method="post" action="" onsubmit="callFunction(this,'applyFilters','results_wrapper').then(()=>callFunction('_','updateSidebar','sidebar')).then(()=>{ rotateHistory(); processFunctionFlags(this.closest('.section')); myScrollIntoView(document.getElementById('results_wrapper')); toggleHelpTexts(); return false; }); return false; ">
 			<input hidden id="formFiltersSearchInResults" type="checkbox" value="searchinresults" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_searchinresults); ?>>
 			<label for="formFiltersSearchInResults" class="unlimitedWidth" data-title="in Ergebnissen suchen"><i class="fas fa-list"></i></label>
-			<input hidden id="formFiltersComplement" type="checkbox" value="complement" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_complement); ?>>
+			<input hidden id="formFiltersComplement" type="checkbox" value="" name="os_OPTIONS[complement][checked]" class="fontToggle" <?php echo($option_complement); ?>>
 			<label for="formFiltersComplement" class="unlimitedWidth" data-title="Komplement"><i class="fas fa-puzzle-piece"></i></label>
-			<label for="formFiltersSubmit" class="submitAddFilters" ><h1 class="center"><i class="fas fa-arrow-circle-right"></i></h1></label>
+            <select name="os_OPTIONS[complement][table]" class="fontToggleChild">
+                <?php $_matched=false; foreach ( $_config_tables as $_config_tablemachine ) { 
+                    $_config_tablereadable = $_result[array_search($_config_tablemachine,$_result_normal['tablemachine'])]['tablereadable'];
+                ?>
+                    <option value="<?php html_echo($_config_tablemachine); ?>"
+                        <?php if ( isset($option_complement_table) AND $_config_tablemachine == $option_complement_table ) {
+                            echo(" selected");
+                            $_matched = true;
+                        } ?>
+                    ><?php html_echo($_config_tablereadable); ?></option>
+                <?php }
+                    if ( ! $_matched ) { ?>
+                    <option value="" selected></option>
+                <?php } else { ?>
+                    <option value=""></option>                    
+                <?php } ?>
+            </select>
+			<input hidden id="formStatsOnly" type="checkbox" value="statsonly" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_statsonly); ?>>
+			<label for="formStatsOnly" class="unlimitedWidth" data-title="nur Statistik"><i class="fas fa-chart-simple"></i></label>
+			<label for="formFiltersSubmit" class="submitAddFilters" data-title="Filter speichern und anwenden"><h1 class="center"><i class="fas fa-arrow-circle-right"></i> filtern</h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>
 			<div class="empty section" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragenter="dragenter(event)" ondragleave="dragleave(event)"></div>
@@ -423,7 +450,7 @@ function updateSidebarCustom(array $PARAMETER, mysqli $conn)
 } 
 
 // display=false: only return the mysql statement
-function applyFilters(array $parameter, mysqli $conn, bool $_complement = false, bool $display = true, bool $changeconf = true, bool $_searchinresults = false)
+function applyFilters(array $parameter, mysqli $conn, bool $_complement = false, bool $display = true, bool $changeconf = true, bool $_searchinresults = false, bool $_statsonly = false)
 {
 	if ( isset($parameter) AND $changeconf ) {
 		$config = array('filters'=>$parameter);
@@ -443,15 +470,24 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	if ( isset($_config['table_hierarchy']) ) { $HIERARCHY = $_config['table_hierarchy']; } else { $HIERARCHY = array(); }
 	$maintable = $TABLES[0];
 	
-	//handle options (like complement, searchinresults, <more to come>)
+	//handle options (like complement, searchinresults, statsonly, <more to come>)
 	$complement = $_complement;
 	$searchinresults = $_searchinresults;
+    $statsonly = $_statsonly;
 	if ( isset($PARAMETER['os_OPTIONS']) ) {
 		$_filter_options = $PARAMETER['os_OPTIONS'];
 		if ( is_array($_filter_options) ) {
 			//give priority to passed arguments:
-			$complement = ($_complement OR in_array('complement',$_filter_options));
+			$complement = ($_complement OR in_array('complement',$_filter_options) OR ( array_key_exists('complement',$_filter_options) AND isset($_filter_options['complement']['checked']) ) );
+            if ( $complement ) {
+                if ( isset($_filter_options['complement']) AND isset($_filter_options['complement']['table']) ) {
+                    $complementtable = $_filter_options['complement']['table'];
+                } else {
+                    $complementtable = $maintable;
+                }
+            }
 			$searchinresults = ($_searchinresults OR in_array('searchinresults',$_filter_options));
+			$statsonly = ($_statsonly OR in_array('statsonly',$_filter_options));
 		}
 		unset($PARAMETER['os_OPTIONS']);
 	}
@@ -813,6 +849,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 				} 				
 				$_WHERE .= ') ';
 			} // end of compound extra tests
+            //begin of NOTES filter
 			elseif ( array_key_exists(7001,$values) ) 
 			{
 				//no multiple notes at the moment...
@@ -841,7 +878,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 					$_nullallowed = false;
 					if ( ! isset($values[7002][$i]) OR  $values[7002][$i] == '' ) { $values[7002][$i] = ''; $_nullallowed = true; }
 					$_WHERE .= $komma2."(";
-					//the following line is wrong: must not be in but sth like IN LIKE... does REGEXP solve the problem?
+					//the following line is wrong: must not be in but sth like IN LIKE... does REGEXP solve the problem? Yes, it does!
 					$_WHERE .= "(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` LIKE '[%' AND JSON_VALUE(`view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."`,'$[1]') ".$_negation." REGEXP '".$values[7002][$i]."')";
 					if ( $_nullallowed ) { $_WHERE .= " OR ( `view__" . $table . "__" . $_SESSION['os_role']."`.`".$key."` IS NULL ) "; }
 					$_WHERE .= '))';
@@ -886,10 +923,11 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	//generate complementary statement if desired
 	//complementary means: find all ids of main table not occuring in stmt result and display maintable filters
 	if ( $complement ) {
-		$_SELECT = 'SELECT id_'.$maintable.' AS '.$maintable.'__id_'.$maintable.',';
+		$_SELECT = 'SELECT id_'.$complementtable.' AS '.$complementtable.'__id_'.$complementtable.',';
 		$komma = '';
-		$_FROM = ' FROM `view__' . $maintable . '__' . $_SESSION['os_role'].'` '; 
-		$_WHERE = 'WHERE id_'.$maintable.' NOT IN ( SELECT '.$maintable.'__id_'.$maintable.' FROM (';
+		$_FROM = ' FROM `view__' . $complementtable . '__' . $_SESSION['os_role'].'` '; 
+        //coalesce makes a NULL to 0 and so the complement works; note: SELECT x FROM T where x NOT IN (null) is always empty!
+		$_WHERE = 'WHERE id_'.$complementtable.' NOT IN ( SELECT COALESCE('.$complementtable.'__id_'.$complementtable.',0) FROM (';
 		$bracket = ') AS T ) ';
 		$_ORDER_BY = ' ORDER BY ';
 		foreach ($PARAMETER as $key=>$values) 
@@ -898,20 +936,26 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 			//check for checked tables;
 			$table = explode('__',$key,2)[0];
 			$key = explode('__',$key,2)[1];
-			if ( $table != $maintable ) { continue; };
+			if ( $table != $complementtable ) { continue; };
 			//replace the __ by . (HTML5 replaces inner white space by _, so no . possible)
 			//$key = str_replace('__','.',$key);
 			$_SELECT .= $komma.'`view__' . $table . '__' . $_SESSION['os_role'].'`.'.$key.' AS `'.$table.'__'.$key.'`';
 			$_ORDER_BY .= $komma.$table.'__'.$key.$_sort;
 			$komma = ',';
 		}
+        //remove trailing komma of $_SELECT if no paramater of complementtable was selected
+        if ( substr($_SELECT,-1) == ',' ) { $_SELECT = substr($_SELECT, 0, -1); }
 		$_main_stmt_array['stmt'] = $_SELECT.$_FROM.$_WHERE.$_main_stmt_array['stmt'].$bracket.$_ORDER_BY;
 	}
 	if ( isset($display) AND !$display ) { return $_main_stmt_array; }
 	//print_r($_main_stmt_array); //for debug only
 	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement,$searchinresults);
 	$_SESSION['currentfilters'] = $filters;
-	$table_results = generateResultTable($_main_stmt_array,$conn);
+    if ( ! $statsonly ) {
+    	$table_results = generateResultTable($_main_stmt_array,$conn);
+    } else {
+        $table_results = "Nur die Statistikansicht ist aktiv.";
+    }
 	$stat_results = generateStatTable($_main_stmt_array,$conn);
 	?>
 	<?php updateTime(); includeFunctions('RESULTS',$conn); ?>

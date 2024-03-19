@@ -326,6 +326,8 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #sidebar .unsaved { color: var(--color-sidebar-changed); }
 #sidebar .fontToggle + label { color: var(--color-sidebar-inactive); cursor: initial; font-size: 1rem; padding: 0.5rem; }
 #sidebar .fontToggle:checked + label { color: var(--color-sidebar); cursor: initial; }
+#sidebar .fontToggleChild { display: none; }
+#sidebar .fontToggle:checked + label + .fontToggleChild { display: inline; }
 #sidebar .more { padding: 0.4rem; line-height: 1.7rem; }
 #sidebar .more:hover { cursor: pointer; }
 
