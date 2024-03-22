@@ -1,3 +1,14 @@
+#v1.7.24
+======
+22.03.2024
+
+* openStatAdmin: weak use of profile data in allowed values of referencey by templates
+  "_PROFILE:<string with $-enclosed profile keys as placeholder>_"
+  for public data of all users and
+  "_PROFILE:MY:<string with $-enclosed profile keys as placeholder>_"
+  for private data of the user's profile
+  "weak use" means that stored values are not updated when profile data change
+  
 #v1.7.23
 ======
 19.03.2024

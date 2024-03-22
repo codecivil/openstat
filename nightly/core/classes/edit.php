@@ -73,6 +73,60 @@ class OpenStatEdit {
 		$_stmt_array['arr_values'] = array();
 		$_stmt_array['arr_values'][] = $_result['referencetag'];
 		$conditions = execute_stmt($_stmt_array,$connection,true)['result']; //first rows, then keynames
+        //get profile data if allowed value is of the form "_PROFILE:string with $ in front of and after profile keys_", e.g.
+        //"_PROFILE:$name$, $vorname$_": select public data from all profiles
+        //"_PROFILE:MY:$name$, $vorname$_": select private data from the user's profile
+        //works but gets disabled in js: work on this!
+        $_options = $conditions['allowed_values'];
+        foreach ( $conditions as $optionindex => $values_array ) {
+            $values = $values_array['allowed_values'];
+            preg_match_all('/_PROFILE\:([^_]*)_/',$values,$matches);
+            unset($profiles);
+            if ( isset($matches[1]) ) {
+                $profilekeys = [];
+                foreach ( $matches[1] as $matchstring ) {
+                    if ( strpos($matchstring,'MY:') == 0 ) {
+                        $_profileclass = "_private";
+                        $_profilewhere = " WHERE userid = ".$_SESSION['os_user'];
+                        $matchstring = substr($matchstring,3);
+                    } else {
+                        $_profileclass = "_public";
+                        $_profilewhere = "";
+                    }
+                    preg_match_all('/\$([^\$]*)\$/',$matchstring,$prflkys);
+                    if ( isset($prflkys[1]) ) {
+                        $profilekeys = array_merge($profilekeys,$prflkys[1]);
+                        $profilekeys = array_unique($profilekeys);
+                    }
+                }
+                if ( sizeof($profilekeys) > 0 ) {
+                    unset($_stmt_array); 
+                    $_stmt_array['stmt'] = 'SELECT '.$_profileclass.' FROM `os_userprofiles`'.$_profilewhere;
+                    unset($_result_array);
+                    $_profile_array = execute_stmt($_stmt_array,$this->connection); 
+                    if ( isset($_profile_array['dbMessageGood']) ) {
+                        $profiles = $_profile_array['result'][$_profileclass];
+                    }
+                }
+                if ( isset($profiles) ) {
+                    foreach ( $matches[1] as $matchstring ) {
+                        $prflrplc = [];
+                        foreach ( $profilekeys as $profilekey ) {
+                            foreach ( $profiles as $profilestring ) {
+                                $profile = json_decode($profilestring,true);
+                                if ( isset($profile[$profilekey]) ) {
+                                    $prflrplc[] = preg_replace('/\$'.$profilekey.'\$/',$profile[$profilekey],$matchstring);
+                                }
+                            }
+                        }
+                        $values = preg_replace('/_PROFILE\:'.preg_replace('/\$/','\\\$',$matchstring).'_/',implode('","',$prflrplc),$values);
+                    }
+                }
+                //remove all unreplaced PROFILE templates
+                $values = preg_replace('/_PROFILE\:[^_]*_/','',$values);
+            }
+            $conditions[$optionindex]['allowed_values'] = $values;
+        }
 		// get dependencies (conditions associated to depends_on_key)
 		unset($_stmt_array); 
 		//$_stmt_array['stmt'] = 'SELECT keymachine,referencetag,depends_on_key,depends_on_value,allowed_values FROM `'.$this->table.'_permissions` LEFT JOIN `'.$this->table.'_references` USING referencetag WHERE depends_on_key LIKE ?';
@@ -124,32 +178,23 @@ class OpenStatEdit {
 			case 'LIST':
 			/* REFERENCE (tag, depends_on_key, depends_on_value, allowed_values as json); several rows with same tag are applied with AND (intersection of allowed values)
 		set always a default: tag,default,default,list (not ANDed with other rows) */
-				unset($_stmt_array); 
-				$_stmt_array['stmt'] = 'SELECT depends_on_key,depends_on_value,allowed_values FROM `'.$this->table.'_references` WHERE referencetag = ?';
-				$_stmt_array['str_types'] = "s";
-				$_stmt_array['arr_values'] = array();
-				$_stmt_array['arr_values'][] = $_result['referencetag'];
-				unset($_result_array);
-				$_result_array = execute_stmt($_stmt_array,$this->connection); 
-				if ( isset($_result_array['dbMessageGood']) ) {
-					$_options = $_result_array['result']['allowed_values'];
-					if ( ! isset($options) ) { $options = array(); };
-					foreach ( $_options as $values ) {
-						//remove "***" signalling that all extended values of EXTENSIBLE LISTs are also allowed
-						//remove "_SHOW_" and "_HIDE_" signalling that the field is shown or hidden
-						$values = preg_replace('/\"\*\*\*\"\,/','',$values);
-						$values = preg_replace('/\,\"\*\*\*\"/','',$values);
-						$values = preg_replace('/\"\*\*\*\"/','',$values);
-						$values = preg_replace('/\"_SHOW_\"\,/','',$values);
-						$values = preg_replace('/\,\"_SHOW_\"/','',$values);
-						$values = preg_replace('/\"_SHOW_\"/','',$values);
-						$values = preg_replace('/\"_HIDE_\"\,/','',$values);
-						$values = preg_replace('/\,\"_HIDE_\"/','',$values);
-						$values = preg_replace('/\"_HIDE_\"/','',$values);
-						if ( is_array(json_decode($values)) ) {
-							$options = array_merge($options,json_decode($values));
-						}
-					}
+				$_options = array_column($conditions,'allowed_values');
+                if ( ! isset($options) ) { $options = array(); };
+                foreach ( $_options as $values ) {
+                    //remove "***" signalling that all extended values of EXTENSIBLE LISTs are also allowed
+                    //remove "_SHOW_" and "_HIDE_" signalling that the field is shown or hidden
+                    $values = preg_replace('/\"\*\*\*\"\,/','',$values);
+                    $values = preg_replace('/\,\"\*\*\*\"/','',$values);
+                    $values = preg_replace('/\"\*\*\*\"/','',$values);
+                    $values = preg_replace('/\"_SHOW_\"\,/','',$values);
+                    $values = preg_replace('/\,\"_SHOW_\"/','',$values);
+                    $values = preg_replace('/\"_SHOW_\"/','',$values);
+                    $values = preg_replace('/\"_HIDE_\"\,/','',$values);
+                    $values = preg_replace('/\,\"_HIDE_\"/','',$values);
+                    $values = preg_replace('/\"_HIDE_\"/','',$values);
+                    if ( is_array(json_decode($values)) ) {
+                        $options = array_merge($options,json_decode($values));
+                    }
 				}
 				break;
 			case 'CALENDAR':

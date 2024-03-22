@@ -25,7 +25,7 @@ hr, .clear { clear: both; }
 .hidden { display: none; }
 .bold { font-weight: bold; }
 .left { float: left; padding: 0.2rem; }
-.right { float: right; padding: 0.2rem; }
+.right { float: right; padding: 0.2rem; padding-right: 1rem; }
 .filelink { color: var(--color-filelink); cursor: pointer; }
 .error { color: red !important; }
 .marked { background: var(--background-marked); }
