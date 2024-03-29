@@ -193,7 +193,28 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 
 function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'os_all')
 {
+    //deal with paging
+    if ( ! isset($stmt_array['paging']) ) {
+        $stmt_array['paging'] = [0,$_SESSION['max_results']];
+    }
+    $stmt_array['stmt'] .= ' LIMIT '.(string)((int)$stmt_array['paging'][0]*(int)$stmt_array['paging'][1]).','.(string)((int)$stmt_array['paging'][1]+1);
+    //
+    $_starttime = microtime(true);
 	$_result_array = _execute_stmt($stmt_array,$conn); $result = $_result_array['result'];
+    $_endtime = microtime(true);
+    if ( $result->num_rows > $_SESSION['exec_forecast_threshold'] ) {
+        $_SESSION['sql_execution_rate'] = ($_endtime - $_starttime) / $result->num_rows;
+    }
+    //test if execution will exceed max_execution_time
+    if ( isset($_SESSION['details_execution_rate']) AND isset($_SESSION['max_execution_time']) ) {
+        if ( $_SESSION['details_execution_rate'] * $result->num_rows > $_SESSION['max_execution_time'] ) {
+            return "<p>Die Erzeugung der Detailliste würde länger dauern als erlaubt. Bitte spezifiziere Deine Tabellen- und Filtereinstellungen.</p>";
+        }
+    }
+    //test if page buttons are necessary
+    if ( $result->num_rows > $stmt_array['paging'][1] ) { $_addnextpagebutton = true; } else {$_addnextpagebutton = false; }
+    if ( $stmt_array['paging'][0] > 0 ) { $_addprevpagebutton = true ; } else { $_addprevpagebutton = false; }
+    //
 	$_config = getConfig($conn);
 	if ( isset($_config['hiddenColumns']) ) { $HIDDEN = $_config['hiddenColumns']; } else { $HIDDEN = array(); };
 	$TABLES = $_config['table'];
@@ -218,6 +239,17 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 	unset($oldvalue);
 	$oldvalue = array();
 	$table_results = "<form id=\"formMassEdit\" method=\"POST\" class=\"noreset function\"></form>";
+    //add page buttons at top
+    //if ( $_addprevpagebutton ){
+        //$table_results .= "<div class=\"prevBtn pageBtn inline\" onclick=\"document.querySelector('[name=page]').value = ".(string)((int)$stmt_array['paging'][0]-1)."; document.querySelector('#formFilters').onsubmit(); return false;\"><i class=\"fas fa-chevron-left\"></i></div>";
+    //}
+    if ( $_addprevpagebutton OR $_addnextpagebutton ){
+        $table_results .= "<label class=\"unlimitedWidth\">Seite </label><input class=\"pageNumber\" type=\"number\" min=1 onchange=\"document.querySelector('[name=page]').value = this.value -1; document.querySelector('#formFilters').onsubmit(); return false;\" value=\"".(string)((int)$stmt_array['paging'][0]+1)."\">";
+    }
+    //if ( $_addnextpagebutton ){
+        //$table_results .= "<div class=\"nextBtn pageBtn inline\" onclick=\"document.querySelector('[name=page]').value = ".(string)((int)$stmt_array['paging'][0]+1)."; document.querySelector('#formFilters').onsubmit(); return false;\"><i class=\"fas fa-chevron-right\"></i></div>";
+    //}
+    //
 	$table_results .= "<table id=\"db_results\">";
 	$rcount = 0;
 	if ( $result->num_rows > 0 ) {
@@ -260,6 +292,9 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 					}
 					$table_results .= "</tr><tr>";
 				}
+                //do not show the last result if it exceeds the pagesize (it is used to determine if there is a next page)
+                if ( $rcount >= $stmt_array['paging'][1] ) { $rcount++; continue; }
+                //
 				$_editvalue = array();
 				foreach ( $TABLES as $table ) 
 				{
@@ -328,13 +363,40 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 	$table_results .= "</table>";
 	$_SESSION['results']=json_encode($_sessionresults);
 	unset($_sessionresults);
-	return $table_results;
+    //compute rate in seconds per result
+    if ( $result->num_rows > $_SESSION['exec_forecast_threshold'] ) {
+        $_endtime = microtime(true);
+        $_SESSION['details_execution_rate'] = ($_endtime - $_starttime) / $result->num_rows;
+    }
+    //add page buttons at bottom
+    //if ( $_addprevpagebutton ){
+        //$table_results .= "<div class=\"prevBtn pageBtn inline\" onclick=\"document.querySelector('[name=page]').value = ".(string)((int)$stmt_array['paging'][0]-1)."; document.querySelector('#formFilters').onsubmit(); return false;\"><i class=\"fas fa-chevron-left\"></i></div>";
+    //}
+    if ( $_addprevpagebutton OR $_addnextpagebutton ){
+        $table_results .= "<label class=\"unlimitedWidth\">Seite </label><input class=\"pageNumber\" type=\"number\" min=1 onchange=\"document.querySelector('[name=page]').value = this.value - 1; document.querySelector('#formFilters').onsubmit(); return false;\" value=\"".(string)((int)$stmt_array['paging'][0]+1)."\">";
+    }
+    //if ( $_addnextpagebutton ){
+        //$table_results .= "<div class=\"nextBtn pageBtn inline\" onclick=\"document.querySelector('[name=page]').value = ".(string)((int)$stmt_array['paging'][0]+1)."; document.querySelector('#formFilters').onsubmit(); return false;\"><i class=\"fas fa-chevron-right\"></i></div>";
+    //}
+    return $table_results;
 }
 
 function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os_all') 
 {
+    $_starttime = microtime(true);
 	$_result_array = execute_stmt($stmt_array,$conn,true); //flip the result array to get rows
 	$result = $_result_array['result'];
+    $_endtime = microtime(true);
+    if ( sizeof($result) > $_SESSION['exec_forecast_threshold'] ) {
+        $_SESSION['sql_execution_rate'] = ($_endtime - $_starttime) / sizeof($result);
+    }
+    //test if execution will exceed max_execution_time
+    if ( isset($_SESSION['stat_execution_rate']) AND isset($_SESSION['max_execution_time']) ) {
+        if ( $_SESSION['stat_execution_rate'] * $result->num_rows > $_SESSION['max_execution_time'] ) {
+            return "<p>Die Erzeugung der Statistik würde länger dauern als erlaubt. Bitte spezifiziere Deine Tabellen- und Filtereinstellungen.</p>";
+        }
+    }
+    //
 	$table_results = "<div id=\"db_stat\">";
 	$rcount = 0;
 	$vrcount = array();
@@ -572,6 +634,11 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 // analyse mistake in Name Nachname Land > Muster 1 label stat3x1 should be stat2x1!
 	}
 	$table_results .= '</div>';
+    //compute rate in seconds per result
+    if ( sizeof($result) > $_SESSION['exec_forecast_threshold'] ) {
+        $_endtime = microtime(true);
+        $_SESSION['stat_execution_rate'] = ($_endtime - $_starttime) / sizeof($result);
+    }
 	return $table_results;
 }
 

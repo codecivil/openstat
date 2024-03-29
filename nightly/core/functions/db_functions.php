@@ -646,7 +646,15 @@ function getDetails($PARAMETER,$conn)
 								$_stmt_array['arr_values'] = array($PARAM['id_'.$ctable]);
 								$fresult = execute_stmt($_stmt_array,$conn,true);
 								if ( isset($fresult['result']) AND sizeof($fresult['result']) > 0 ) {
-									$value = json_decode($fresult['result'][0][$fkey],true);
+									//get value of virtual field
+                                    //virtual fields have always NULL or 0 as table value
+                                    if ( $fresult['result'][0][$fkey] == '' OR $fresult['result'][0][$fkey] == 0 OR $fresult['result'][0][$fkey] == null ) {
+                                        $_virtvalue = getVirtualValue($ctable,$PARAM['id_'.$ctable],$fkey,$conn);
+                                        if ( $_virtvalue != null ) {
+                                            $fresult['result'][0][$fkey] = $_virtvalue;
+                                        }
+                                    }
+                                    $value = json_decode($fresult['result'][0][$fkey],true);
 									if ( $value != null ) {
 										if (is_array($value) AND isset($value[0]) AND is_array($value[0])) {
 											$value = _cleanup($fresult['result'][0][$fkey],' | ');
@@ -684,8 +692,10 @@ function getDetails($PARAMETER,$conn)
 					if ( array_unique($ALLPARAM[$key]) != array($default) ) { $default = ''; }
 					if ( sizeof($id) > 1 ) {
 						$_single = false;
+                        $_passid = 0;
 					} else {
 						$_single = true;
+                        $_passid = $id[0];
 					}
 					if ( substr($key,0,9) == 'subtable_' ) {
 						$currentsubtablemachine = substr($key,9);
@@ -703,7 +713,7 @@ function getDetails($PARAMETER,$conn)
 						<?php
 					}
 					if ( substr($key,0,9) != 'subtable_' AND substr($key,0,3) != 'id_'  AND $key != 'table' ) {
-						$edit = new OpenStatEdit($table,$key,$conn);
+						$edit = new OpenStatEdit($table,$key,$conn,$_passid);
 						$PARAMTYPE[$table.'__'.$key] = $edit->edit($default,$_single);
 						unset($edit);
 					}
@@ -716,6 +726,23 @@ function getDetails($PARAMETER,$conn)
 		</form>
 	</div>
 <?php }
+
+function getVirtualValue(string $table,int $id,string $key,mysqli $conn) {
+    $_virtual_stmt_array = array();
+    $_virtual_stmt_array['stmt'] = 'SELECT edittype, defaultvalue FROM '.$table .'_permissions WHERE keymachine = ?';
+    $_virtual_stmt_array['str_types'] = 's';
+    $_virtual_stmt_array['arr_values'] = array($key);
+    $_virtualornot = execute_stmt($_virtual_stmt_array,$conn,true)['result'][0];
+    if ( strpos($_virtualornot['edittype'],'; VIRTUAL') > 0 ) {
+        $_sqlforkey = str_replace("'","",preg_replace('/\$([^\$]*)\$/','$1',$_virtualornot['defaultvalue']));
+        $_virtual_stmt_array = array();
+        $_virtual_stmt_array['stmt'] = 'SELECT '.$_sqlforkey.' AS _value FROM `view__'.$table .'__'.$_SESSION['os_role'].'` WHERE id_'.$table.' = ?';
+        $_virtual_stmt_array['str_types'] = 'i';
+        $_virtual_stmt_array['arr_values'] = array($id);
+        return execute_stmt($_virtual_stmt_array,$conn)['result']['_value'][0];        
+    }
+    return null;
+}
 
 function includeFunctions(string $scope, mysqli $conn)
 { ?>

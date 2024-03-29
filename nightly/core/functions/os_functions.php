@@ -747,15 +747,28 @@ function trafficLight(array $PARAM, mysqli $conn)
 				$resultout_array = _parseCriterion($resultin,$_param,$criterion,$tables,$conn);
 				$resultout = $resultout_array[0];
 				$_param = $resultout_array[1];
-				foreach ( $resultout as $id ) {
-					if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
-					$_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
-					if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
-					if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }
-					if ( $criterion['urgency'] == "-" ) { $ids[$criterion['table']][$id]['urgency'] -= 1; }
-					if ( is_int($criterion['urgency']) ) { $ids[$criterion['table']][$id]['urgency'] = max($ids[$criterion['table']][$id]['urgency'],$criterion['urgency']); }
-					if (! substr_in_array($criterion['name'],$ids[$criterion['table']][$id]['criteria']) ) { array_push($ids[$criterion['table']][$id]['criteria'],$criterion['name'].$_criteriondetail); } 
-				}
+                //execute callback if given (callback is a json string of a list of callback function names, '_' is proteceted and
+                //means: go on and display result)
+                if ( isset($criterion['callback']) ) {
+                    $_callback_array = json_decode($criterion['callback']);
+                    foreach ( $_callback_array as $_callback ) {
+                        if ( function_exists('_callback_'.$_callback) AND $_callback != '_' ) {
+                           '_callback_'.$_callback($table,$resultout,$conn);
+                       }
+                   }
+                }
+                //go on and display if callback is not given or contains '_'
+                if ( ! isset($criterion['callback']) OR ( isset($criterion['callback']) AND in_array('_',$_callback_array) ) ) {
+                    foreach ( $resultout as $id ) {
+                        if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
+                        $_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
+                        if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
+                        if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }
+                        if ( $criterion['urgency'] == "-" ) { $ids[$criterion['table']][$id]['urgency'] -= 1; }
+                        if ( is_int($criterion['urgency']) ) { $ids[$criterion['table']][$id]['urgency'] = max($ids[$criterion['table']][$id]['urgency'],$criterion['urgency']); }
+                        if (! substr_in_array($criterion['name'],$ids[$criterion['table']][$id]['criteria']) ) { array_push($ids[$criterion['table']][$id]['criteria'],$criterion['name'].$_criteriondetail); } 
+                    }
+                }
 			}
 		}
 		//save result as session variable (so we can use this when opening such an item)

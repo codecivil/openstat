@@ -13,6 +13,9 @@ if ( ! isset($_SESSION['os_user']) OR ! isset($_SESSION['os_dbpwd']) ) { header(
 // set openids as SESSION variable for bookkeeping
 $_SESSION['os_opennow'] = array();
 
+// get max_execution_time as session variable
+$_SESSION['max_execution_time'] = (int)ini_get('max_execution_time');
+
 //load classes, functions and constants
 
 //include system classes
@@ -303,6 +306,13 @@ $_v = time();
 				</div>
 			</div>
 		</div>
+        <div id="paging" data-title="Ergebnisse pro Seite">
+            <form method="post" class="statusForm" onsubmit="return false" onchange="callFunction(this,'changeConfig').then(()=>{ return false; }); ">
+                <legend><i class="fas fa-arrow-down-1-9"></i></legend>
+                <?php if ( ! isset($_config['paging']) ) { $_config['paging'] = 100; } ?>
+                <input id="pagingMax" type="number" min=1 max=<?php echo($_SESSION['max_results']); ?> name="paging" value="<?php echo(min($_SESSION['max_results'],$_config['paging'])); ?>">
+            </form>
+        </div>
 		<div id="info" class="<?php echo($whatsnewclass); ?>">
 			<form id="osInfoForm"></form>
 			<label for="osInfo">&nbsp;<i class="fas fa-info-circle" data-title="Informationen zur Software"></i>&nbsp;</label>

@@ -1,3 +1,20 @@
+#v1.8.0
+======
+29.03.2024
+
+* dos protection: forecast if generation of details and stats table takes too long and cancel in case
+* dos protection: user configurable paging of results
+* trafficLight: support for callback functions; the callback parameter of a criterion takes the json
+  string of a list of callback functions as value; '_' means 'display normally' and is also done for missing
+  callback parameter; callback functions are not registered and must be defined as '_callback_<functionname>',
+  where <functionname> is the name given in the callback value
+* openStatAdmin: virtual fields: data model modifier 'VIRTUAL' takes defaultvalue (in single quotes) as SQL
+  expression to determine the actual value at access time; this differs from 'DERIVED' as derived values are
+  computed at update/insert time and only read at access time; so computing the age would be a VIRTUAL field,
+  not DERIVED.
+* openStatAdmin: restrictrole values apply for (mutliple) combined fields for last entry's first item; there
+  will be language extension for arbitrary items at a later update
+
 #v1.7.24
 ======
 22.03.2024

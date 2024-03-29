@@ -1,3 +1,18 @@
+#v1.8.0
+======
+
+* Details- und Statistitabelle werden nicht erzeugt, wenn die Vorhersage für die benötigte Dauer
+die eingestellte Höchstgrenze des Webservers überschreitet.
+* Resultate werden auf Seiten aufgeteilt; die Seitengröße kann vom Benutzer eingestellt werden 
+  (bis zur Höchstgrenze der Installationskonfiguration)
+* openStatAdmin: Die Ampelfunkion hat einen Callbackparameter; anstatt und zusätzlich zur Anzeige
+  können weitere Funktionen auf die Ergebnisse des Kriteriums angewendet werden 
+* openStatAdmin: Es gibt nun virtuelle Felder; deren Wert wird aus anderen Feldern derselben Tabelle
+  bei Zugriff errechnet (im Unterschied zu abgeleiteten Feldern, deren Wert bei Aktualisierung des
+  Eintrags bestimmt wird) und ist etwa für das Errechnen des Alters nutzbar.
+* openStatAdmin: restrictrole-Werte werden bei (multiplen) Kombifeldern zusätzlich auf das erste Feld des
+  letzten Eintrags angewendet
+  
 #v1.7.24
 ======
 

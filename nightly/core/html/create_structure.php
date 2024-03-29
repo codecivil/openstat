@@ -530,7 +530,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 							_execute_stmt($_stmt_array,$conn);						
 						}
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "CREATE TABLE ".$PARAMETER['tablemachine']."_permissions(id INT NOT NULL AUTO_INCREMENT, keymachine VARCHAR(40), keyreadable VARCHAR(255), subtablemachine VARCHAR(40), realid DECIMAL(6,3), typelist VARCHAR(40), edittype VARCHAR(60), defaultvalue TEXT, referencetag VARCHAR(40), role_0 INT DEFAULT 0, restrictrole_0 TEXT DEFAULT NULL, PRIMARY KEY (id))".$ENCRYPTED.";";
+						$_stmt_array['stmt'] = "CREATE TABLE ".$PARAMETER['tablemachine']."_permissions(id INT NOT NULL AUTO_INCREMENT, keymachine VARCHAR(40), keyreadable VARCHAR(255), subtablemachine VARCHAR(40), realid DECIMAL(6,3), typelist VARCHAR(40), edittype VARCHAR(60), defaultvalue TEXT, extras TEXT, referencetag VARCHAR(40), role_0 INT DEFAULT 0, restrictrole_0 TEXT DEFAULT NULL, PRIMARY KEY (id))".$ENCRYPTED.";";
 						_execute_stmt($_stmt_array,$conn);
 						unset($_role);
 						foreach ( $_ROLES as $_role )
@@ -603,7 +603,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					foreach ( json_decode($PARAMETER['allowed_roles'],true) as $_role )
 					{
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,realid,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
+						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,defaultvalue,extras,realid,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
 						_execute_stmt($_stmt_array,$conn); 
 						unset($_stmt_array); $_stmt_array = array();
 						$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_role].";";
@@ -618,7 +618,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 						foreach ( $_children as $_child )
 						{
 							unset($_stmt_array); $_stmt_array = array();
-							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
+							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,defaultvalue,extras,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
 							_execute_stmt($_stmt_array,$conn); 
 							unset($_stmt_array); $_stmt_array = array();
 							$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_child].";";
@@ -802,7 +802,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 					foreach ( json_decode($PARAMETER['allowed_roles'],true) as $_role )
 					{
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
+						$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,defaultvalue,extras,referencetag,role_".$_PARENTS_ARRAY[$_role].",restrictrole_".$_PARENTS_ARRAY[$_role].",role_".$_role.",restrictrole_".$_role.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_role].";";
 						_execute_stmt($_stmt_array,$conn); 
 						unset($_stmt_array); $_stmt_array = array();
 						$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_role].";";
@@ -817,7 +817,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 						foreach ( $_children as $_child )
 						{
 							unset($_stmt_array); $_stmt_array = array();
-							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
+							$_stmt_array['stmt'] = "GRANT SELECT (realid,keymachine,keyreadable,subtablemachine,typelist,edittype,defaultvalue,extras,referencetag,role_".$_PARENTS_ARRAY[$_child].",restrictrole_".$_PARENTS_ARRAY[$_child].",role_".$_child.",restrictrole_".$_child.") ON ".$PARAMETER['tablemachine']."_permissions TO ".$_ROLES_ARRAY[$_child].";";
 							_execute_stmt($_stmt_array,$conn); 
 							unset($_stmt_array); $_stmt_array = array();
 							$_stmt_array['stmt'] = "GRANT SELECT ON ".$PARAMETER['tablemachine']."_references TO ".$_ROLES_ARRAY[$_child].";";
@@ -872,17 +872,19 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 						break;
 				}
 			}
+            //do not actully set another default value for virtual fields
 			//note: expressions as DEFAULT are only supported for mariadb >= 10.2.1
-			if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };					
+			if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; VIRTUAL') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };					
+            //
 			switch($PARAMETER['dbAction']) {
 				case 'edit':
 					unset($_stmt_array);
-					$_stmt_array['stmt'] = "SELECT keymachine,typelist FROM ".$PARAMETER['table']." WHERE id = ?";
+					$_stmt_array['stmt'] = "SELECT keymachine,typelist,edittype FROM ".$PARAMETER['table']." WHERE id = ?";
 					$_stmt_array['str_types'] = "i";
 					$_stmt_array['arr_values'] = array();
 					$_stmt_array['arr_values'][] = $PARAMETER['id'];
 					$_former = execute_stmt($_stmt_array,$conn,true)['result'][0];
-					unset($_stmt_array);
+                    unset($_stmt_array);
 					$_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` CHANGE COLUMN `".$_former['keymachine']."` `".$PARAMETER['keymachine']."` ".$PARAMETER['typelist'].$_DEFAULT;
 					_execute_stmt($_stmt_array,$conn);
 					break;
@@ -1329,7 +1331,9 @@ function recreateView(string $_propertable, mysqli $conn) {
 							$_values = trimList($_values);
 							$_values = implode("\',\'",json_decode($_values,true));
 							if ( $_values != ',' AND $_values != '' ) {
-								$CREATEVIEW_WHERE .= $CREATEVIEW_AND.$_restrict['keymachine']." IN (\'".$_values."\') ";
+                                //key has one of the values or, for multiple combined keys: first component's last entry is one of the values
+                                //kind of hotfix for now; may be subject to change!
+								$CREATEVIEW_WHERE .= $CREATEVIEW_AND."(".$_restrict['keymachine']." IN (\'".$_values."\') OR ( ".$_restrict['keymachine']." LIKE \'[%\' AND JSON_VALUE(JSON_QUERY(".$_restrict['keymachine'].",\'$[0]\'),CONCAT(\'$[\',JSON_LENGTH(JSON_QUERY(".$_restrict['keymachine'].",\'$[0]\'))-1,\']\')) IN (\'".$_values."\') ) )";
 								$CREATEVIEW_AND = ' AND ';
 							}
 						}
@@ -1340,7 +1344,10 @@ function recreateView(string $_propertable, mysqli $conn) {
 							$_values = trimList($_values);
 							$_values = implode("\',\'",json_decode($_values,true));
 							if ( $_values != ',' AND $_values != '' ) {
-								$CREATEVIEW_WHERE .= $CREATEVIEW_AND.$_restrict['keymachine']." IN (\'".$_values."\') ";
+								// was: $CREATEVIEW_WHERE .= $CREATEVIEW_AND.$_restrict['keymachine']." IN (\'".$_values."\') ";
+                                //key has one of the values or, for multiple combined keys: first component's last entry is one of the values
+                                //kind of hotfix for now; may be subject to change!
+								$CREATEVIEW_WHERE .= $CREATEVIEW_AND."(".$_restrict['keymachine']." IN (\'".$_values."\') OR ( ".$_restrict['keymachine']." LIKE \'[%\' AND JSON_VALUE(JSON_QUERY(".$_restrict['keymachine'].",\'$[0]\'),CONCAT(\'$[\',JSON_LENGTH(JSON_QUERY(".$_restrict['keymachine'].",\'$[0]\'))-1,\']\')) IN (\'".$_values."\') ) )";
 //											$CREATEVIEW_WHERE .= $CREATEVIEW_AND.$_restrict['keymachine'].' IN ('.$_values.') ';
 								$CREATEVIEW_AND = ' AND ';
 							}
@@ -1387,7 +1394,9 @@ function recreateView(string $_propertable, mysqli $conn) {
 					}	
 				}
 				//echo("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
-				$conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
+                file_put_contents('/var/www/test/openStat/mylog.txt',"SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;",FILE_APPEND);
+
+                $conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
 				$conn->query("PREPARE stmt FROM @qry2;");
 				$conn->query("EXECUTE stmt;");
 				$conn->query("COMMIT;");

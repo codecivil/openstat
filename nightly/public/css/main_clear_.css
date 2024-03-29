@@ -169,6 +169,7 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar .functions { background: initial; }
 #statusbar #usermenu #display_options div { border: 1px solid var(--color-statusbar); border-radius: 5px; margin: 0.2rem 0; }
 #statusbar #columnsSelect { width: 3rem; }
+#statusbar #pagingMax { width: 4rem; padding: 0; border: none; }
 
 /* HelpMode specifics */
 #helpModeBtn:checked ~ div .sliderframe {
@@ -400,6 +401,8 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #results_wrapper > .functions { border: 0; padding: 0; margin: 0; }
 #results_wrapper > .time { border: 0; padding: 0; margin: 0; font-size: 0.7rem; }
 #results_wrapper .newEntry { background: var(--background-details-new); }
+#results_wrapper .pageBtn:hover { cursor: pointer; }
+#results_wrapper .pageNumber { width: 3.5rem; border: none; }
 /*#results_wrapper #stat_wrapper, #results_wrapper #details_wrapper { border: 1px solid black; border-radius: 5px; padding: 0.2rem; overflow-x: auto; margin: 0.2rem; }*/
 #stat_wrapper { background: var(--background-statwrapper);}
 #stat_wrapper #statGraphics_wrapper { border: 1px solid var(--color-statwrapper); border-radius: 5px; }
