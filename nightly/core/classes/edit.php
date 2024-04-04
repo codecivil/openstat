@@ -287,12 +287,13 @@ class OpenStatEdit {
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'MULTIPLE' ) { $_result['multiple'] = true; } else { $_result['multiple'] = false; };//multiple entries
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'DERIVED' ) { $_result['derived'] = true; } else { $_result['derived'] = false; }; //compute values from other fields
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'VIRTUAL' ) { $_result['virtual'] = true; } else { $_result['virtual'] = false; }; //compute values from other fields
+		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'EXPRESSION' ) { $_result['expression'] = true; } else { $_result['expression'] = false; }; //compute values from other fields
 		$_result['FUNCTIONchecked'] = "user";
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'CHECKED' ) { $_result['FUNCTIONchecked'] = "true"; } //only for FUNCTIONS: automatically checked
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'UNCHECKED' ) { $_result['FUNCTIONchecked'] = "false"; } //only for FUNCTIONS: automatically checked
 		unset($_tmp_array);
-		//disable if derived or virtual
-		if ( $_result['derived'] OR $_result['virtual'] ) { $_addclasses = " noupdate noinsert"; $_disabled = 'disabled'; } //values of derived fields are determined by other fields
+		//disable if derived or virtual or expression
+		if ( $_result['derived'] OR $_result['virtual'] OR $_result['expression'] ) { $_addclasses = " noupdate noinsert"; $_disabled = 'disabled'; } //values of derived fields are determined by other fields
 		//get actual value ('default') for virtual fields
         if ( $_result['virtual'] ) {
             $_virtual_stmt_array = array("stmt" => 'SELECT '.str_replace("'","",preg_replace('/\$([^\$]*)\$/','$1',$_result['defaultvalue'])).' AS _default FROM view__'.$this->table.'__'.$_SESSION['os_role']." WHERE id_".$this->table."= ?");

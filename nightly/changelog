@@ -1,3 +1,10 @@
+#v1.8.1
+======
+04.04.2024
+
+* faster version of virtual fields, called expression fields for compatibility; defaultvalue parameters
+  are NOT enclosed in $'s any more
+
 #v1.8.0
 ======
 29.03.2024

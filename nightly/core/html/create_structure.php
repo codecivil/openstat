@@ -874,31 +874,34 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 			}
             //do not actully set another default value for virtual fields
 			//note: expressions as DEFAULT are only supported for mariadb >= 10.2.1
-			if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; VIRTUAL') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };					
+			if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; VIRTUAL') == false AND strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };					
             //
-			switch($PARAMETER['dbAction']) {
-				case 'edit':
-					unset($_stmt_array);
-					$_stmt_array['stmt'] = "SELECT keymachine,typelist,edittype FROM ".$PARAMETER['table']." WHERE id = ?";
-					$_stmt_array['str_types'] = "i";
-					$_stmt_array['arr_values'] = array();
-					$_stmt_array['arr_values'][] = $PARAMETER['id'];
-					$_former = execute_stmt($_stmt_array,$conn,true)['result'][0];
-                    unset($_stmt_array);
-					$_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` CHANGE COLUMN `".$_former['keymachine']."` `".$PARAMETER['keymachine']."` ".$PARAMETER['typelist'].$_DEFAULT;
-					_execute_stmt($_stmt_array,$conn);
-					break;
-				case 'insert':
-					unset($_stmt_array);
-					$_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` ADD COLUMN `".$PARAMETER['keymachine']."` ".$PARAMETER['typelist'].$_DEFAULT;
-					_execute_stmt($_stmt_array,$conn);
-					break;
-				case 'delete':
-					unset($_stmt_array);
-					$_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` DROP COLUMN `".$PARAMETER['keymachine']."`";
-					_execute_stmt($_stmt_array,$conn);
-					break;
-			}
+            //do not create columns for EXPRESSION modifier (they are created exclusively in the views!)
+            if ( strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) {
+                switch($PARAMETER['dbAction']) {
+                    case 'edit':
+                        unset($_stmt_array);
+                        $_stmt_array['stmt'] = "SELECT keymachine,typelist,edittype FROM ".$PARAMETER['table']." WHERE id = ?";
+                        $_stmt_array['str_types'] = "i";
+                        $_stmt_array['arr_values'] = array();
+                        $_stmt_array['arr_values'][] = $PARAMETER['id'];
+                        $_former = execute_stmt($_stmt_array,$conn,true)['result'][0];
+                        unset($_stmt_array);
+                        $_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` CHANGE COLUMN `".$_former['keymachine']."` `".$PARAMETER['keymachine']."` ".$PARAMETER['typelist'].$_DEFAULT;
+                        _execute_stmt($_stmt_array,$conn);
+                        break;
+                    case 'insert':
+                        unset($_stmt_array);
+                        $_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` ADD COLUMN `".$PARAMETER['keymachine']."` ".$PARAMETER['typelist'].$_DEFAULT;
+                        _execute_stmt($_stmt_array,$conn);
+                        break;
+                    case 'delete':
+                        unset($_stmt_array);
+                        $_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` DROP COLUMN `".$PARAMETER['keymachine']."`";
+                        _execute_stmt($_stmt_array,$conn);
+                        break;
+                }
+            }
 			break;
 	}
 	if (! isset($_stmt_array['stmt']) ) { $_stmt_array = array('error'=>'Keine Aktion. ','dbMessageGood'=>true); };
@@ -1265,7 +1268,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 		//debug only: file_put_contents('/var/www/test/openStat/mylog.txt',$_stmt_array['stmt'],FILE_APPEND);
 		$conn->begin_transaction();
 		$conn->query("START TRANSACTION;");
-		$conn->query("SELECT GROUP_CONCAT(CONCAT('T.',keymachine) ORDER BY realid) INTO @qry FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$_propertable."';");
+		$conn->query("SELECT GROUP_CONCAT(IF ( edittype LIKE '%; EXPRESSION', REPLACE(CONCAT(defaultvalue,' AS `',keymachine,'`'),'\'',''), CONCAT('T.`',keymachine,'`')) ORDER BY realid) INTO @qry FROM ".$PARAMETER['parentmachine']."_permissions WHERE subtablemachine = '".$_propertable."';");
 		$conn->query($_stmt_array['stmt']);
 		$conn->query("PREPARE stmt FROM @qry2;");
 		$conn->query("EXECUTE stmt;");
@@ -1282,7 +1285,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 		$_stmt_array['stmt'] .= ",', @qry, ' FROM ".$_propertable." WITH CHECK OPTION') INTO @qry2;";
 		$conn->begin_transaction();
 		$conn->query("START TRANSACTION;");
-		$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$_propertable."_permissions WHERE subtablemachine = '' OR subtablemachine IS NULL;");
+		$conn->query("SELECT GROUP_CONCAT(IF ( edittype LIKE '%; EXPRESSION', REPLACE(CONCAT(defaultvalue,' AS ',keymachine),'\'',''), keymachine) ORDER BY realid) INTO @qry FROM ".$_propertable."_permissions WHERE subtablemachine = '' OR subtablemachine IS NULL;");
 		$conn->query($_stmt_array['stmt']);
 		$conn->query("PREPARE stmt FROM @qry2;");
 		$conn->query("EXECUTE stmt;");
@@ -1379,7 +1382,12 @@ function recreateView(string $_propertable, mysqli $conn) {
 				if ( $CREATEVIEW_WHERE != '' ) { $CREATEVIEW_WHERE = " WHERE ".$CREATEVIEW_WHERE; }
 				$conn->begin_transaction();
 				$conn->query("START TRANSACTION;");
-				$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7;"); //if you add permission types: 8=2^n; 7=2^n-1;
+                //treat normal fields and expression fields differently
+                $conn->query("SELECT GROUP_CONCAT(IF ( edittype LIKE '%; EXPRESSION', REPLACE(CONCAT(defaultvalue,' AS ',keymachine),'\'',''), keymachine) ORDER BY realid) INTO @qry FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7;"); //if you add permission types: 8=2^n; 7=2^n-1;
+                //normal fields
+                //$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$PARAMETER['table']." WHERE NOT edittype LIKE '%; EXPRESSION' AND ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7;"); //if you add permission types: 8=2^n; 7=2^n-1;
+				//expression fields
+                //$conn->query("SELECT COALESCE(CONCAT(',',GROUP_CONCAT(REPLACE(CONCAT(defaultvalue,' AS ',keymachine),'\'','') ORDER BY realid)),'') INTO @qry0 FROM ".$PARAMETER['table']." WHERE edittype LIKE '%; EXPRESSION' AND ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7;"); //if you add permission types: 8=2^n; 7=2^n-1;
 				//id in next line is wrong: replace by id_s of allowed tables for role
 				$CREATEVIEW_ID = '';
 				if ( $PARAMETER['parentmachine'] != '' ) { $CREATEVIEW_ID = 'subtable_'.$_propertable.','; }
@@ -1396,7 +1404,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 				//echo("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
                 file_put_contents('/var/www/test/openStat/mylog.txt',"SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;",FILE_APPEND);
 
-                $conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
+                $conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry,' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
 				$conn->query("PREPARE stmt FROM @qry2;");
 				$conn->query("EXECUTE stmt;");
 				$conn->query("COMMIT;");

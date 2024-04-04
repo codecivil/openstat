@@ -1,3 +1,9 @@
+#v1.8.1
+======
+
+* openStatAdmin: EXPRESSION Modifikator als schnellerer Ersatz für VIRTUAL; Feldnamen in defaultvalue
+  werden dabei nicht von $-Zeichen umgeben.
+   
 #v1.8.0
 ======
 
