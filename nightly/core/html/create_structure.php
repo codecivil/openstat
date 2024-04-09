@@ -1431,10 +1431,13 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry1 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 2 < 1;");
 				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry2 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 4 < 2;");
 				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry4 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 < 4;");
+				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry01 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 2 < 1 AND NOT edittype LIKE '%; EXPRESSION';");
+				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry02 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 4 < 2 AND NOT edittype LIKE '%; EXPRESSION';");
+				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry04 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 < 4 AND NOT edittype LIKE '%; EXPRESSION';");
                 //grants for update and select view (do not yet split them for backwards compatibility)
 				$conn->query("SELECT CONCAT('GRANT SELECT (".$CREATEVIEW_ID."', @qry1,'), UPDATE (".$CREATEVIEW_ID."', @qry2,'), INSERT(".$CREATEVIEW_ID."', @qry4, ') ON view__".$_propertable.'__'.$PARAMETER['roleid']." TO ".$PARAMETER['rolename']."') INTO @qry;");
 				//same grants for insert view (need select for where clauses anyway, I think)
-                $conn->query("SELECT CONCAT('GRANT SELECT (".$CREATEVIEW_ID."', @qry1,'), UPDATE (".$CREATEVIEW_ID."', @qry2,'), INSERT(".$CREATEVIEW_ID."', @qry4, ') ON view__".$_propertable.'INSERT__'.$PARAMETER['roleid']." TO ".$PARAMETER['rolename']."') INTO @qry0;");
+                $conn->query("SELECT CONCAT('GRANT SELECT (".$CREATEVIEW_ID."', @qry01,'), UPDATE (".$CREATEVIEW_ID."', @qry02,'), INSERT(".$CREATEVIEW_ID."', @qry04, ') ON view__".$_propertable.'INSERT__'.$PARAMETER['roleid']." TO ".$PARAMETER['rolename']."') INTO @qry0;");
 //wrong place:					$conn->query("GRANT SELECT, UPDATE ON os_userconfig.* TO".$PARAMETER['rolename'].";");
 //needs to be in role>insert	$conn->query("GRANT SELECT ON os_functions.* TO".$PARAMETER['rolename'].";");
 //								$conn->query("GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$PARAMETER['roleid'].",restrictrole_".$PARAMETER['roleid'].") ON ".$PARAMETER['table']."_permissions TO ".$PARAMETER['rolename'].";");
