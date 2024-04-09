@@ -874,7 +874,8 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 			}
             //do not actully set another default value for virtual fields
 			//note: expressions as DEFAULT are only supported for mariadb >= 10.2.1
-			if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; VIRTUAL') == false AND strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };					
+			//prospective: when VIRTUAL is removed completely: if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };					
+            if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; VIRTUAL') == false AND strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };
             //
             //do not create columns for EXPRESSION modifier (they are created exclusively in the views!)
             if ( strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) {
@@ -1383,7 +1384,12 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$conn->begin_transaction();
 				$conn->query("START TRANSACTION;");
                 //treat normal fields and expression fields differently
+                //moreover, a view with an expression field is updatable but not insertable, so we have to create a second view
+                //without expression fields for inserts only
+                //this is the select and update view keys
                 $conn->query("SELECT GROUP_CONCAT(IF ( edittype LIKE '%; EXPRESSION', REPLACE(CONCAT(defaultvalue,' AS ',keymachine),'\'',''), keymachine) ORDER BY realid) INTO @qry FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7;"); //if you add permission types: 8=2^n; 7=2^n-1;
+                //this is the insert view keys
+                $conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry0 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7 AND NOT `edittype` LIKE '%; EXPRESSION';"); //if you add permission types: 8=2^n; 7=2^n-1;
                 //normal fields
                 //$conn->query("SELECT GROUP_CONCAT(keymachine ORDER BY realid) INTO @qry FROM ".$PARAMETER['table']." WHERE NOT edittype LIKE '%; EXPRESSION' AND ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 != 7;"); //if you add permission types: 8=2^n; 7=2^n-1;
 				//expression fields
@@ -1402,10 +1408,15 @@ function recreateView(string $_propertable, mysqli $conn) {
 					}	
 				}
 				//echo("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
-                file_put_contents('/var/www/test/openStat/mylog.txt',"SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;",FILE_APPEND);
-
+                //file_put_contents('/var/www/test/openStat/mylog.txt',"SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;",FILE_APPEND);
+                
+                //select and update view statement
                 $conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry,' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
+                //insert view statement
+                $conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'INSERT__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry0,' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry3;");
 				$conn->query("PREPARE stmt FROM @qry2;");
+				$conn->query("EXECUTE stmt;");
+				$conn->query("PREPARE stmt FROM @qry3;");
 				$conn->query("EXECUTE stmt;");
 				$conn->query("COMMIT;");
 				$conn->commit();
@@ -1420,11 +1431,16 @@ function recreateView(string $_propertable, mysqli $conn) {
 				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry1 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 2 < 1;");
 				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry2 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 4 < 2;");
 				$conn->query("SELECT GROUP_CONCAT(keymachine) INTO @qry4 FROM ".$PARAMETER['table']." WHERE ( `role_".$PARAMETER['roleid']."` + `role_".$PARAMETER['parentid']."` ) MOD 8 < 4;");
+                //grants for update and select view (do not yet split them for backwards compatibility)
 				$conn->query("SELECT CONCAT('GRANT SELECT (".$CREATEVIEW_ID."', @qry1,'), UPDATE (".$CREATEVIEW_ID."', @qry2,'), INSERT(".$CREATEVIEW_ID."', @qry4, ') ON view__".$_propertable.'__'.$PARAMETER['roleid']." TO ".$PARAMETER['rolename']."') INTO @qry;");
+				//same grants for insert view (need select for where clauses anyway, I think)
+                $conn->query("SELECT CONCAT('GRANT SELECT (".$CREATEVIEW_ID."', @qry1,'), UPDATE (".$CREATEVIEW_ID."', @qry2,'), INSERT(".$CREATEVIEW_ID."', @qry4, ') ON view__".$_propertable.'INSERT__'.$PARAMETER['roleid']." TO ".$PARAMETER['rolename']."') INTO @qry0;");
 //wrong place:					$conn->query("GRANT SELECT, UPDATE ON os_userconfig.* TO".$PARAMETER['rolename'].";");
 //needs to be in role>insert	$conn->query("GRANT SELECT ON os_functions.* TO".$PARAMETER['rolename'].";");
 //								$conn->query("GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,referencetag,role_".$PARAMETER['roleid'].",restrictrole_".$PARAMETER['roleid'].") ON ".$PARAMETER['table']."_permissions TO ".$PARAMETER['rolename'].";");
 				$conn->query("PREPARE stmt FROM @qry;");
+				$conn->query("EXECUTE stmt;");
+				$conn->query("PREPARE stmt FROM @qry0;");
 				$conn->query("EXECUTE stmt;");
 				$conn->query("FLUSH PRIVILEGES;");
 				$conn->query("COMMIT;");
