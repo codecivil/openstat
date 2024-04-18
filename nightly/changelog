@@ -1,3 +1,9 @@
+#v1.8.3
+======
+18.04.2024
+
+* prepare transition from VIRTUAL to EXPRESSION fields: use INSERT views
+
 #v1.8.2
 ======
 09.04.2024

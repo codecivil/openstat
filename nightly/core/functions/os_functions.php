@@ -106,7 +106,7 @@ function newEntry(array $PARAM,$conn) {
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = 'SELECT column_name FROM information_schema.columns WHERE table_name = ?;';
 	$_stmt_array['str_types'] = 's';
-	$_stmt_array['arr_values'] = array('view__'.$table[0].'__'.$_SESSION['os_role']);
+	$_stmt_array['arr_values'] = array('view__'.$table[0].'INSERT__'.$_SESSION['os_role']);
 
 	//get details of the entry
 	unset($PARAMETER);
