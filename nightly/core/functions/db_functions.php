@@ -174,7 +174,8 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			if ( ! is_array($_MAINIDS) ) { $_MAINIDS = array($_MAINIDS); }
  			foreach ( $_MAINIDS as $_index=>$mainid ) {
 				if ( isset($PARAMETER['id_'.$maintable]) ) { $PARAMETER['id_'.$maintable] = $mainid; }; 
-                $into = " INTO `view__" . $PARAMETER['table'] . "INSERT__". $_SESSION['os_role']."` "; //INSERT view is without EXPRESSION modified fields				$komma = "(";
+                $into = " INTO `view__" . $PARAMETER['table'] . "INSERT__". $_SESSION['os_role']."` "; //INSERT view is without EXPRESSION modified fields
+                $komma = "(";
 				$arr_values = array();
 				$str_types = '';
 				$values = " VALUES ";
