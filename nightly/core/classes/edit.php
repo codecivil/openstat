@@ -16,7 +16,7 @@ class OpenStatEdit {
 	public $table = "";
 	public $key = "";
 	public $connection;// = new mysqli;
-    public $id; //need id on table for computing virtual fields live
+    public $id; //was needed for VIRTUAL fields but is kept for any prospective use...
 	
 	public function __construct(string $table, string $key, mysqli $connection, int $id=0) {
 		$this->table = $this->_input_escape($table);
@@ -66,7 +66,7 @@ class OpenStatEdit {
 		//
 		//implement MULTIPLE (for LISTs e.g.) (elements of array as options, not the JSON encode...)
 		//already done, just need to strip away the MULTIPLE part
-        //need VIRTUAL modifier here
+        //need EXPRESSION modifier here? (was VIRTUAL)
         $_type_modifier = explode('; ',$_result['edittype'],2);
 		$_result['edittype']= $_type_modifier[0];
 		$_result['modifier']= '';
@@ -162,11 +162,7 @@ class OpenStatEdit {
 			case 'SUGGEST BEFORE LIST':
 				unset($_stmt_array); 
 				if ( $compound == -1 ) {
-                    if ( $_result['modifier'] == "VIRTUAL" ) {
-                        $_this_key = str_replace("'","",preg_replace('/\$([^\$]*)\$/','$1',$_result['defaultvalue']));
-                    } else {
-                        $_this_key = '`'.$this->key.'`';
-                    }
+                    $_this_key = '`'.$this->key.'`';
 					$_stmt_array['stmt'] = 'SELECT '.$_this_key.' FROM `view__' . $this->table . '__' . $_SESSION['os_role'].'` ORDER BY `'.$this->key.'`';
 					$_here_key = $this->key;
 				} else {
@@ -224,11 +220,7 @@ class OpenStatEdit {
 				}
 				break;
 			default:
-                if ( $_result['modifier'] == "VIRTUAL" ) {
-                    $_this_key = str_replace("'","",preg_replace('/\$([^\$]*)\$/','$1',$_result['defaultvalue']));
-                } else {
-                    $_this_key = '`'.$this->key.'`';
-                }
+                $_this_key = '`'.$this->key.'`';
 				unset($_stmt_array); 
 				$_stmt_array['stmt'] = 'SELECT '.$_this_key.' FROM `view__' . $this->table . '__' . $_SESSION['os_role'].'`';
 				$options = execute_stmt($_stmt_array,$this->connection)['result'][$this->key];
@@ -244,8 +236,7 @@ class OpenStatEdit {
 	public function edit(string $_default, bool $_single = true) {
 		$default = $_default;
 		$_stmt_array = array();
-        #virtual fields: either defaultvalue or extras has to be queried; see to.do
-        #to be continued
+        #virtual field needed defaultvalue, but we keep it a while to be on the safe side...
 		$_stmt_array['stmt'] = 'SELECT defaultvalue,edittype,typelist,role_'.$_SESSION['os_role'].' AS role, restrictrole_'.$_SESSION['os_role'].' AS restrictrole, role_'.$_SESSION['os_parent'].' AS parentrole, restrictrole_'.$_SESSION['os_parent'].' AS restrictparentrole FROM '.$this->table.'_permissions WHERE keymachine = ?';
 		$_stmt_array['str_types'] = 's';
 		$_stmt_array['arr_values'] = array($this->key);
@@ -286,22 +277,13 @@ class OpenStatEdit {
 		//print_r($_tmp_array);
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'MULTIPLE' ) { $_result['multiple'] = true; } else { $_result['multiple'] = false; };//multiple entries
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'DERIVED' ) { $_result['derived'] = true; } else { $_result['derived'] = false; }; //compute values from other fields
-		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'VIRTUAL' ) { $_result['virtual'] = true; } else { $_result['virtual'] = false; }; //compute values from other fields
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'EXPRESSION' ) { $_result['expression'] = true; } else { $_result['expression'] = false; }; //compute values from other fields
 		$_result['FUNCTIONchecked'] = "user";
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'CHECKED' ) { $_result['FUNCTIONchecked'] = "true"; } //only for FUNCTIONS: automatically checked
 		if ( isset($_tmp_array[1]) AND $_tmp_array[1] == 'UNCHECKED' ) { $_result['FUNCTIONchecked'] = "false"; } //only for FUNCTIONS: automatically checked
 		unset($_tmp_array);
-		//disable if derived or virtual or expression
-		if ( $_result['derived'] OR $_result['virtual'] OR $_result['expression'] ) { $_addclasses = " noupdate noinsert"; $_disabled = 'disabled'; } //values of derived fields are determined by other fields
-		//get actual value ('default') for virtual fields
-        if ( $_result['virtual'] ) {
-            $_virtual_stmt_array = array("stmt" => 'SELECT '.str_replace("'","",preg_replace('/\$([^\$]*)\$/','$1',$_result['defaultvalue'])).' AS _default FROM view__'.$this->table.'__'.$_SESSION['os_role']." WHERE id_".$this->table."= ?");
-            $_virtual_stmt_array['str_types'] = "s";
-            $_virtual_stmt_array['arr_values'] = array();
-            $_virtual_stmt_array['arr_values'][] = $this->id;
-            $default = execute_stmt($_virtual_stmt_array,$this->connection)['result']['_default'][0];
-        }
+		//disable if derived or expression
+		if ( $_result['derived'] OR $_result['expression'] ) { $_addclasses = " noupdate noinsert"; $_disabled = 'disabled'; } //values of derived fields are determined by other fields
         //preliminary: compound structures
 		$_tmp_array = explode(' + ',$_result['edittype']);
 		$_result['edittype_array'] = $_tmp_array;

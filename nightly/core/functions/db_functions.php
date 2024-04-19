@@ -174,8 +174,8 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			if ( ! is_array($_MAINIDS) ) { $_MAINIDS = array($_MAINIDS); }
  			foreach ( $_MAINIDS as $_index=>$mainid ) {
 				if ( isset($PARAMETER['id_'.$maintable]) ) { $PARAMETER['id_'.$maintable] = $mainid; }; 
-                $into = " INTO `view__" . $PARAMETER['table'] . "INSERT__". $_SESSION['os_role']."` "; //INSERT view is without EXPRESSION modified fields
-                $komma = "(";
+				$into = " INTO `view__" . $PARAMETER['table'] . "INSERT__". $_SESSION['os_role']."` "; //INSERT view is without EXPRESSION modified fields
+				$komma = "(";
 				$arr_values = array();
 				$str_types = '';
 				$values = " VALUES ";
@@ -646,14 +646,6 @@ function getDetails($PARAMETER,$conn)
 								$_stmt_array['arr_values'] = array($PARAM['id_'.$ctable]);
 								$fresult = execute_stmt($_stmt_array,$conn,true);
 								if ( isset($fresult['result']) AND sizeof($fresult['result']) > 0 ) {
-									//get value of virtual field
-                                    //virtual fields have always NULL or 0 as table value
-                                    if ( $fresult['result'][0][$fkey] == '' OR $fresult['result'][0][$fkey] == 0 OR $fresult['result'][0][$fkey] == null ) {
-                                        $_virtvalue = getVirtualValue($ctable,$PARAM['id_'.$ctable],$fkey,$conn);
-                                        if ( $_virtvalue != null ) {
-                                            $fresult['result'][0][$fkey] = $_virtvalue;
-                                        }
-                                    }
                                     $value = json_decode($fresult['result'][0][$fkey],true);
 									if ( $value != null ) {
 										if (is_array($value) AND isset($value[0]) AND is_array($value[0])) {
@@ -727,6 +719,7 @@ function getDetails($PARAMETER,$conn)
 	</div>
 <?php }
 
+//obsolete but may come in handy later...
 function getVirtualValue(string $table,int $id,string $key,mysqli $conn) {
     $_virtual_stmt_array = array();
     $_virtual_stmt_array['stmt'] = 'SELECT edittype, defaultvalue FROM '.$table .'_permissions WHERE keymachine = ?';

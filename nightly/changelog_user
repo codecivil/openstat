@@ -1,3 +1,10 @@
+#v1.8.4
+======
+
+* kein Support mehr für VIRTUAL
+* Filteroption "komprimieren": keine Anzeige von Einträgen aus Tabellen ohne Filter
+* Fix für initiale Pagingeinstellung
+
 #v1.8.3
 ======
 

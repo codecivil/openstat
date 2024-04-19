@@ -1,9 +1,17 @@
+#v1.8.4
+======
+19.04.2024
+
+* drop support for VIRTUAL fields
+* new filter option "compress": hide entries of tables without filters
+* fix for initial paging setting
+
 #v1.8.3
 ======
 18.04.2024
 
 * prepare transition from VIRTUAL to EXPRESSION fields: use INSERT views
-
+ 
 #v1.8.2
 ======
 09.04.2024
@@ -11,7 +19,7 @@
 * create_structure.php: views with expressions are not insertable, so in order to completely support expression fields
   (in fact, enable again to create new entries in tables containing expression fields!) we have to create an extra view
   for every role without any expression fields; after creating the views, inserts can be done using the new view
-  (this will be in v1.8.3)
+  (this will be in v1.8.3); please recreate all views after applying this update
 
 #v1.8.1
 ======

@@ -195,7 +195,7 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 {
     //deal with paging
     if ( ! isset($stmt_array['paging']) ) {
-        $stmt_array['paging'] = [0,$_SESSION['max_results']];
+        $stmt_array['paging'] = [0,min($_SESSION['max_results'],$_SESSION['paging_default'])];
     }
     $stmt_array['stmt'] .= ' LIMIT '.(string)((int)$stmt_array['paging'][0]*(int)$stmt_array['paging'][1]).','.(string)((int)$stmt_array['paging'][1]+1);
     //

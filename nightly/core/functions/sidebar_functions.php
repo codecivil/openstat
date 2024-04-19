@@ -87,6 +87,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 	$option_complement = '';
 	$option_searchinresults = '';
     $option_statsonly = '';
+    $option_compress = '';
 	if ( isset($_config['os_OPTIONS']) ) {
 			if ( is_array($_config['os_OPTIONS']) AND in_array('complement',$_config['os_OPTIONS']) ) { $option_complement = 'checked'; $option_complement_table = $table; }
 			//complement may now also be an array 'complement' => tablemachine
@@ -97,6 +98,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
             }
 			if ( is_array($_config['os_OPTIONS']) AND in_array('searchinresults',$_config['os_OPTIONS']) ) { $option_searchinresults = 'checked'; }
 			if ( is_array($_config['os_OPTIONS']) AND in_array('statsonly',$_config['os_OPTIONS']) ) { $option_statsonly = 'checked'; }
+			if ( is_array($_config['os_OPTIONS']) AND in_array('compress',$_config['os_OPTIONS']) ) { $option_compress = 'checked'; }
 	}
 	$_config_tables = $_config_array['table'];
 	$_config_hierarchy = $_config_array['table_hierarchy'];
@@ -364,6 +366,8 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
             </select>
 			<input hidden id="formStatsOnly" type="checkbox" value="statsonly" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_statsonly); ?>>
 			<label for="formStatsOnly" class="unlimitedWidth" data-title="nur Statistik"><i class="fas fa-chart-simple"></i></label>
+			<input hidden id="formCompress" type="checkbox" value="compress" name="os_OPTIONS[]" class="fontToggle" <?php echo($option_compress); ?>>
+			<label for="formCompress" class="unlimitedWidth" data-title="Komprimieren: Tabellen ohne Filter nicht anzeigen"><i class="fas fa-compress"></i></label>
 			<label for="formFiltersSubmit" class="submitAddFilters" data-title="Filter speichern und anwenden"><h1 class="center"><i class="fas fa-arrow-circle-right"></i> filtern</h1></label>
 			<input hidden id="formFiltersSubmit" type="submit" value="Aktualisieren">
 			<hr>
@@ -452,7 +456,7 @@ function updateSidebarCustom(array $PARAMETER, mysqli $conn)
 } 
 
 // display=false: only return the mysql statement
-function applyFilters(array $parameter, mysqli $conn, bool $_complement = false, bool $display = true, bool $changeconf = true, bool $_searchinresults = false, bool $_statsonly = false)
+function applyFilters(array $parameter, mysqli $conn, bool $_complement = false, bool $display = true, bool $changeconf = true, bool $_searchinresults = false, bool $_statsonly = false, bool $_compress = false)
 {
 	//do not save page number, so extract and forget it:
     if ( isset($parameter['page']) ) {
@@ -484,6 +488,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	$complement = $_complement;
 	$searchinresults = $_searchinresults;
     $statsonly = $_statsonly;
+    $compress = $_compress;
 	if ( isset($PARAMETER['os_OPTIONS']) ) {
 		$_filter_options = $PARAMETER['os_OPTIONS'];
 		if ( is_array($_filter_options) ) {
@@ -498,11 +503,12 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
             }
 			$searchinresults = ($_searchinresults OR in_array('searchinresults',$_filter_options));
 			$statsonly = ($_statsonly OR in_array('statsonly',$_filter_options));
+			$compress = ($_compress OR in_array('compress',$_filter_options));
 		}
 		unset($PARAMETER['os_OPTIONS']);
 	}
 	
-	//get edittypes (for strict or weak matches of values and virtual fields)
+	//get edittypes (for strict or weak matches of values)
 	$_edittypes = array();
 	foreach ( $TABLES as $table ) {
 		unset($_stmt_array); $_stmt_array = array();
@@ -533,7 +539,10 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	foreach ( $TABLES as $tindex => $table )
 	{
 		//add table to showme (customer request); here for economic reasons...
-		array_push($SHOWME,$table.'__id_'.$table);
+        //governey by $compress now
+        if ( ! $compress ) {
+    		array_push($SHOWME,$table.'__id_'.$table);
+        }
 		//select from former result if requested; also here for economic reasons...
 		if ( isset($searchinresults) and $searchinresults ) {
 			$_WHERE .= $komma0.'(`view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IS NULL OR `view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IN ('.implode(',',json_decode($_SESSION['results'],true)[$table]).') )';
@@ -667,15 +676,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 		}
 		//replace the __ by . (HTML5 replaces inner white space by _, so no . possible)
 		//$key = str_replace('__','.',$key);
-        //select expression if VIRTUAL field
-        //not enough! We need to replace any occurence of '`view__' . $table . '__' . $_SESSION['os_role'].'`.'.$key.' by str_replace("'","",preg_replace('/\$([^\$]*)\$/','`view__' . $table . '__' . $_SESSION['os_role'].'`.$1',$_defaultvalues[$table][$key]))
-        //for virtual fields!
-        //to be continued...
-        if (strpos($_edittypes[$table][$key],'; VIRTUAL') > 0) {
-            $_sqlforkey = str_replace("'","",preg_replace('/\$([^\$]*)\$/','`view__' . $table . '__' . $_SESSION['os_role'].'`.$1',$_defaultvalues[$table][$key]));
-        } else {
-    		$_sqlforkey = '`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key.'`';
-        }
+        //the name 'sqlforkey' comes from now obsolete VIRTUAL fields, but may be reactivated in a different way later, sp we keep it as a marker...'
+        $_sqlforkey = '`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key.'`';
         $_SELECT .= $komma.$_sqlforkey.' AS `'.$table.'__'.$key.'`';
 		$_ORDER_BY .= $komma.$table.'__'.$key.$_sort;
 		$komma = ',';
@@ -957,9 +959,10 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 			$table = explode('__',$key,2)[0];
 			$key = explode('__',$key,2)[1];
 			if ( $table != $complementtable ) { continue; };
+            $_sqlforkey = '`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key.'`';
 			//replace the __ by . (HTML5 replaces inner white space by _, so no . possible)
 			//$key = str_replace('__','.',$key);
-			$_SELECT .= $komma.$_sqlforkey;
+			$_SELECT .= $komma.$_sqlforkey.' AS '.$table.'__'.$key;
 			$_ORDER_BY .= $komma.$table.'__'.$key.$_sort;
 			$komma = ',';
 		}
@@ -973,7 +976,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	$_SESSION['currentfilters'] = $filters;
     if ( ! $statsonly ) {
         //add paging info to stmt array and apply it in generateResultTable (but not in generateStatTable!)
-        if ( isset( $_config['paging'] ) ) { $PAGESIZE = (int)$_config['paging']; } else { $PAGESIZE = $_SESSION['max_results']; }
+        if ( isset( $_config['paging'] ) ) { $PAGESIZE = min($_SESSION['max_results'],(int)$_config['paging']); } else { $PAGESIZE = min($_SESSION['max_results'],$_SESSION['paging_default']); }
         $_main_stmt_array['paging'] = [$PAGE,$PAGESIZE];
     	$table_results = generateResultTable($_main_stmt_array,$conn);
     } else {

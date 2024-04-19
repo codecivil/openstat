@@ -4,7 +4,11 @@
 //Enable debug (see core/data/debugdata.php for path and filename settings)
 //$_SESSION['DEBUG'] = true;
 
-//Maximal number of results to be displayes in the details pane
+//Default page size for results if no value was set as yet by the user
+//Limited by max_results
+$_SESSION['paging_default'] = 100;
+
+//Maximal number of results to be displayed in the details pane
 //The statistics pane counts all results independently of this setting
 //The user may reduce this limit but cannot exceed it
 $_SESSION['max_results'] = 1000;

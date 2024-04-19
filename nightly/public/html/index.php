@@ -309,7 +309,7 @@ $_v = time();
         <div id="paging" data-title="Ergebnisse pro Seite">
             <form method="post" class="statusForm" onsubmit="return false" onchange="callFunction(this,'changeConfig').then(()=>{ return false; }); ">
                 <legend><i class="fas fa-arrow-down-1-9"></i></legend>
-                <?php if ( ! isset($_config['paging']) ) { $_config['paging'] = 100; } ?>
+                <?php if ( ! isset($_config['paging']) ) { $_config['paging'] = min($_SESSION['max_results'],$_SESSION['paging_default']); } ?>
                 <input id="pagingMax" type="number" min=1 max=<?php echo($_SESSION['max_results']); ?> name="paging" value="<?php echo(min($_SESSION['max_results'],$_config['paging'])); ?>">
             </form>
         </div>
