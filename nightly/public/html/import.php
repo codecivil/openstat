@@ -139,6 +139,10 @@ if ( ! isset($PARAMETER['table']) ) { $PARAMETER['table'] = ''; };
 	</div>
 	<div id="headermatch" hidden>
 		<h1>Vorgeschlagene Zuordnung</h1>
+        <form id="formShowIdenticalMatches">
+            <input type="checkbox" id="notShowIdenticalMatches" checked>
+            <label>Nur abweichende Zuordnungen anzeigen</label>
+        </form>
 		<form id="formHeaderMatch" onsubmit="checkHeaders(this,'importnow'); return false;">
 			<div>
 				<label><b>Datei</b></label>

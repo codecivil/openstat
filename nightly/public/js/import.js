@@ -35,6 +35,45 @@ function similarity_asym(string1,string2) {
 //the symmetric version
 function similarity(string1,string2) { return Math.max(similarity_asym(string1,string2),similarity_asym(string2,string1)); }
 
+//Levenshtein distance as alternative
+//here: Levenshtein similarity = 1 - Levenshtein distince/Max(stringlengths)
+//since Max(stringlengths) is the maximal possible Levenshtein distance
+//preliminary result: has often same rankings, but goes occasionally quite wrong: "Vermessung" is more simlar to "Vermittlungsstand"
+//than "Stand der Vermittlung" is
+function levenshtein_similarity(string1,string2) {
+    if ( string1 == '' && string2 == '' ) { return 1; }
+    let _index1 = 0;
+    let _index2 = 0;
+    let paddedstring1 = " "+string1;
+    let paddedstring2 = " "+string2;
+    let _dist = new Array();
+    while ( _index1 <= string1.length ) {
+        _dist[_index1] = new Array();
+        _index2 = 0;
+        while ( _index2 <= string2.length ) {
+            _dist[_index1][_index2] = string1.length*string2.length;
+            if ( _index1 == 0 ) { _dist[_index1][_index2] = _index2; }
+            if ( _index2 == 0 ) { _dist[_index1][_index2] = _index1; }
+            if ( _index1 > 0 && _index2 > 0) {
+                if ( paddedstring1[_index1] == paddedstring2[_index2] ) {
+                    _dist[_index1][_index2] = _dist[_index1-1][_index2-1];
+                } else {
+                    _dist[_index1][_index2] = _dist[_index1-1][_index2-1] + 1;
+                }
+            }
+            if ( _index1 > 0 ) {
+                    _dist[_index1][_index2] = Math.min(_dist[_index1][_index2],_dist[_index1-1][_index2] + 1);                
+            }
+            if ( _index2 > 0 ) {
+                    _dist[_index1][_index2] = Math.min(_dist[_index1][_index2],_dist[_index1][_index2-1] + 1);                
+            }
+            _index2 += 1;
+        }
+        _index1 += 1;
+    }
+    return 1-_dist[string1.length][string2.length]/Math.max(string1.length,string2.length);
+}
+
 //asymmetric! every item of array1 has to be matche, maximal one match for array2
 function match_old(array1,array2,threshold) {
 	//console.log("("+array1+")\n MATCHING TO\n("+array2+")\n");
@@ -136,7 +175,20 @@ function _nowmatch(_importel,_files,_fileheaders,i,_oldmatch) {
 		var clone_el = el.getElementsByClassName('singlematch')[0];
 		var parent = el.querySelector('.formHeaderMatch');
 		clone = clone_el.cloneNode(true);
-		clone.removeAttribute('hidden');
+        //show only if fileheader and match differ or user wants to see all
+        if ( _match[j] == -1 || _fileheaders[j] != _tableheaders[_match[j]].replace(/:.*/,'') || ! el.querySelector('#notShowIdenticalMatches').checked ) {
+            clone.removeAttribute('hidden');
+        }
+        //mark if choice is double
+        clone.querySelector('select').onchange = function() {
+                parent.querySelectorAll('select').forEach(_select=>_select.classList.remove('clash'));
+                parent.querySelectorAll('option[value="'+this.value+'"]:checked').forEach(_clash=>{
+                    if ( _clash.closest('select') != this ) {
+                        _clash.closest('select').classList.add('clash');
+                        this.classList.add('clash');
+                    }
+                });
+            };
 		clone.getElementsByTagName('label')[0].textContent = _fileheaders[j];
 		if ( _match[j] != undefined ) { clone.querySelector('option[value="'+_match[j]+'"]').setAttribute('selected',true); }
 		if ( _oldmatch[_fileheaders[j]] ) { 
@@ -348,6 +400,10 @@ function importJS(el,subtables) {
 								for ( var ci = 0; ci < _cmp_lgth; ci++ ) {
 									if ( _cmp_lgth > 1 ) { 
 										row[k] = JSON.stringify(JSON.parse(currentrow)[ci]);
+                                        //there may be some inconsistency of _cmp_length and actual length of the row
+                                        //add empy value if row is too short
+                                        if ( row[k] == undefined ) { row[k] = '[]'; }
+                                        //
 										_tableheadersfull['edittype'][_matchedIndex[k]] = currentedittype.split('; ')[0].split(' + ')[ci]+'; MULTIPLE';
 										if ( currentallowedvalues[ci] ) { _tableheadersfull['allowed_values'][_matchedIndex[k]] = currentallowedvalues[ci]; }
 									}
@@ -495,4 +551,20 @@ function getIDOfInsert(_form,_arg,_result) {
 	}; 	
 }
 
+function toggleMatches(el) {
+    if ( ! el.closest('.headermatch').querySelector('#notShowIdenticalMatches').checked ) {
+        el.closest('.headermatch').querySelectorAll('.singlematch').forEach(_singlematch => {
+            if ( _singlematch.querySelector('label').textContent != '' ) {
+                _singlematch.removeAttribute('hidden');
+            }
+        });
+    } else {
+        el.closest('.headermatch').querySelectorAll('.singlematch').forEach(_singlematch => _singlematch.setAttribute('hidden',true));
+        el.closest('.headermatch').querySelectorAll('.singlematch').forEach(_singlematch => {
+            if ( _singlematch.querySelector('label').textContent != '' && ( _singlematch.querySelector('select').selectedOptions == undefined || _singlematch.querySelector('label').textContent != _singlematch.querySelector('select').selectedOptions[0].textContent ) ) {
+                _singlematch.removeAttribute('hidden');
+            }
+        });
+    }
+}
 //still some problems when imorting secondary table data with same data but different attributions: attribution is neglected!

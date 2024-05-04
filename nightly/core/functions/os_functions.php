@@ -245,7 +245,7 @@ function importCSV(array $PARAM,$conn) {
 			while ( $old_add != $key_array_add['keyreadable'] ) 
 			{
 				$old_add = $key_array_add['keyreadable'];
-				// disable unselectable and uneditable entries (keyreadable = _none or edittype = ID)
+				// disable unselectable and uneditable entries (keyreadable = _none or edittype = ID or editytype = *";EXPRESSION")
 				if (($index = array_search('_none_', $key_array_add['keyreadable'])) !== false ) {
 					unset($key_array_add['keyreadable'][$index]);
 					unset($key_array_add['keymachine'][$index]);
@@ -254,6 +254,13 @@ function importCSV(array $PARAM,$conn) {
 					unset($key_array_add['table'][$index]);
 				}
 				if (($index = array_search('ID', $key_array_add['edittype'])) !== false ) {
+					unset($key_array_add['keyreadable'][$index]);
+					unset($key_array_add['keymachine'][$index]);
+					unset($key_array_add['edittype'][$index]);
+					unset($key_array_add['referencetag'][$index]);
+					unset($key_array_add['table'][$index]);
+				}
+				if (($index = array_search('EXPRESSION', preg_replace('/.*\; EXPRESSION/','EXPRESSION',$key_array_add['edittype']))) !== false ) {
 					unset($key_array_add['keyreadable'][$index]);
 					unset($key_array_add['keymachine'][$index]);
 					unset($key_array_add['edittype'][$index]);
@@ -351,6 +358,11 @@ function importCSV(array $PARAM,$conn) {
 	</div>
 	<div class="headermatch" hidden>
 		<h3>Vorgeschlagene Zuordnung</h3>
+        <form class="db_options" id="formShowIdenticalMatches">
+            <input type="checkbox" id="notShowIdenticalMatches" checked onchange="toggleMatches(this)">
+            <label>Nur abweichende Zuordnungen anzeigen</label>
+        </form>
+        <div class="clear"></div>
 		<form class="db_options formHeaderMatch" onsubmit="checkHeaders(this,'importnow'); return false;">
 			<div>
 				<label><b>Datei</b></label>
@@ -551,7 +563,8 @@ function exportCSV (array $PARAM, $conn) {
 		$_stmt_array['stmt'] = "SELECT keymachine,edittype FROM ".$_table."_permissions";
 		$_col_info = execute_stmt($_stmt_array,$conn)['result'];
 		foreach ( $_raw_columns as $column ) {
-			if ( in_array($column,$_col_info['keymachine']) AND ! in_array($_col_info['edittype'][array_search($column,$_col_info['keymachine'])],array('ID','NONE')) ) {
+            //do not export EXPRESSION fields
+			if ( in_array($column,$_col_info['keymachine']) AND ! in_array($_col_info['edittype'][array_search($column,$_col_info['keymachine'])],array('ID','NONE')) AND ! strpos($_col_info['edittype'][array_search($column,$_col_info['keymachine'])],"; EXPRESSION") ) {
 				$_allkeys[$_table.'__'.$column] = array('_all');
 			}
 		}

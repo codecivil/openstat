@@ -598,6 +598,8 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .import_overwrite + label::after { content: 'Bereits existierende Einträge werden nicht importiert.'; }
 .import_overwrite:checked + label::after { content: 'Bereits existierende Einträge werden durch die importierte Version überschrieben.'; font-weight: bold; }
 
+.clash { border: 1px solid red; }
+
 .profile { width: 35rem; background: var(--background-config); }
 .profile table { text-align: center; }
 .profile table th.right { text-align: right; }

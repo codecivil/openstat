@@ -1,3 +1,12 @@
+#v1.8.5
+======
+04.05.2024
+
+* do not anymore CSV-export nor CSV-import EXPRESSION fields
+* importCSV: show only non-matching headers by default and mark clashes
+  (non-injective mapping)
+* importCSV: incomplete combination fields are padded instead of throwing errors
+
 #v1.8.4
 ======
 19.04.2024
