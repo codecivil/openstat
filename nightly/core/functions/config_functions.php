@@ -73,6 +73,9 @@ function updateConfig(array $config, mysqli $conn, string $configname = 'Default
 
 function updateCustomConfig(array $config, mysqli $conn)
 {
+    //expand if given by trashForm (called in this way by importConfig in JS)
+    if ( isset($config['trash']) ) { $config = json_decode($config['trash'],true); }
+	//
 	if ( ! isset($config['configname']) ) { return; }
 	$_wait = updateConfig($config,$conn,$config['configname']);
 }
@@ -167,7 +170,7 @@ function changeConfig(array $newconf, mysqli $conn, string $configname = 'Defaul
 
 function changeCustomConfig (array $newconf, mysqli $conn)
 {
-	if ( ! isset($newconf['configname']) ) { return; }
+    if ( ! isset($newconf['configname']) ) { return; }
 	$_wait = changeConfig($newconf,$conn,$newconf['configname']);
 }
 
@@ -180,6 +183,21 @@ function copyConfig(array $config, mysqli $conn)
 	$_wait = updateConfig($defaultconfig,$conn,$configname);
 	$_wait = updateConfig($defaultconfig,$conn);
 }
+
+function exportConfig (array $config, mysqli $conn)
+{
+	if ( ! isset($config['configname']) OR $config['configname'] == "Default" ) { return; }
+	$configname = $config['configname'];
+	$savedconfig = getConfig($conn,$configname);
+    $_config = array();
+    foreach ( ["filters","table","table_hierarchy","configname","subtable","showSubtablesOf"] as $_key ) {
+        $_config[$_key] = $savedconfig[$_key];
+    }
+    return base64_encode(json_encode($_config));
+}
+
+//importConfig is initialized on JS side
+function importConfig(array $PARAM, mysqli $conn ){ return; }
 
 function removeOpenId(array $entry, mysqli $conn)
 {

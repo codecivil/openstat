@@ -1310,6 +1310,38 @@ function cleanDB(form,arg,response) {
 		}
 	});
 }
+
+//this a callback for callFunction
+function exportConfig(form,arg,response) {
+    let _download = document.createElement('a')
+    _download.href = "data:text/plain;charset=utf-8;base64,"+response;
+    _download.download = "openStat-"+form.querySelector('select[name=configname]').value.replace(/[^a-zA-Z0-9_\-]/g,'')+".conf";
+    _download.click();
+    console.log(_download);
+}
+
+function importConfig(form,arg,response) {
+    let _imports = document.createElement('input');
+    _imports.type = "file";
+    _imports.setAttribute('multiple',true);
+    _imports.setAttribute('accept','.conf');
+    _imports.onchange = function() {
+        _files = _imports.files;
+    	for ( var i = 0; i < _files.length; i++ ) {
+            _result = function(i) {
+                var r = new FileReader();
+                r.onload = function () {
+                    //if configname is Default, do not continue:
+                    if ( JSON.parse(r.result).configname == "Default" ) { return false; }
+                    document.getElementById('trash').value = r.result;
+                    callFunction('_','updateCustomConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar').then(()=>{ return false; }));
+                }
+                r.readAsText(_files[i]);
+            }(i);
+        };
+    };
+    _imports.click();
+}
 //action: copy unless it is an attribution field; then copy if clipboard is empty, paste otherwise
 //to be continued...
 function transportAttribution(el) {

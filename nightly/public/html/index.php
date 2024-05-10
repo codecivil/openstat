@@ -399,11 +399,11 @@ $_v = time();
 <div id="wasistneu_wrapper">
 	<form id="whatsNewForm">
 		<input type="checkbox" id="wasistneu" hidden>
-		<div id="wasistneudiv"><h1>Was ist neu in...</h1><pre><?php html_echo($changelog); ?>...</pre></div>
+		<div id="wasistneudiv"><h1>Was ist neu in...</h1><pre><?php link_echo($changelog); ?>...</pre></div>
 		<input type="checkbox" id="waswarneu" hidden>
 		<label for="waswarneu" onclick="setTimeout(function(){myScrollIntoView(document.getElementById('wasistneu_wrapper'));},100)"><i class="fas fa-chevron-right"></i></label>
 		<label for="waswarneu"><i class="fas fa-chevron-down"></i></label>
-		<div id="waswarneudiv"><pre><?php html_echo($olderchangelog); ?></pre></div>
+		<div id="waswarneudiv"><pre><?php link_echo($olderchangelog); ?></pre></div>
 	</form>
 </div>
 <div id="wrapper_handle"></div>

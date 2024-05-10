@@ -13,6 +13,7 @@ label.shownot:hover { cursor: pointer; }
 label.show:hover,label.openentry:hover { cursor: pointer; }
 label.openentry:hover b { text-decoration: underline; }
 div[id^="showHistory"]:hover { cursor: pointer; }
+pre { display: inline; }
 
 /*label[class^="submit"]:active { cursor: wait; }
 label[for^="toggle"]:active { cursor: wait; } */

@@ -150,6 +150,10 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			<input hidden type="submit" id="config_save">
 			<label class="load <?php echo($config_save_class); ?>" for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
 			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ toggleHelpTexts(); return result; });">
+			<label class="config_export <?php echo($config_remove_class); ?>" for="config_export" data-title="Konfiguration exportieren"><i class="fas fa-file-export"></i></label>
+			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_export" onclick="callPHPFunction(this.closest('form'),'exportConfig'); return false;">
+			<label class="config_import" for="config_import" data-title="Konfiguration importieren"><i class="fas fa-file-import"></i></label>
+			<input hidden type="button" id="config_import" onclick="callPHPFunction(this.closest('form'),'importConfig'); return false;">
 			<label class="<?php echo($config_remove_class); ?> " for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
 			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;">
 			<div class="unite">
