@@ -13,6 +13,7 @@ label.shownot:hover { cursor: pointer; }
 label.show:hover,label.openentry:hover { cursor: pointer; }
 label.openentry:hover b { text-decoration: underline; }
 div[id^="showHistory"]:hover { cursor: pointer; }
+pre { display: inline; }
 
 /*label[class^="submit"]:active { cursor: wait; }
 label[for^="toggle"]:active { cursor: wait; } */
@@ -37,13 +38,13 @@ hr, .clear { clear: both; }
 .note_edit .note_unfocussed { display: block; }
 .note_edit .note_wrapper .textarea { display: none; }
 .note_edit .note_cb:checked ~ div .textarea { display: block; height: 10rem; width: 10rem; text-align: center; }
-.note_edit .note_unfocussed, .note .note_wrapper { width: 10rem; height: 10rem; }
+.note_edit .note_unfocussed, .note_edit .note_wrapper { width: 10rem; height: 10rem; }
 .note_edit .note_wrapper { transform: rotate(2deg); }
 .note div .textarea { background: var(--background-functions); border: 1px dashed black; text-align:center; font-family: serif; }
-.note_blue,.note input.note_blue:checked ~ .note_wrapper .textarea { background: lightblue; }
-.note_green,.note input.note_green:checked ~ .note_wrapper .textarea { background: lightgreen; }
-.note_yellow,.note input.note_yellow:checked ~ .note_wrapper .textarea { background: lightyellow; }
-.note_red,.note input.note_red:checked ~ .note_wrapper .textarea { background: lightpink; }
+.note_blue,.note_edit input.note_blue:checked ~ .note_wrapper .textarea { background: lightblue; }
+.note_green,.note_edit input.note_green:checked ~ .note_wrapper .textarea { background: lightgreen; }
+.note_yellow,.note_edit input.note_yellow:checked ~ .note_wrapper .textarea { background: lightyellow; }
+.note_red,.note_edit input.note_red:checked ~ .note_wrapper .textarea { background: lightpink; }
 .note_theme { background: repeating-linear-gradient(45deg,var(--background-functions),var(--background-functions) 0.1rem, #00000080 0.2rem); }
 .note_choose input.note_all:checked ~ .note_wrapper label.note_all, .note_choose input.note_blue:checked ~ .note_wrapper label.note_blue, .note_choose input.note_green:checked ~ .note_wrapper label.note_green, .note_choose input.note_yellow:checked ~ .note_wrapper label.note_yellow, .note_choose input.note_red:checked ~ .note_wrapper label.note_red, .note_choose input.note_theme:checked ~ .note_wrapper label.note_theme { border-top: 2px solid black; }
 /* end of NOTES */
@@ -60,7 +61,43 @@ textarea { min-height: 6rem; }
 textarea.FREELONGER { min-height: 10rem; }
 
 /* veil */
+
 #veil.veiled { z-index: 1700; opacity: 1; }
+#veil.solid {
+	background: center/15% no-repeat url('../img/veil.svg?v=1235'), center/10% no-repeat url('../img/logo.png'),var(--background-body);
+}
+#veil.solid::before {
+	content: "Deine Sitzung wird geladen...";
+	position: fixed;
+	top: 3rem;
+	width: 100%;
+	text-align: center;
+	font-weight: bold;
+	width: 33%;
+	hyphens: none;
+}
+#veil.solid.sidebar::before {
+	content: 'Deine Filtereinstellungen werden eingerichtet...';
+}
+#veil.solid.loginfunctions::before {
+	content: "Loginfunktionen werden ausgeführt...";
+}
+#veil.solid.openids::before {
+	content: "Geöffnete Einträge werden geladen...";
+}
+
+#veil.solid.openids.loginfunctions::before {
+	content: "Loginfunktionen werden ausgeführt und Einträge geöffnet...";
+}
+#veil.solid.sidebar.openids.loginfunctions::before {
+	content: "Filtereinstellungen werden eingerichtet, Loginfunktionen ausgeführt und Einträge geöffnet...";
+}
+#veil.solid.sidebar.openids::before {
+	content: "Filtereinstellungen werden eingerichtet und Einträge geöffnet...";
+}
+#veil.solid.sidebar.loginfunctions::before {
+	content: "Filtereinstellungen werden eingerichtet und Loginfunktionen ausgeführt...";
+}
 #veil{ font: 1rem sans-serif; z-index: -500; opacity: 0; width: 100%; height: 100%; position: fixed; top: 0; left:0; margin: 0; padding: 0; display: flex; flex-direction: row; align-items: center; justify-content: center; }
 #veil > div { width: 100%; height: 100%; background: var(--background-body); z-index: -500; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
@@ -104,8 +141,9 @@ textarea.FREELONGER { min-height: 10rem; }
 #statusbar .sliderframe { fill: var(--background-slider); stroke: var(--button-slider); }
 #statusbar label[for="helpModeBtn"] { top: 0; }
 #statusbar .functions { background: initial; }
+#statusbar #usermenu #display_options div { border: 1px solid var(--color-statusbar); border-radius: 5px; margin: 0.2rem 0; }
 #statusbar #columnsSelect { width: 3rem; }
-
+#statusbar #pagingMax { width: 4rem; padding: 0; border: none; }
 /* HelpMode specifics */
 #helpModeBtn:checked ~ div .sliderframe {
 	fill: var(--background-slider-checked);
@@ -193,9 +231,9 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #important tr:nth-child(odd) { background-color: var(--background-row-even); }
 #important tr:hover { background: var(--background-filters); }
 #important td, #important th { text-align: center; padding: 0.2rem 0.5rem 0.2rem 0.5rem; border: 1px solid var(--color-statusbar); }
-#important tr.yellow { background: yellow; }
-#important tr.orange { background: orange; }
-#important tr.red { background: FF8787; }
+#important tr.yellow, div.yellow { background: yellow; }
+#important tr.orange, div.orange { background: orange; }
+#important tr.red, div.red { background: #FF8787; }
 #important .imp_close { position: relative; left: calc(100% - 1.2rem); top: 0.2rem; width: 1rem;}
 #important .tableicon { position: relative; font-size: 1.5rem; margin: 0 auto; text-align: center; }
 #important .toggle + div { display: none; }
@@ -302,7 +340,8 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 #results_wrapper > .functions { border: 0; padding: 0; margin: 0; }
 #results_wrapper > .time { border: 0; padding: 0; margin: 0; font-size: 0.7rem; }
 #results_wrapper .newEntry { background: var(--background-details-new); }
-/*#results_wrapper #stat_wrapper, #results_wrapper #details_wrapper { border: 1px solid black; border-radius: 5px; padding: 0.2rem; overflow-x: auto; margin: 0.2rem; }*/
+#results_wrapper .pageBtn:hover { cursor: pointer; }
+#results_wrapper .pageNumber { width: 3.5rem; border: none; }/*#results_wrapper #stat_wrapper, #results_wrapper #details_wrapper { border: 1px solid black; border-radius: 5px; padding: 0.2rem; overflow-x: auto; margin: 0.2rem; }*/
 #stat_wrapper { background: var(--background-statwrapper);}
 #stat_wrapper #statGraphics_wrapper { border: 1px solid var(--color-statwrapper); border-radius: 5px; }
 #stat_wrapper #statGraphics_wrapper { border: 1px solid var(--color-statwrapper); border-radius: 5px; padding: 0.2em; overflow-x: auto; }
@@ -361,6 +400,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details .db_formbox {float: left; width: 60%;}
 .details .action { float: left; margin: 0.5rem; background: var(--background-action); border-radius: 5px; width: auto; }
 .details .actionwrapper { position: sticky; top: 10rem; overflow: hidden; z-index: 500; margin: 0.5rem; background: var(--background-action); border-radius: 5px; border-bottom: 1px solid black; 	box-shadow: 0 2px 5px #444; width: auto; }
+.details .fieldset { column-rule-width: thin; column-rule-style: dashed; }
 .details.new .actionwrapper { top: 5.2rem; }
 /* sticky for assignments? takes too much space? */
 .details .assignment { position: sticky; top: 9.2rem; overflow: hidden; z-index: 500; margin: 0.5rem; padding: 0.5rem; background: var(--background-details); border-radius: 5px; border-bottom: 1px solid black; box-shadow: 0 2px 5px #444; width: auto; }
@@ -495,6 +535,8 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .import_overwrite + label:hover { cursor: pointer; text-decoration: underline; }
 .import_overwrite + label::after { content: 'Bereits existierende Einträge werden nicht importiert.'; }
 .import_overwrite:checked + label::after { content: 'Bereits existierende Einträge werden durch die importierte Version überschrieben.'; font-weight: bold; }
+
+.clash { border: 1px solid red; }
 
 .profile { width: 35rem; background: var(--background-config); }
 .profile table { text-align: center; }
