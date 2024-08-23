@@ -137,6 +137,11 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			}
 		}
 	}
+    
+    //save computed hierarchy, otherwise the computed hierarchy and the one used in applyFilters differ (is read freshly from config)
+    ///(...with unpredictable results...)
+    ksort($_config_hierarchy);
+    changeConfig(array("table_hierarchy" => array_values($_config_hierarchy)),$conn);
 	?>
 	<div id="config" class="section">
 		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;" >
@@ -936,6 +941,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	$_SESSION['filterlog'] = json_encode($filterlog);
 	//
 	$_WHERE .= $bracket;
+	$_WHERE = preg_replace('/IN \(\)/i',"NOT IN (-1)",$_WHERE);
 	$_WHERE = preg_replace('/\(\)/',"(0=0)",$_WHERE);
 	$_main_stmt_array = array();
 	$_main_stmt_array['stmt'] = 'SELECT '.$_SELECT.$_FROM.$_WHERE.$_ORDER_BY; //do not order by id!
@@ -972,6 +978,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 		}
         //remove trailing komma of $_SELECT if no paramater of complementtable was selected
         if ( substr($_SELECT,-1) == ',' ) { $_SELECT = substr($_SELECT, 0, -1); }
+        //order by id if no filter was selected for complment table
+        if ( $_ORDER_BY == ' ORDER BY ' ) { $_ORDER_BY .= $complementtable.'__id_'.$complementtable; }
 		$_main_stmt_array['stmt'] = $_SELECT.$_FROM.$_WHERE.$_main_stmt_array['stmt'].$bracket.$_ORDER_BY;
 	}
 	if ( isset($display) AND !$display ) { return $_main_stmt_array; }

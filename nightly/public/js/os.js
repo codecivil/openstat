@@ -1439,7 +1439,7 @@ function showEmptyFields(_form,_arg,resp) {
 		if ( ! _filled ) { 
 			editwrapper.style.background = "var(--background-warning)";
 			console.log(editwrapper.querySelectorAll('label'));
-			_notFilledFields.push({_id: _inputid, _label: editwrapper.querySelector('label.onlyone,label.files').innerText});
+			_notFilledFields.push({_id: _inputid, _label: editwrapper.querySelector('label.onlyone,label.files')?editwrapper.querySelector('label.onlyone,label.files').innerText:''});
 		}
 	});
 	//create the message

@@ -149,11 +149,11 @@ function changeConfig(array $newconf, mysqli $conn, string $configname = 'Defaul
 		if ( is_array($value) ) {
 			foreach ( $value as $key2=>$value2 )
 			{
-				if ( ! isset($value2) OR $value2 == '' ) { unset($conf[$key][$key2]); };
+				if ( ! isset($value2) OR $value2 === '' ) { unset($conf[$key][$key2]); };
 				if ( is_array($value2) ) {
 					foreach ( $value2 as $key3=>$value3 )
 					{
-						if (  ! isset($value3) OR $value3 == '' ) { unset($conf[$key][$key2][$key3]); };
+						if (  ! isset($value3) OR $value3 === '' ) { unset($conf[$key][$key2][$key3]); };
 						if ( is_array($value3) ) {
 							foreach ( $value3 as $key4=>$value4 )
 							{

@@ -970,7 +970,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 						$_stmt_array['stmt'] = "ALTER TABLE `".$_table."_permissions` ADD COLUMN `restrictrole_".$_result_id."` VARCHAR(40) DEFAULT NULL;";
 						_execute_stmt($_stmt_array,$conn);
 						unset($_stmt_array); $_stmt_array = array();
-						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,subtablemachine,typelist,edittype,realid,referencetag,role_".$_result_id.",restrictrole_".$_result_id.") ON ".$_table."_permissions TO ".$_ROLES_ARRAY[$_result_id].";";
+						$_stmt_array['stmt'] = "GRANT SELECT (keymachine,keyreadable,subtablemachine,defaultvalue,extras,typelist,edittype,realid,referencetag,role_".$_result_id.",restrictrole_".$_result_id.") ON ".$_table."_permissions TO ".$_ROLES_ARRAY[$_result_id].";";
 						_execute_stmt($_stmt_array,$conn);
 						unset($_stmt_array); $_stmt_array = array();
 						$_stmt_array['stmt'] = "GRANT SELECT (role_".$_result_parentid.",restrictrole_".$_result_parentid.") ON ".$_table."_permissions TO ".$_ROLES_ARRAY[$_result_id].";";
