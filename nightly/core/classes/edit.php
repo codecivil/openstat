@@ -36,8 +36,18 @@ class OpenStatEdit {
 		$_stmt_array['str_types'] = 's';
 		$_stmt_array['arr_values'] = array($this->key);
 		$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
-		$_result['edittype'] = explode(' + ',$_result['edittype'])[$effective_compound];
-		$_result['referencetag'] = explode(' + ',$_result['referencetag'])[$effective_compound];
+		$_result['edittype'] = explode(' + ',$_result['edittype']);
+        if ( isset($_result['edittype'][$effective_compound]) ) {
+            $_result['edittype'] = $_result['edittype'][$effective_compound];
+        } else {
+            $_result['edittype'] = 'NONE';
+        }
+		$_result['referencetag'] = explode(' + ',$_result['referencetag']);
+        if ( isset($_result['referencetag'][$effective_compound]) ) {
+            $_result['referencetag'] = $_result['referencetag'][$effective_compound];
+        } else {
+            $_result['referencetag'] = '';
+        }
 		unset($_stmt_array); $_stmt_array = array();
 		$_stmt_array['stmt'] = 'SELECT keyreadable FROM '.$this->table.'_permissions WHERE keymachine = ?';
 		$_stmt_array['str_types'] = "s";
@@ -78,12 +88,15 @@ class OpenStatEdit {
 		$_stmt_array['str_types'] = "s";
 		$_stmt_array['arr_values'] = array();
 		$_stmt_array['arr_values'][] = $_result['referencetag'];
-		$conditions = execute_stmt($_stmt_array,$connection,true)['result']; //first rows, then keynames
+		$conditions = execute_stmt($_stmt_array,$connection,true); //first rows, then keynames
+        if ( isset( $conditions['result']) ) { $conditions = $conditions['result']; }
+        if ( ! $conditions ) { $conditions = array(); }
         //get profile data if allowed value is of the form "_PROFILE:string with $ in front of and after profile keys_", e.g.
         //"_PROFILE:$name$, $vorname$_": select public data from all profiles
         //"_PROFILE:MY:$name$, $vorname$_": select private data from the user's profile
         //works but gets disabled in js: work on this!
-        $_options = $conditions['allowed_values'];
+        $_options = array();
+        if ( isset($conditions['allowed_values']) ) { $_options = $conditions['allowed_values']; }
         foreach ( $conditions as $optionindex => $values_array ) {
             $values = $values_array['allowed_values'];
             preg_match_all('/_PROFILE\:([^_]*)_/',$values,$matches);
@@ -138,7 +151,8 @@ class OpenStatEdit {
 		//$_stmt_array['stmt'] = 'SELECT keymachine,referencetag,depends_on_key,depends_on_value,allowed_values FROM `'.$this->table.'_permissions` LEFT JOIN `'.$this->table.'_references` USING referencetag WHERE depends_on_key LIKE ?';
 		$_stmt_array['stmt'] = "SELECT keymachine,".$this->table."_permissions.referencetag AS fullreferencetag,".$this->table."_references.referencetag AS singlereferencetag,depends_on_key,depends_on_value,allowed_values FROM `".$this->table."_permissions` LEFT JOIN `".$this->table."_references` ON ".$this->table."_permissions.referencetag LIKE CONCAT('%',".$this->table."_references.referencetag,'%') WHERE depends_on_key LIKE '".$this->key."%'";
 		unset($_result_dep);
-		$dependencies = execute_stmt($_stmt_array,$connection,true)['result']; //first rows, then keynames
+		$dependencies = execute_stmt($_stmt_array,$connection,true);
+        if ( isset($dependencies['result']) ) { $dependencies = $dependencies['result']; } else { $dependencies = array(); } //first rows, then keynames
 		//!!!!!
 		switch($_result['edittype']) {
 			case 'TEXT':
@@ -179,7 +193,9 @@ class OpenStatEdit {
 					}
 				}
 				unset($option); unset($_index);
-				$options = array_diff($options,$_splice);
+				//was: $options = array_diff($options,$_splice);
+                //array_diff cannot handle multidimensional arrays without un-/serializing
+                $options = array_map("unserialize",array_diff(array_map("serialize",$options),array_map("serialize",$_splice)));
 			case 'FUNCTION':
 			case 'CHECKBOX':
 			case 'LIST':
@@ -226,9 +242,12 @@ class OpenStatEdit {
 				$options = execute_stmt($_stmt_array,$this->connection)['result'][$this->key];
 				break;
 		}
-		if ( is_array($options) AND sizeof($options) > 0 AND ! is_array($options[0]) ) {
-			$options = array_unique($options);
-			asort($options);
+		if ( is_array($options) AND sizeof($options) > 0 AND ( ! isset($options[0]) OR ! is_array($options[0]) ) ) {
+			//was: $options = array_unique($options);
+            //array_unique cannot handle multidimensional arrays, solution is to un-/serialize
+            //see https://www.phpflow.com/php/remove-duplicates-from-multidimensional-array/
+            $options = array_map("unserialize",array_unique(array_map("serialize",$options)));
+    			asort($options);
 		}
 		return array("options"=>$options, "conditions"=>$conditions, "dependencies"=>$dependencies);
 	}
@@ -384,7 +403,11 @@ class OpenStatEdit {
 				?>
 					<div id="db_<?php echo($key.$rnd); ?>_conditions" hidden><?php html_echo(json_encode($conditions)); ?></div>
 				<?php
-				$default = $_default_array[$indexedit][$indexdefault];
+                if ( isset($default_array[$indexedit]) AND isset($default_array[$indexedit][$indexdefault]) ) {
+    				$default = $_default_array[$indexedit][$indexdefault];
+                } else {
+                    $default = null;
+                }
 				$keyreadable = $_keyreadable_array[$indexedit];
 				//the name of input fields is not arrayed! Change this!
 				switch($_result['edittype']) {
@@ -459,7 +482,9 @@ class OpenStatEdit {
 									$tables_array = getConfig($this->connection)['table'];
 								}
 								//compare those two arrays:
-								if ( $necessary_tables_array == array_intersect($necessary_tables_array,$tables_array) ) {
+                                if ( $necessary_tables_array == array_map("unserialize",array_intersect(array_map("serialize",$necessary_tables_array),array_map("serialize",$tables_array))) ) {
+								//was: if ( $necessary_tables_array == array_intersect($necessary_tables_array,$tables_array) ) {
+                                //array_intersect cannot handle multidimensional array w/o serializing
 									$_show_option[] = $value;
 								}
 							}
@@ -602,7 +627,8 @@ class OpenStatEdit {
 							<?php foreach ( $options as $value ) { 
 								$_sel = '';
 								if ( _cleanup($default) == _cleanup($value) ) { $_sel = 'selected'; };
-								?>				
+								if ( ! is_string($value) ) { continue; }
+                                ?>				
 								<option value="<?php echo($value); ?>" <?php echo($_sel); ?> ><?php echo($value); ?></option>
 							<?php } ?>
 						</select>
@@ -669,6 +695,7 @@ class OpenStatEdit {
 						<?php break;
 					case 'DATETIME':
 						$default_array = explode(' ',$default,2);
+                        if ( ! isset($default_array[1]) ) { $default_array[1] = '00:00'; }
 						?>
 						<label class="date onlyone" for="db_<?php echo($key.$rnd.'date'); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 						<input <?php echo($_disabled); ?> id="db_<?php echo($key.$rnd.'date'); ?>" type="date" value="<?php echo($default_array[0]); ?>" class="db_<?php echo($key); ?>" onchange="_updateDateTime(this.id);<?php echo($_onchange_function); ?>"/>
@@ -756,7 +783,8 @@ class OpenStatEdit {
 						// 'filepath': index 4002;
 						// determine fileroot
 						require('../../core/data/filedata.php');
-						$_fileroot = getConfig($this->connection)['fileroot'];
+						$_fileroot = getConfig($this->connection);
+                        if ( isset($_fileroot['fileroot']) ) { $_fileroot = $_fileroot['fileroot']; } else { $_fileroot = ''; }
 		//				if ( isset($_fileroot) AND $_fileroot != '' ) { $fileroot .= $_fileroot; }				
 						//
 						$default_array = json_decode($default,true);
@@ -1003,9 +1031,9 @@ class OpenStatEdit {
 			if ( ! isset($checked[2001]) ) { $checked[2001] = "-500"; }
 			?>
 			<div>
-				<label class="orand" for="<?php html_echo($this->key.$option.$rnd); ?>_orand">oder</label>
-				<input type="range" id="<?php html_echo($this->key.$option.$rnd); ?>_orand" name="<?php html_echo($this->table.'__'.$this->key); ?>[2001]" min="-500" max="-499" value="<?php echo($checked[2001]); ?>" step="1">
-				<label class="orand" for="<?php html_echo($this->key.$option.$rnd); ?>_orand">und</label>
+				<label class="orand" for="<?php html_echo($this->key.$rnd); ?>_orand">oder</label>
+				<input type="range" id="<?php html_echo($this->key.$rnd); ?>_orand" name="<?php html_echo($this->table.'__'.$this->key); ?>[2001]" min="-500" max="-499" value="<?php echo($checked[2001]); ?>" step="1">
+				<label class="orand" for="<?php html_echo($this->key.$rnd); ?>_orand">und</label>
 			</div><?php
 		}
 		if ( $_result['compound'] ) {
@@ -1036,7 +1064,11 @@ class OpenStatEdit {
 					$this->key = $tmpkey.'['.(6001+$indexedit).']';
 					$key = $this->key;
 					$_result['edittype'] = $_edittype;
-					$_result['referencetag'] = $_result['referencetag_array'][$indexedit];
+                    if ( isset($_result['referencetag_array'][$indexedit]) ) {
+    					$_result['referencetag'] = $_result['referencetag_array'][$indexedit];
+                    } else {
+                        $_result['referencetag'] = '';
+                    }
 					$checked = $this->_extract($tmpchecked,$indexedit,$item);
 					if ( ! is_array($checked) OR sizeof($checked) == 0 ) { $checked = array('_all'); }; 
 					$_searchfieldcompound = "hidden";

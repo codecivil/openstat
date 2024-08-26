@@ -60,7 +60,7 @@ function _cleanup($value,$separator = '<br />')
 			}
 		}
         //replace array of empty strings by empty string, e.g for NOTES
-        if ( implode('',$values) == '' ) { $values = array(''); } //triggers warning when $values entries are again arrays
+        if ( implode('',array_map("serialize",$values)) == '' ) { $values = array(''); } //triggers warning when $values entries are again arrays
 		//format compound fields
 		if ( is_array($values[0]) ) {
 			$komma = '';

@@ -91,6 +91,7 @@ function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$
 			}; 
 			break;
 	}
+    if ( ! isset($tmpvalue) ) { $tmpvalue = null; }
 	return array($filter_results,$tmpvalue,$komma);
 }
 
@@ -338,24 +339,27 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 					}
 				}
 				$rnd2 = rand(0,32767);
-				$table_results .= "
-				<td>
-					<input type=\"checkbox\" hidden class=\"toggle\" id=\"newEntries_".$rnd2."\">
-					<label for=\"newEntries_".$rnd2."\"><i class=\"fas fa-plus\"></i></label>
-					<div class=\"form newEntry\">
-						<input type=\"checkbox\" hidden class=\"toggle\" id=\"newEntries_".$rnd2."\">
-						<label for=\"newEntries_".$rnd2."\"><i class=\"fas fa-plus\"></i>&nbsp;</label>";
-				foreach ( $TABLES as $table ) {
-					if ( $table == $TABLES[0] ) { continue; }
-					$table_results .= "<label onclick=\"_setValue(this,'".$table."',1);\"><i class=\"fas fa-".$ICON[$table]."\"></i>&nbsp;</label>";
-				}
-				$table_results .= "
-						<form method=\"POST\">
-							<input type=\"number\" hidden name=\"id_".$TABLES[0]."\" value=\"".$row[$TABLES[0].'__id_'.$TABLES[0]]."\">
-							<input type=\"text\" hidden name=\"table[]\" value=\"\">
-						</form>					
-					</div>
-				</td>";
+                //add only new entey icons if attribution to main table exists (may be filtered with complement...)
+				if ( isset($row[$TABLES[0].'__id_'.$TABLES[0]]) ) {
+                    $table_results .= "
+                    <td>
+                        <input type=\"checkbox\" hidden class=\"toggle\" id=\"newEntries_".$rnd2."\">
+                        <label for=\"newEntries_".$rnd2."\"><i class=\"fas fa-plus\"></i></label>
+                        <div class=\"form newEntry\">
+                            <input type=\"checkbox\" hidden class=\"toggle\" id=\"newEntries_".$rnd2."\">
+                            <label for=\"newEntries_".$rnd2."\"><i class=\"fas fa-plus\"></i>&nbsp;</label>";
+                    foreach ( $TABLES as $table ) {
+                        if ( $table == $TABLES[0] ) { continue; }
+                        $table_results .= "<label onclick=\"_setValue(this,'".$table."',1);\"><i class=\"fas fa-".$ICON[$table]."\"></i>&nbsp;</label>";
+                    }
+                    $table_results .= "
+                            <form method=\"POST\">
+                                <input type=\"number\" hidden name=\"id_".$TABLES[0]."\" value=\"".$row[$TABLES[0].'__id_'.$TABLES[0]]."\">
+                                <input type=\"text\" hidden name=\"table[]\" value=\"\">
+                            </form>					
+                        </div>
+                    </td>";
+                }
 				$table_results .= "</tr> ";
 				$rcount++;
 		}
@@ -385,14 +389,14 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 {
     $_starttime = microtime(true);
 	$_result_array = execute_stmt($stmt_array,$conn,true); //flip the result array to get rows
-	$result = $_result_array['result'];
+	if ( isset($_result_array['result']) ) { $result = $_result_array['result']; } else { $result = array(); }
     $_endtime = microtime(true);
     if ( sizeof($result) > $_SESSION['exec_forecast_threshold'] ) {
         $_SESSION['sql_execution_rate'] = ($_endtime - $_starttime) / sizeof($result);
     }
     //test if execution will exceed max_execution_time
     if ( isset($_SESSION['stat_execution_rate']) AND isset($_SESSION['max_execution_time']) ) {
-        if ( $_SESSION['stat_execution_rate'] * $result->num_rows > $_SESSION['max_execution_time'] ) {
+        if ( $_SESSION['stat_execution_rate'] * sizeof($result) > $_SESSION['max_execution_time'] ) {
             return "<p>Die Erzeugung der Statistik würde länger dauern als erlaubt. Bitte spezifiziere Deine Tabellen- und Filtereinstellungen.</p>";
         }
     }
@@ -487,8 +491,9 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 			$new = false;
 			$mustresort = false;
 			for ( $i = 0; $i < sizeof($keys); $i++ ) {
-				if ( $key == "id" ) { continue; }
+				//was before, not after $key definition: if ( $key == "id" ) { continue; }
 				$key = $keys[$i];
+				if ( $key == "id" ) { continue; }
 				$value = _cleanup($row[$keys[$i]]); //need control over the whole key array: first, last...
 				switch($edittype[$key]) {
 					case 'DATE':

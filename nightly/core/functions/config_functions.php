@@ -67,7 +67,7 @@ function updateConfig(array $config, mysqli $conn, string $configname = 'Default
 			$_result_array = execute_stmt($_stmt_array,$conn); 		
 		} 
 		//define an output area for db result messages!
-		if ($_result_array['dbMessageGood']) { }; //define an output area for db result messages!
+		//if ($_result_array['dbMessageGood']) { }; //define an output area for db result messages!
 	}
 }
 

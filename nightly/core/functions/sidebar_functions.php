@@ -1058,7 +1058,7 @@ function jenks(int $userid, string $tablemachine, array $key_array, array $alrea
 	}
 	foreach ( $key_array as $key ) {
 		if ( ! isset($_keystats[$key['keymachine']]) ) { $_keystats[$key['keymachine']] = 0; }
-		if ( isset($already_chosen[$table.'__'.$key['keymachine']])	 ) { unset($_keystats[$key['keymachine']]); } //disregard already chosen keys
+		if ( isset($already_chosen[$tablemachine.'__'.$key['keymachine']])	 ) { unset($_keystats[$key['keymachine']]); } //disregard already chosen keys
 	}
 	arsort($_keystats); //ensure descending order of frequency
 	//recursively compute means and jenks value differences
