@@ -403,7 +403,7 @@ class OpenStatEdit {
 				?>
 					<div id="db_<?php echo($key.$rnd); ?>_conditions" hidden><?php html_echo(json_encode($conditions)); ?></div>
 				<?php
-                if ( isset($default_array[$indexedit]) AND isset($default_array[$indexedit][$indexdefault]) ) {
+                if ( isset($_default_array[$indexedit]) AND isset($_default_array[$indexedit][$indexdefault]) ) {
     				$default = $_default_array[$indexedit][$indexdefault];
                 } else {
                     $default = null;

@@ -351,7 +351,6 @@ function getDetails($PARAMETER,$conn)
 	} else {
 		$_array = $PARAMETER;
 	}
-
 	if ( ! is_array($_array) ) { return; }
 	//distinguish mass and single edit
 	if ( isset($_array['massEdit']) ) {
