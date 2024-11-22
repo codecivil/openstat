@@ -123,5 +123,11 @@ $conn->close();
 			}
 		},500);
 		<?php }; ?>
+        if ( ! parseInt(window.navigator.userAgent.replace(/.*Firefox\//,'').replace(/\..*/,'')) ) {
+            document.querySelector('#actionneeded').innerHTML += '<p>Dies scheint kein unterstützter Browser zu sein. Bitte installiere Firefox.</p>';
+        }
+        if ( <?php echo($firefox_least_featureversion); ?> > parseInt(window.navigator.userAgent.replace(/.*Firefox\//,'').replace(/\..*/,'')) ) {
+            document.querySelector('#actionneeded').innerHTML += '<p>Diese Firefoxversion ist zu alt. Es kann sein, dass manche Funktionen nicht verfügbar sind oder fehlerhaft reagieren. Bitte installiere oder aktualisiere Firefox.</p>';
+        }
 	</script>
 </body>

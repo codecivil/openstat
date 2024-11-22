@@ -9,6 +9,9 @@ require_once('../../core/functions/frontend_functions.php');
 require_once('../../core/functions/display_functions.php');
 require_once('../../settings.php');
 require_once('../../core/data/debugdata.php');
+
+//mysqli does not throw errors (php8 makes errors fatal, so temporarily switch back to php7.4 behaviour)
+mysqli_report(MYSQLI_REPORT_OFF);
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="de-DE">
@@ -893,7 +896,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
                         break;
                     case 'insert':
                         unset($_stmt_array);
-                        $_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` ADD COLUMN `".$PARAMETER['keymachine']."` ".$PARAMETER['typelist'].$_DEFAULT;
+                        $_stmt_array['stmt'] = "ALTER TABLE `".$_propertable."` ADD COLUMN IF NOT EXISTS `".$PARAMETER['keymachine']."` ".$PARAMETER['typelist'].$_DEFAULT;
                         _execute_stmt($_stmt_array,$conn);
                         break;
                     case 'delete':
@@ -1252,7 +1255,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 	$_stmt_array['stmt'] = "SELECT delete_roles,parentmachine FROM os_tables WHERE tablemachine = ?";
 	$_stmt_array['str_types'] = "s";
 	$_stmt_array['arr_values'] = array();
-	$_stmt_array['arr_values'][] = $_propertable;
+	$_stmt_array['arr_values'][] = str_replace('MAIN','',$_propertable); //MAIN is up to now the only tablemachine extension being a view
 	$_os_tables_result = execute_stmt($_stmt_array,$conn,true)['result'][0];
 	$_delete_roles = $_os_tables_result['delete_roles'];
 	$PARAMETER['parentmachine'] = $_os_tables_result['parentmachine'];
@@ -1304,7 +1307,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 	}
 	unset($_stmt_array);
 	//query os_roles into $PARAMETER['rolename'] in a loop
-	$_stmt_array['stmt'] = "SELECT id AS roleid,parentid,rolename FROM os_roles";
+	$_stmt_array['stmt'] = "SELECT id AS roleid,parentid,rolename FROM os_roles WHERE rolename != '_none_'";
 	$_result_array = _execute_stmt($_stmt_array,$conn); $_result=$_result_array['result'];
 	if ( $_result AND $_result->num_rows > 0 ) {
 		while ($row=$_result->fetch_assoc()) {
@@ -1332,8 +1335,11 @@ function recreateView(string $_propertable, mysqli $conn) {
 							$_values = str_replace('THIS_ROLE',$PARAMETER['rolename'],$_restrict['role']);
 							$_values = str_replace('CHILD_ROLE','',$_values);
 							$_values = str_replace('USER','',$_values);
+		                    file_put_contents('/var/www/test/openStat/mylog.txt','test1: '.$_values.PHP_EOL,FILE_APPEND);
 							$_values = trimList($_values);
-							$_values = implode("\',\'",json_decode($_values,true));
+                            if ( $_values != '' ) {
+                                $_values = implode("\',\'",json_decode($_values,true));
+                            }
 							if ( $_values != ',' AND $_values != '' ) {
                                 //key has one of the values or, for multiple combined keys: first component's last entry is one of the values
                                 //kind of hotfix for now; may be subject to change!

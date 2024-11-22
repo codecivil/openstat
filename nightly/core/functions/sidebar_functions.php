@@ -554,9 +554,13 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
         }
 		//select from former result if requested; also here for economic reasons...
 		if ( isset($searchinresults) and $searchinresults ) {
-			$_WHERE .= $komma0.'(`view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IS NULL OR `view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IN ('.implode(',',json_decode($_SESSION['results'],true)[$table]).') )';
-			$komma0 = " AND ";
-			$komma2 = " AND (";
+            $_tableresults = json_decode($_SESSION['results'],true)[$table];
+            //do not restrict if $_tableresults is empty (== [-1]); otherwise search in complements wont work
+            if ( sizeof($_tableresults) > 1 ) {
+                $_WHERE .= $komma0.'(`view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IS NULL OR `view__'.$table.'__'.$_SESSION['os_role'].'`.id_'.$table.' IN ('.implode(',',json_decode($_SESSION['results'],true)[$table]).') )';
+                $komma0 = " AND ";
+                $komma2 = " AND (";
+            }
 		}
 		//
 		$JOINSRC[$HIERARCHY[$tindex]] = $table;
@@ -783,11 +787,15 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 				{
 		//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";
 					if ( ! isset($values[5001][$i]) OR $values[5001][$i] == '' ) { $values[5001][$i] = '0'; }
-					$_WHERE .= $komma2.'('.$_sqlforkey." ".$_ge." '".$values[5001][$i]."'";
+					//$_WHERE .= $komma2.'('.$_sqlforkey." ".$_ge." '".$values[5001][$i]."'"; 
+					//DO NOT USE TICKS: THE CONVERSION OF STRINGS TO NUMBERS COSTS A LOT OF TIME!!!
+                    $_WHERE .= $komma2.'('.$_sqlforkey." ".$_ge." ".$values[5001][$i]; 
 					$komma2 = $_komma_date_inner;
 					$bracket = ')';
 					if ( ! isset($values[5002][$i]) OR  $values[5002][$i] == '' ) { $values[5002][$i] = '1000000000'; }
-					$_WHERE .= $komma2.''.$_sqlforkey." ".$_le." '".$values[5002][$i]."')";
+					//$_WHERE .= $komma2.''.$_sqlforkey." ".$_le." '".$values[5002][$i]."')";
+					//DO NOT USE TICKS: THE CONVERSION OF STRINGS TO NUMBERS COSTS A LOT OF TIME!!!
+					$_WHERE .= $komma2.''.$_sqlforkey." ".$_le." ".$values[5002][$i].")";
 					$komma2 = $_komma_outer;
 					$bracket = ')';
 				}
@@ -846,11 +854,15 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 							{
 					//			$_WHERE .= $komma2.'(`'.$key."` = '".date("Y-m-d H:i:s",$value)."'";	
 								if ( ! isset($cmp_values[$compoundnumber][5001][$i]) OR $cmp_values[$compoundnumber][5001][$i] == '' ) { $cmp_values[$compoundnumber][5001][$i] = '0'; }
-								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." '".$cmp_values[$compoundnumber][5001][$i]."'";
+					//			$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." '".$cmp_values[$compoundnumber][5001][$i]."'";
+                    //          DO NOT USE TICKS FOR NUMBER VALUES, see above
+								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." ".$cmp_values[$compoundnumber][5001][$i];
 								$komma2 = $_komma_date_inner;
 								$bracket = ')';
 								if ( ! isset($cmp_values[$compoundnumber][5002][$i]) OR  $cmp_values[$compoundnumber][5002][$i] == '' ) { $cmp_values[$compoundnumber][5002][$i] = '1000000000'; }
-								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." '".$cmp_values[$compoundnumber][5002][$i]."')";
+					//			$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." '".$cmp_values[$compoundnumber][5002][$i]."')";
+                    //          DO NOT USE TICKS FOR NUMBER VALUES, see above
+								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." ".$cmp_values[$compoundnumber][5002][$i].")";
 								$komma2 = $_komma_cmp;
 								$bracket = ')';
 							}			

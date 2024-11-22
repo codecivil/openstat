@@ -25,4 +25,6 @@ foreach($_FILES as $key=>$value)
 	}
 }
 
+//experimental: recover numbers from strings (converted by JS's FormData object at submission)
+$PARAMETER = json_decode(json_encode($PARAMETER,JSON_NUMERIC_CHECK),true);
 ?>

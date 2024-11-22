@@ -267,7 +267,7 @@ function updateSelection(el) {
 		var allowed_values = conditions[i].allowed_values;
 		if ( allowed_values.indexOf('\"***\"') > -1 ) { continue; }
 		//
-		if ( depends_local != '' ) { var search_el = el.closest('.searchfield'); } else { var search_el = el.closest('form'); }
+		if ( depends_local != '' ) { var search_el = el.closest('.searchfield'); } else { var search_el = el.closest('form'); } // this is the reason why ;local only works with MULTIPLE: otherwise there is no .searchfield
 		if ( search_el.querySelector('[name*="'+depends_on_key+'"]') ) {
 				_hits = search_el.querySelectorAll('[name*="'+depends_on_key+'"]');
 			//restrict successively for almost all fields
@@ -599,7 +599,7 @@ function styleNotes() {
 		_note.closest('.edit_wrapper').style.height = "0";	
 		_note.closest('.edit_wrapper').style.left = "calc(100% - 14rem)";	
 		_note.closest('.edit_wrapper').style.zIndex = "5";
-		if ( _note.querySelector('.note_wrapper textarea').value == '' ) {
+		if ( _note.querySelector('.note_wrapper textarea').value == '' || _note.querySelector('.note_wrapper textarea').value == 'undefined') {
 			_note.querySelector('.note_wrapper textarea').style.visibility = 'hidden';
 		} else {
 			_note.style.opacity = 1;
@@ -955,7 +955,6 @@ function generateDistribution(graphtype,type,statObj,element) {
 	//statistical data:
 	_statData = new Object;
 	_statData.median = ( statArray.length == 2*Math.floor(statArray.length/2) ) ? 0.5*(statArray[statArray.length/2-1][type]+statArray[statArray.length/2][type]) : statArray[Math.floor(statArray.length/2)][type];
-	console.log(_statData.median);
 	_statData.mean = y_total/statArray.length;
 	_statData.sd = Math.sqrt(y2_total/statArray.length - _statData.mean*_statData.mean);
 	(new Array('median','mean','sd')).forEach(function(statdatum) {
@@ -1068,6 +1067,7 @@ function showPieGraph(y_total,type,statObj,element) {
 	el_innerhtml += '<g transform="translate(120,120)" stroke="#000" stroke-width="1">'
 	statArray = addStatGraphicsLabels(statArray,statNumber);
 	statArray.forEach(function(el,index,array){
+        console.log(y_total); //NaN...? to be continued
 		el_percent = el[type]/y_total;
 		el_angle = 2*Math.PI*el_percent;
 		//check the svg arc flags on consistency;
@@ -1092,7 +1092,8 @@ function showPieGraph(y_total,type,statObj,element) {
 		_angle_old = _angle_new;
 	});
 	el_innerhtml += "</g></svg>";
-	element.innerHTML = el_innerhtml;
+	//console.log(el_innerhtml);
+    element.innerHTML = el_innerhtml;
 }
 
 

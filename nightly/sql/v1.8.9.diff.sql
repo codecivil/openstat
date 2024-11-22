@@ -1,0 +1,8 @@
+-- manually;
+-- import scheduledIndexes.sql
+-- set in 50-server.cnf:
+--
+-- [mariadb]
+-- event_scheduler=ON
+--
+-- and restart mysql

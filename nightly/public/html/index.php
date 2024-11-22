@@ -143,7 +143,7 @@ $_fullstats = execute_stmt($_stmt_array,$conn,true)['result'];
 $_fullstats_array = array();
 foreach ( $_fullstats as $_item ) {
 	if ( ! isset($_fullstats_array[$_item['tablemachine']]) ) { $_fullstats_array[$_item['tablemachine']] = array(); }
-	$_fullstats_array[$_item['tablemachine']][$_item['keymachine']] = $_item['_count'];
+	$_fullstats_array[$_item['tablemachine']][$_item['keymachine']] = (int) $_item['_count'];
 }
 $_SESSION['filterstats'] = json_encode($_fullstats_array);
 
@@ -165,6 +165,7 @@ $_v = time();
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/fontsize_<?php echo($_config['_fontSize']); ?>.css?v=<?php echo($_v);?>" id="cssFontSize" />
 	<link rel="stylesheet" type="text/css" media="screen, projection" href="/css/config_colors_<?php echo($_config['_colors']); ?>.css?v=<?php echo($_v);?>" id="cssColors" />
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/main<?php echo($_config['css']); ?>.css?v=<?php echo($_v);?>" />
+	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/subtables.css?v=<?php echo($_v);?>" />
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/css/config_columns_<?php echo(max(1,$_config['columns'])); ?>.css?v=<?php echo($_v);?>" id="cssColumns"/>
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontcc/css/fcc1.css?v=<?php echo($_v);?>" />
 	<link rel="stylesheet" type="text/css" media="screen, projection, print" href="/plugins/fontawesome/css/all.css?v=<?php echo($_v);?>" />
@@ -320,6 +321,7 @@ $_v = time();
 			<div>
 				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="myScrollIntoView(document.getElementById('wasistneu_wrapper'))">Was ist neu?</label><br />
 				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
+				<b>benötigt Firefox:</b> <?php html_echo($firefox_least_featureversion); ?>+<br />
 				<b>Autor:</b> <i class="fcc fcc-codecivil-icon"></i><?php html_echo($author); ?><br />
 				<?php if ( $contact != '' ) { 
 					$_contactbefore = ''; $_contactafter = '';

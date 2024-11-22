@@ -1,3 +1,19 @@
+#v1.8.9
+======
+22.11.2024
+
+* test and statement for firefox dependency (subtable accordion needs CSS :has; in Firefox available since 121;
+  also nested css (117+) will be applied in the future)
+* improved subtable layout: allows css accordion for up to 100 subtables per table
+* openStatAdmin: create_structure.php now rudimentarily php8-compliant
+* implement indexing as background task of mariadb (but perhaps not very effective since many
+  data model filters use LIKE '%WORD%' for comparison, so cannot use indices)
+* Change in applyFilters: numbers in sql querys without quotation marks (makes query faster)
+* scripts/getParamaters.php: experimental reconversion from strings to numbers if applicable
+* Fix in db_functions.php: Counts of attributions led to empty display of attribution in counted
+  entries
+* Cleanup of code with respect to attribution counts
+
 #v1.8.8
 ======
 26.08.2024

@@ -8,7 +8,10 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 	$stmt = ''; $str_types = ''; $arr_values = ''; $message = '';
 	if (isset($stmt_array['stmt']) ) { $stmt = $stmt_array['stmt']; };
 	if (isset($stmt_array['str_types']) ) { $str_types = $stmt_array['str_types']; };
-	if (isset($stmt_array['arr_values']) ) {  $arr_values = $stmt_array['arr_values']; };
+	if (isset($stmt_array['arr_values']) ) {
+        $arr_values = $stmt_array['arr_values'];
+        if ( ! is_array($arr_values) ) { $arr_values = array($arr_values); }
+    };
 	if (isset($stmt_array['message']) ) { $message = $stmt_array['message']; }
 	$dbMessage = ''; $dbMessageGood = '';
 	//often saving of new entries is rejected; I think this is due to an overload of the mariadb server; so, cynic who I am, let's try it more often...
@@ -77,6 +80,16 @@ function execute_stmt(array $stmt_array, mysqli $conn, bool $flip = false)
 		}
 		return $return;
 	}
+}
+
+function flipResults(array $return) {
+    if ( isset($return['result']) ) {
+        //use array_map with callback "null" on sequence of "inner" arrays of $a, see
+        //https://www.php.net/manual/en/function.array-map.php
+        array_unshift($return['result'], null);
+        $return['result'] = call_user_func_array("array_map", $return['result']);        
+    }
+    return $return;
 }
 
 
@@ -483,6 +496,9 @@ function getDetails($PARAMETER,$conn)
 						if ( isset($_tmp_keys[$index]) AND $_tmp_keys[$index] == $_table_result[$i]['tablemachine'] ) { unset($_tmp_keys[$index]); }
 					}
 				}
+                //save $_table_result in a new variable, since it is redefined a few lines below (and clean up code later)
+                $_tables_here = json_decode(json_encode($_table_result),true);
+                //
 				$_tmp_keys = array_values($_tmp_keys);
 				if ( sizeof($_tmp_keys) == 0 ) { $_tmp_keys = array('id_'.$table); }
 				unset($_stmt_array); $_stmt_array = array();
@@ -606,6 +622,10 @@ function getDetails($PARAMETER,$conn)
 						{
 							if ( substr($value,0,strlen($_tmp_table)) != $_tmp_table ) { unset($_tmp_keys[$index]); }
 							else { $_tmp_keys[$index] = substr($value,strlen($_tmp_table)+2); }
+                            //exclude counts of attributions (they do not exist as columns)):
+                            for ( $i = 0; $i < sizeof($_tables_here); $i++ ) {
+                                if ( isset($_tmp_keys[$index]) AND $_tmp_keys[$index] == $_tables_here[$i]['tablemachine'] ) { unset($_tmp_keys[$index]); }
+                            }
 						}
 						$_tmp_keys = array_values($_tmp_keys);
 						if ( sizeof($_tmp_keys) == 0 ) { $_tmp_keys = array('id_'.$_tmp_table); };

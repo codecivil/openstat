@@ -35,7 +35,14 @@ class OpenStatEdit {
 		$_stmt_array['stmt'] = 'SELECT typelist,edittype,referencetag,defaultvalue,role_'.$_SESSION['os_role'].' AS role, restrictrole_'.$_SESSION['os_role'].' AS restrictrole, role_'.$_SESSION['os_parent'].' AS parentrole, restrictrole_'.$_SESSION['os_parent'].' AS restrictparentrole FROM '.$this->table.'_permissions WHERE keymachine = ?';
 		$_stmt_array['str_types'] = 's';
 		$_stmt_array['arr_values'] = array($this->key);
-		$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
+		$_result = execute_stmt($_stmt_array,$this->connection,true);
+        if ( isset($_result['result']) ) { $_result = $_result['result']; } else { $_result = array(); };
+        if ( isset($_result[0]) ) { $_result = $_result[0]; } else { $_result = array(); };
+        //return if result is empty (currently for counts; they correspond to no column)
+		if ( sizeof($_result) == 0 ) {
+            return array("options"=>array(), "conditions"=>array(), "dependencies"=>array());
+        }
+        //
 		$_result['edittype'] = explode(' + ',$_result['edittype']);
         if ( isset($_result['edittype'][$effective_compound]) ) {
             $_result['edittype'] = $_result['edittype'][$effective_compound];
@@ -239,7 +246,9 @@ class OpenStatEdit {
                 $_this_key = '`'.$this->key.'`';
 				unset($_stmt_array); 
 				$_stmt_array['stmt'] = 'SELECT '.$_this_key.' FROM `view__' . $this->table . '__' . $_SESSION['os_role'].'`';
-				$options = execute_stmt($_stmt_array,$this->connection)['result'][$this->key];
+				$options = execute_stmt($_stmt_array,$this->connection);
+                if ( isset($options['result']) ) { $options = $options['result']; } else { $options = array(); };
+                if ( isset($options[$this->key]) ) { $options = $options[$this->key]; } else { $options = array(); };
 				break;
 		}
 		if ( is_array($options) AND sizeof($options) > 0 AND ( ! isset($options[0]) OR ! is_array($options[0]) ) ) {
@@ -877,7 +886,7 @@ class OpenStatEdit {
 							?>
 								<label for="note_<?php echo($_cbcolor); ?>_cb<?php echo($rnd); ?>" class="unlimitedWidth note_<?php echo($_cbcolor); ?>"><i class="far fa-square"></i></label>
 							<?php } ?>
-								<textarea  <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> onchange="note_synctext(this)" spellcheck="true" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" class="textarea db_formbox db_<?php echo($key.' note_'.$default[0]); ?>"  value="" rows="3" wrap="hard"><?php echo($default[1]); ?></textarea>
+								<textarea  <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> spellcheck="true" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" class="textarea db_formbox db_<?php echo($key.' note_'.$default[0]); ?>"  value="" rows="3" wrap="hard"><?php echo($default[1]); ?></textarea>
 							</div>
 						</div>
 						<?php break;
@@ -947,9 +956,11 @@ class OpenStatEdit {
 		$_stmt_array['stmt'] = 'SELECT typelist,edittype,referencetag,keyreadable,role_'.$_SESSION['os_role'].' AS role, restrictrole_'.$_SESSION['os_role'].' AS restrictrole, role_'.$_SESSION['os_parent'].' AS parentrole, restrictrole_'.$_SESSION['os_parent'].' AS restrictparentrole FROM '.$this->table.'_permissions WHERE keymachine = ?';
 		$_stmt_array['str_types'] = 's';
 		$_stmt_array['arr_values'] = array($this->key);
-		$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
+		$_result = execute_stmt($_stmt_array,$this->connection,true);
+        if ( isset($_result['result']) ) { $_result = $_result['result']; } else { $_result = array(); };
+        if ( isset($_result[0]) ) { $_result = $_result[0]; } else { $_result = array(); };
 		//if it is an attribution, then $_result is not set:
-		if ( ! isset($_result) ) {
+		if ( sizeof($_result) == 0) {
 			$_stmt_array = array();
 			$_stmt_array['stmt'] = 'SELECT tablereadable AS keyreadable,allowed_roles,iconname FROM os_tables WHERE tablemachine = ?';
 			$_stmt_array['str_types'] = 's';
@@ -961,6 +972,7 @@ class OpenStatEdit {
 			$_result['role'] = '0';
 			$_result['restrictrole'] = '';
 			$_result['parentrole'] = '0';
+			$_result['referencetag'] = '';
 			$_result['restrictparentrole'] = '';
 		}
 		$options_array = $this->_getOptions();
