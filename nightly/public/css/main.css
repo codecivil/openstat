@@ -284,8 +284,6 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 }
 #formChooseTables { font-size: 1rem; }
 #formChooseTables > div:nth-child(2) { font-weight: bold; }
-#formChooseTables .toggle + .chooseSubtable { display: none; }
-#formChooseTables .toggle:checked + .chooseSubtable { display: block; }
 #formChooseTables .chooseSubtable { background: var(--background-choose-subtable); }
 #formChooseTables label.chooseSubtable { position: relative; top: -1.4rem; left: calc(100% - 1.4rem); font-size: 0.7rem; display: block; height: 0; width: 0.7rem; }
 .hier_up:hover::after { content: '\2190'; } /* arrow left */
@@ -454,7 +452,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details .subtoggle:checked + div label .closed { display: none; }
 .details .subtoggle:not(:checked) + div label .open { display: none; }
 .details .subtoggle:not(:checked) + div label .closed { display: inline; }
-.details .subtable_header { display: block; height: 2rem; background: var(--background-subtable-header); margin: 0.5rem; }
+.details .subtable_header { display: block; z-index: 1; height: 2rem; background: var(--background-subtable-header); margin: 0.5rem; }
 .details .subtable_header label { width: initial; float: none; text-align: left; padding: 0.5rem; }
 /** SUGGESTion windows **/
 .details .suggestions { 

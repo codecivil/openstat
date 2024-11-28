@@ -1,3 +1,13 @@
++v1.8.10
+======
+
+* verbesserte Anzeige im Zusammenhang mit Untertabellen
+* Formaler Start der semantischen Versionierung: 
+  - Letzte Zahl wird erhöht: nur Fehlerkorrekturen
+  - Mittlere Zahl wird erhöht: (auch) neue Features
+  - Erste Zahl wird erhöht: neue Version, die mit Versionen vorheriger
+    erster Zahl inkompatibel ist
+
 #v1.8.9
 ======
 

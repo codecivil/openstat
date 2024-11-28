@@ -1,3 +1,10 @@
+#v1.8.10
+======
+28.11.2024
+
+* formal start of semantic versioning (incompatible changes.backward compatible features.bug fixes)
+* fixes for subtable related layout
+
 #v1.8.9
 ======
 22.11.2024
