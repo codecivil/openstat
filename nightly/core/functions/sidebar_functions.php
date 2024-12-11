@@ -17,9 +17,9 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			id="toggleSubtables<?php echo($_subrnd); ?>"
 			name="showSubtablesOf[]"
 			value="<?php echo($_tablemachine); ?>"
-			<?php if ( isset($_config_array['showSubtablesOf']) AND in_array($_tablemachine,$_config_array['showSubtablesOf']) ) { ?>
+			<?php if ( ! isset($_config_array['showSubtablesOf']) OR ( isset($_config_array['showSubtablesOf']) AND in_array($_tablemachine,$_config_array['showSubtablesOf']) ) ) { ?>
 			checked
-			<?php } ?>
+			<?php } //initially, show all subtables ?>
 		>
 		<?php
 		}

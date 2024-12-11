@@ -1,0 +1,2 @@
+#formChooseTables .toggle:nth-of-type(A) ~ .chooseSubtable:has(~ .toggle:nth-of-type(B)) { display: none; }
+#formChooseTables .toggle:nth-of-type(A):checked + .chooseSubtable:has(~ .toggle:nth-of-type(B)) { display: block; }
