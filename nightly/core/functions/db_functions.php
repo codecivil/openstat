@@ -713,7 +713,7 @@ function getDetails($PARAMETER,$conn)
 						$_subrnd = rand(0,2147483647);
 						?>
 						<!-- the header and clickers here... -->
-						<input hidden type="checkbox" id="subToggle<?php echo($_subrnd); ?>" class="subtoggle">
+						<input hidden type="checkbox" id="subToggle<?php echo($_subrnd); ?>" onchange="console.log(this);this.nextElementSibling.scrollIntoView({block: 'center'});" class="subtoggle" />
 						<div class="subtable_header">
 							<label for="subToggle<?php echo($_subrnd); ?>">
 								<i class="fas fa-angle-right closed">&nbsp;</i>

@@ -1,3 +1,10 @@
+#v1.8.12
+======
+12.12.2024
+
+* fix: scroll and display behaviour of subtable accordion
+* preparation for Chrome compatibility
+
 #v1.8.11
 ======
 11.12.2024

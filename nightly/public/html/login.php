@@ -74,17 +74,28 @@ $conn->close();
 		<div id="logo"></div>
 		<div id="title"><img src="/img/openStat.svg">openStat</div>
 		<div id="title_after"></div>
+        <script>
+            if ( _browserversion = parseInt(window.navigator.userAgent.replace(/.*Firefox\//,'').replace(/\..*/,'')) ) {
+                _browser = "Firefox";
+                _extensionlink = "https://addons.mozilla.org/addon/openstat/";
+            }
+            if ( ! _browserversion && ( _browserversion = parseInt(window.navigator.userAgent.replace(/.*Chrome\//,'').replace(/\..*/,'')) ) ) {
+                _browser = "Chrome";
+                _extensionlink = "https://chromewebstore.google.com/openStat/mfoblahoofibcaebhefdchnfnojiphjb";
+            }
+            if ( ! _browserversion ) { _browser = "Unsupported"; }        
+        </script>
 		<div id="actionneeded">
 			<?php 
 				if ( isset($_SESSION['e']) AND $_GET['e'] == "noextension" ) { ?>
-					<p>Bitte aktiviere die <b>openStat</b>-Erweiterung für Firefox.</p>
+					<p>Bitte aktiviere die <b>openStat</b>-Erweiterung.</p>
 					<p>Wenn Du sie noch nicht installiert hast, kannst Du das hier tun:</p>
-					<p><a href="https://addons.mozilla.org/addon/openstat/">https://addons.mozilla.org/addon/openstat/</a></p>
+					<p><a class="extensionlink"></a></p>
 					<p>und <b>erlaube die Aktivierung der Erweiterung in privaten Fenstern</b>.</p>
 				<?php };
 				if ( isset($_SESSION['e']) AND $_GET['e'] == "extensionupdate" ) { ?>
-					<p>Bitte aktualisiere die <b>openStat</b>-Erweiterung für Firefox:</p>
-					<p><a href="https://addons.mozilla.org/addon/openstat/">https://addons.mozilla.org/addon/openstat/</a></p>
+					<p>Bitte aktualisiere die <b>openStat</b>-Erweiterung:</p>
+					<p><a class="extensionlink"></a></p>
 					<p>und <b>erlaube die Aktivierung der Erweiterung in privaten Fenstern</b>.</p>
 				<?php };
 				if ( isset($_SESSION['e']) AND $_GET['e'] == "notprivate" ) { ?>
@@ -122,12 +133,18 @@ $conn->close();
 					break;
 			}
 		},500);
-		<?php }; ?>
-        if ( ! parseInt(window.navigator.userAgent.replace(/.*Firefox\//,'').replace(/\..*/,'')) ) {
-            document.querySelector('#actionneeded').innerHTML += '<p>Dies scheint kein unterstützter Browser zu sein. Bitte installiere Firefox.</p>';
+		<?php }; ?>        
+        if ( _browser == "Unsupported" ) {
+            document.querySelector('#actionneeded').innerHTML += '<p>Dies scheint kein unterstützter Browser zu sein. Bitte benutze Firefox.</p>';
+            document.querySelectorAll('.extensionlink').forEach(_link => { _link.textContent = "Bitte installiere openStat aus dem passenden Erweiterungsstore."; } );
+        } else {
+            document.querySelectorAll('.extensionlink').forEach(_link => { _link.textContent = _extensionlink; _link.href = _extensionlink; } );
         }
-        if ( <?php echo($firefox_least_featureversion); ?> > parseInt(window.navigator.userAgent.replace(/.*Firefox\//,'').replace(/\..*/,'')) ) {
-            document.querySelector('#actionneeded').innerHTML += '<p>Diese Firefoxversion ist zu alt. Es kann sein, dass manche Funktionen nicht verfügbar sind oder fehlerhaft reagieren. Bitte installiere oder aktualisiere Firefox.</p>';
+        if ( 
+            ( _browser == "Firefox" && <?php echo($firefox_least_featureversion); ?> > _browserversion ) ||
+            ( _browser == "Chrome" && <?php echo($chrome_least_version); ?> > _browserversion )           
+        ) {
+            document.querySelector('#actionneeded').innerHTML += '<p>Diese Browserversion ist zu alt. Es kann sein, dass manche Funktionen nicht verfügbar sind oder fehlerhaft reagieren. Bitte aktualisiere Deinen Browser.</p>';
         }
 	</script>
 </body>
