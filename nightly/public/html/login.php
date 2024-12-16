@@ -81,7 +81,7 @@ $conn->close();
             }
             if ( ! _browserversion && ( _browserversion = parseInt(window.navigator.userAgent.replace(/.*Chrome\//,'').replace(/\..*/,'')) ) ) {
                 _browser = "Chrome";
-                _extensionlink = "https://chromewebstore.google.com/openStat/mfoblahoofibcaebhefdchnfnojiphjb";
+                _extensionlink = "https://chromewebstore.google.com/detail/openstat/mfoblahoofibcaebhefdchnfnojiphjb";
             }
             if ( ! _browserversion ) { _browser = "Unsupported"; }        
         </script>

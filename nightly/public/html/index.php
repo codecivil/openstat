@@ -321,7 +321,9 @@ $_v = time();
 			<div>
 				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="myScrollIntoView(document.getElementById('wasistneu_wrapper'))">Was ist neu?</label><br />
 				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
-				<b>benötigt Firefox:</b> <?php html_echo($firefox_least_featureversion); ?>+<br />
+				<b>Mindestversionen:</b><br />
+                <b>&nbsp;Firefox:</b> <?php html_echo($firefox_least_featureversion); ?>+<br />
+                <b>&nbsp;Chrome:</b> <?php html_echo($chrome_least_version); ?>+<br />
 				<b>Autor:</b> <i class="fcc fcc-codecivil-icon"></i><?php html_echo($author); ?><br />
 				<?php if ( $contact != '' ) { 
 					$_contactbefore = ''; $_contactafter = '';
