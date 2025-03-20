@@ -99,7 +99,7 @@ $conn->close();
 					<p>und <b>erlaube die Aktivierung der Erweiterung in privaten Fenstern</b>.</p>
 				<?php };
 				if ( isset($_SESSION['e']) AND $_GET['e'] == "notprivate" ) { ?>
-					Bitte öffne <b>openStat</b> in einem privaten Fenster (Strg+Umschalt+P).
+					Bitte öffne <b>openStat</b> in einem privaten Fenster (Firefox: Strg+Umschalt+P, Chromium: Strg+Umschalt+N).
 				<?php };
 			 ?>
 		</div>

@@ -773,7 +773,7 @@ function trafficLight(array $PARAM, mysqli $conn)
                 //go on and display if callback is not given or contains '_'
                 if ( ! isset($criterion['callback']) OR ( isset($criterion['callback']) AND in_array('_',$_callback_array) ) ) {
                     foreach ( $resultout as $id ) {
-                        if ( ! is_array($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
+                        if ( ! is_array($ids[$criterion['table']]) OR ! isset($ids[$criterion['table']]) ) { $ids[$criterion['table']] = array(); } 
                         $_criteriondetail = ''; if ( isset($_param['id'.$id]) ) { $_criteriondetail = ": ".$_param['id'.$id]; }
                         if ( ! array_key_exists($id,$ids[$criterion['table']]) ) { $ids[$criterion['table']][$id] = array(); $ids[$criterion['table']][$id]['urgency'] = 0; $ids[$criterion['table']][$id]['criteria'] = array(); }
                         if ( $criterion['urgency'] == "+" ) { $ids[$criterion['table']][$id]['urgency'] += 1; }

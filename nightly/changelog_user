@@ -1,3 +1,9 @@
+#v.10.0
+======
+
+* Fehler bei leeren Filterwerten korrigiert
+* openStatAdmin testet Eingabe auf JSON-Syntax
+
 #v1.9.0
 ======
 

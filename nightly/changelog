@@ -1,3 +1,10 @@
+#v1.10.0
+======
+20.03.2025
+
+* fix: empty filter values sometimes excluded hits erroneously
+* openStatAdmin: tests now field inputs for JSON syntax
+
 #v1.9.0
 ======
 16.12.2024

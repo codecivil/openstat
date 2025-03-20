@@ -1335,7 +1335,6 @@ function recreateView(string $_propertable, mysqli $conn) {
 							$_values = str_replace('THIS_ROLE',$PARAMETER['rolename'],$_restrict['role']);
 							$_values = str_replace('CHILD_ROLE','',$_values);
 							$_values = str_replace('USER','',$_values);
-		                    file_put_contents('/var/www/test/openStat/mylog.txt','test1: '.$_values.PHP_EOL,FILE_APPEND);
 							$_values = trimList($_values);
                             if ( $_values != '' ) {
                                 $_values = implode("\',\'",json_decode($_values,true));
@@ -1414,7 +1413,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 					}	
 				}
 				//echo("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
-                //file_put_contents('/var/www/test/openStat/mylog.txt',"SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;",FILE_APPEND);
+                //debug only: file_put_contents('/var/www/test/openStat/mylog.txt',"SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry, ' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;",FILE_APPEND);
                 
                 //select and update view statement
                 $conn->query("SELECT CONCAT('CREATE OR REPLACE ALGORITHM = MERGE VIEW view__".$_propertable.'__'.$PARAMETER['roleid']." AS SELECT ".$CREATEVIEW_ID."', @qry,' FROM ".$_propertable.$CREATEVIEW_WHERE." WITH CHECK OPTION') INTO @qry2;");
@@ -1797,7 +1796,7 @@ $tableel .= "</table>";
 							case 'list': 
 							?>
 								<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
-										<input type="text" id="db_<?php echo($key); ?>_text" name="<?php echo($key); ?>" class="db_formbox" value="" onkeyup='_autoComplete(<?php echo(json_encode($optionlist)); ?>,this)' autofocus disabled hidden>
+										<input type="text" id="db_<?php echo($key); ?>_text" name="<?php echo($key); ?>" class="db_formbox" value="" onkeyup='_autoComplete(<?php echo(json_encode($optionlist)); ?>,this);_testJSON(this);' autofocus disabled hidden>
 										<select id="db_<?php echo($key); ?>_list" name="<?php echo($key); ?>" class="db_formbox" onchange="_onResetFilter(this.value)">
 											<option value="none"></option>
 											<?php foreach ( $optionlist as $value ) { 
@@ -1813,7 +1812,7 @@ $tableel .= "</table>";
 							default:
 							?>
 								<label for="db_<?php echo($key); ?>"><?php echo(readable($key)); ?></label>
-								<input type="text" id="db_<?php echo($key); ?>" name="<?php echo($key); ?>" class="db_formbox" value="<?php echo(htmlentities($default)); ?>">
+								<input type="text" id="db_<?php echo($key); ?>" name="<?php echo($key); ?>" class="db_formbox" value="<?php echo(htmlentities($default)); ?>" onkeyup="_testJSON(this);">
 								<br>
 								<?php break;
 						}; } ?>

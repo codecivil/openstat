@@ -30,7 +30,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					id="add_<?php html_echo($_tablemachine); ?>_allsubtables" 
 					type="checkbox" 
 					onclick="_toggleEditAll('formChooseTables',this.id,'.subtableOf<?php echo($_tablemachine); ?>');"
-					<?php if ( ! isset($_config_array['subtable']) OR ( isset($_config_array['subtable']) AND in_array($_subtable['tablemachine'],$_config_array['subtable']) ) ) { ?>checked<?php }; ?>
+					<?php if ( ! isset($_config_array['subtable']) ) { ?>checked<?php }; ?>
 				/>
 			</div>
 		<?php }
@@ -910,7 +910,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 					$komma3 = '';
 					$_nullallowed = false;
 					$_altnull = "";
-					if ( ! isset($values[7001][$i]) OR $values[7001][$i] == '' OR $values[7001][$i] == '["_all"]' ) { $values[7001][$i] = '["_all"]'; $_nullallowed = true; $_altnull = " OR true "; } //select all colors of notes; a bit dirty but quite short...
+					if ( ! isset($values[7001][$i]) OR $values[7001][$i] == '' OR $values[7001][$i] == '[]' OR $values[7001][$i] == '["_all"]' ) { $values[7001][$i] = '["_all"]'; $_nullallowed = true; $_altnull = " OR true "; } //select all colors of notes; a bit dirty but quite short...
 					$_WHERE .= $komma3."((";
 					$_WHERE .= "(".$_sqlforkey." LIKE '[%' AND JSON_VALUE(".$_sqlforkey.",'$[0]') ".$_negation." IN ('".implode("','",json_decode($values[7001][$i],true))."') ".$_altnull." )";
 					$_WHERE .= ')';

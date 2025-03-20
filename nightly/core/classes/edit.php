@@ -1247,7 +1247,7 @@ class OpenStatEdit {
 							<?php 
 		// before 20200525:						if ( ! is_array($checked) OR sizeof($checked) <= 1) {
 		//before 20200527:						if ( ! is_array($checked) OR sizeof($checked[1001]) <= 1) {
-								if ( ! is_array($checked) OR sizeof($checked[1001]) == 0) {
+								if ( ! is_array($checked) OR ! isset($checked[1001]) OR sizeof($checked[1001]) == 0) {
 								?>
 								<div class="searchfield<?php echo($_searchfieldcompound); ?>">
 									<label>Kürzel</label>
@@ -1510,7 +1510,7 @@ class OpenStatEdit {
 										type="number"
 										step="1"
 										placeholder="0" 
-										value="<?php html_echo($checked[5001][$i]); ?>"
+										value=""
 									/>
 									<label>bis</label>
 									<input 
@@ -1518,7 +1518,7 @@ class OpenStatEdit {
 										type="number"
 										step="1"
 										placeholder="0" 
-										value="<?php html_echo($checked[5002][$i]); ?>"
+										value=""
 										/>
 									<label <?php echo($_searchfieldcompound); ?> onclick="removeContainingDiv(this);" data-title="Feld löschen"><i class="fas fa-minus"></i></label>
 									<br />

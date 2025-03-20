@@ -53,3 +53,32 @@ function importScript(_lineno) {
 		importScript(_lineno);
 	}
 }
+
+function _testJSON(el) {
+    let str = el.value;
+    //assume str should be JSON if it starts with curly or square brackets
+    if ( str.startsWith("{") || str.startsWith("[") ) {
+        try { 
+            JSON.stringify(JSON.parse(str));
+            
+            el.style.color = "black";
+            if ( el.closest('form').querySelector('option[value="edit"]') ) {
+                el.closest('form').querySelector('option[value="edit"]').disabled = false;
+            }
+            if ( el.closest('form').querySelector('option[value="insert"]') ) {
+                el.closest('form').querySelector('option[value="insert"]').disabled = false;
+            }
+        }
+        catch(e) {
+            el.style.color = "red";
+            if ( el.closest('form').querySelector('option[value="edit"]') ) {
+                el.closest('form').querySelector('option[value="edit"]').disabled = true;
+            }
+            if ( el.closest('form').querySelector('option[value="insert"]') ) {
+                el.closest('form').querySelector('option[value="insert"]').disabled = true;
+            }
+        }
+    } else {
+        el.style.color = "black";
+    }
+}
