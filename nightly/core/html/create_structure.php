@@ -108,6 +108,35 @@ try {
 }
 mysqli_set_charset($conn,"utf8");
 
+//test if user is root or editot
+if ( ! isset($_SESSION['user_class']) ) {
+    $_SESSION['user_class'] = "";
+    if ( $_SESSION['user'] == 'root' ) {
+        $_SESSION['user_class'] = "root";
+    } else {
+        $_stmt_array['stmt'] = "SHOW GRANTS FOR ".$_SESSION['user'];
+        $_grants = execute_stmt($_stmt_array,$conn);
+        if ( isset($_grants['result']) ) {
+            forEach( $_grants['result'] as $_grant_array) {
+                forEach( $_grant_array as $_grant ) {
+                    if ( strpos($_grant,"ALL PRIVILEGES ON `".$_SESSION['database']."`.*")>0 AND strpos($_grant,"WITH GRANT OPTION")>0 ) {
+                        $_SESSION['user_class'] = "editor";
+                    }
+                }
+            }
+        }
+    }
+}
+
+if ( $_SESSION['user_class'] == '' ) {
+?>
+<div>Nicht genügend Rechte. Bitt melden Sie sich mit anderen Logindaten an.</div>
+<div><a href="https://<?php echo($_SERVER['HTTP_HOST']); ?>/html/admin.php">openStatAdmin Login</a></div>
+<?php 
+    exit();
+}
+//log out if user is not root and no editor
+
 //collect most important info
 unset($_stmt_array); $_stmt_array = array();
 $_stmt_array['stmt'] = "SELECT id,tablemachine,allowed_roles,parentmachine FROM `os_tables`";
@@ -1642,13 +1671,19 @@ $tableel .= "</table>";
 		<ul>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST']); ?>/html/admin.php"><i class="fas fa-power-off" title="Abmelden"></i></a></li>
 			<li class="separate"></li>
+            <?php if ( $_SESSION['user_class'] == "root" ) { ?>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_roles"><i class="fas fa-theater-masks" title="Rollen"></i></a></li>
+            <?php } ?>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_users"><i class="fas fa-users" title="Benutzer"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_tables"><i class="fas fa-table" title="Nutzertabellen"></i></a></li>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_functions"><i class="fas fa-briefcase" title="Funktionen"></i></a></li>
-			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_secrets"><i class="fas fa-mask" title="Geheimnisse"></i></a></li>
+            <?php if ( $_SESSION['user_class'] == "root" ) { ?>
+			<li class="js-root"><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?table=os_secrets"><i class="fas fa-mask" title="Geheimnisse"></i></a></li>
+            <?php } ?>
 			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_sql"><i class="fas fa-database" title="SQL Import"></i></a></li>
-			<li><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_script"><i class="fas fa-scroll" title="Script Import"></i></a></li>
+            <?php if ( $_SESSION['user_class'] == "root" ) { ?>
+			<li class="js-root"><a href="https://<?php echo($_SERVER['HTTP_HOST'].$_SERVER['SCRIPT_NAME']); ?>?site=os_script"><i class="fas fa-scroll" title="Script Import"></i></a></li>
+            <?php } ?>
 			<li class="separate"></li>
 			<li>
 				<a>
