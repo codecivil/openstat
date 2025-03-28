@@ -78,6 +78,7 @@ mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
 		rm -r codecivil-*
 		cp -a "$WEBDIR/v1.0/vendor/" "$WEBDIR/$VERSION/"
 		cp -a "$WEBDIR/v1.0/vendor/css/" "$WEBDIR/$VERSION/public/"
+		cp -a "$WEBDIR/v1.0/vendor/js/" "$WEBDIR/$VERSION/public/"
 		cp -a "$WEBDIR/v1.0/plugins/" "$WEBDIR/$VERSION/"
 		cp -a "$WEBDIR/$VERSION/plugins-config"/* "$WEBDIR/$VERSION/plugins/"
 		# cleanup
@@ -134,6 +135,7 @@ tar xzf $INSTANCE.tgz && {
 	cp -a "$WEBDIR/v1.0/vendor/" "$WEBDIR/latest/"
 	cp -a "$WEBDIR/v1.0/vendor/css/" "$WEBDIR/latest/public/"
 	cp -a "$WEBDIR/v1.0/vendor/img/" "$WEBDIR/latest/public/"
+	cp -a "$WEBDIR/v1.0/vendor/js/" "$WEBDIR/latest/public/"
 	cp -a "$WEBDIR/v1.0/plugins/" "$WEBDIR/latest/"
 	cp -a "$WEBDIR/latest/plugins-config"/* "$WEBDIR/latest/plugins/"
 	chown -R www-data:www-data "$WEBDIR/latest/"

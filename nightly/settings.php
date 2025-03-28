@@ -20,4 +20,8 @@ $_SESSION['max_results'] = 1000;
 //trouble. If the number is too low, the higher variability of the execution rate may cause a skip too early.
 //If set to 0, the forecast is always active.
 $_SESSION['exec_forecast_threshold'] = 0;
+
+//Additional JS files can be loaded via an array of filenames, e.g. instance specific. These are to be located in public/js/
+//for instance distributions or v1.0/vendor/js/ for vendor specific files, e.g.
+//$_SESSION['additional_js'] = array("vendor_functions.js");
 ?>
