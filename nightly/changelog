@@ -1,3 +1,9 @@
+#v1.13.0
+======
+14.04.2025
+
+* ENV variables in field functions implemented; currently date, time and datetime
+
 #v1.12.1
 ======
 14.04.2025
