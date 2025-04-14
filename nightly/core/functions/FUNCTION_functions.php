@@ -124,6 +124,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 		if ( gettype($value) == "array" ) { $value = FUNCTIONreplacePlaceholders($value,$trigger,$PARAM,$conn); }
 		else {
 			$needProfiles = false; //initialize if we need to look up profiles
+			$needEnv = false; //initialize if we need to look up profiles
 			//replace triggers
 			preg_match_all('/\$trigger\[([^\]]+\]\[[^\]]+)\]/',$value,$matches);
 			foreach ( $matches[1] as $pattern ) {
@@ -138,8 +139,19 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 			unset($matches);
 			preg_match_all('/\$([^ ,\$\"\'\.\;\:\!\?\)]*)/',$value,$matches);
 			$need = array("select" => array(), "from" => array("view__".$PARAM['table']."__".$_SESSION['os_role']), "on" => array(), "where" => array());
-			foreach ( $matches[1] as $pattern ) {
+			foreach ( $matches[1] as $pattern_specs ) {
+                //handle multiple and combined fields, e.g. opsz_vermittlungslisten__vermitteltzu[2][last]
+                $pattern_split = explode('[',$pattern_specs);
+                $pattern = $_pattern_split[0];
+                if ( isset($pattern_split[2]) ) { 
+                    $pattern_component = (int)str_replace(']','',$pattern_split[1]);
+                    $pattern_entry = str_replace(']','',$pattern_split[2]);
+                } elseif ( isset($pattern_split[1]) ) {
+                    $pattern_entry = str_replace(']','',$pattern_split[1]);
+                }
+                //to be continued
 				if ( strpos($pattern,'PROFILE') === 0 ) { $needProfiles = true; continue; }
+				if ( strpos($pattern,'ENV') === 0 ) { $needEnv = true; continue; }
 				[$pattern_table,$pattern_key] = explode('__',$pattern,2);
 				if ( $pattern_table != $PARAM['table'] and isset($PARAM['id_'.$pattern_table]) ) {
 					if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role']." ON view__".$PARAM['table']."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = view__'. $pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table,$need['from']) ) { $need['from'][] = "view__".$pattern_table."__".$_SESSION['os_role']." ON view__".$PARAM['table']."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = view__'. $pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table; }
@@ -147,6 +159,31 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = '.$PARAM['id_'.$pattern_table],$need['where']) ) { $need['where'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = '.$PARAM['id_'.$pattern_table]; }					
 				} else {	
 					if ( isset($PARAM[$pattern]) ) {
+                        if ( isset($pattern_specs[1]) ) {
+                            $_json_array = json_decode($PARAM[$pattern],true);
+                            if ( "$_json" == null ) {
+	            				$success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern."nicht vorgesehen.";
+                            } else {
+                                if ( $pattern_spec[1] == "last" ) { $pattern_spec[1] = sizeof(_json_array)-1; } else { $pattern_spec[1] = (int)$pattern_spec[1]; }
+                                if ( isset($_json_array[$pattern_spec[1]]) ) {
+                                    $PARAM[$pattern] = $_json_array[$pattern_spec[1]];
+                                } else {
+                                    $PARAM[$pattern] = "(ungesetzt)";
+                                }
+                                if ( isset($pattern_specs[2]) ) {
+                                    if ( ! is_array($PARAM[$pattern]) ) {
+                                        $success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten sind im Feld ".$pattern."nicht vorgesehen.";
+                                    } else {
+                                        if ( $pattern_spec[2] == "last" ) { $pattern_spec[2] = sizeof($PARAM[$pattern])-1; } else { $pattern_spec[2] = (int)$pattern_spec[2]; }
+                                        if ( isset($PARAM[$pattern][$pattern_spec[2]]) ) {
+                                            $PARAM[$pattern] = $PARAM[$pattern][$pattern_spec[2]];
+                                        } else {
+                                            $PARAM[$pattern] = "(ungesetzt)";
+                                        }
+                                    }
+                                }
+                            }
+                        }
 						$value = preg_replace('/\$'.$pattern.'/',_cleanup($PARAM[$pattern]),$value);
 					} else {
 						//$value = preg_replace('/\$'.$pattern.'/','(ungesetzt)',$value);
@@ -167,6 +204,31 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 				} else {
 					$foreignfields = $foreignfields['result'][0]; //multiple ids are handled by FUNCTIONAction, here there must be only one table id
 					foreach ( $foreignfields as $pattern => $foreignvalue ) {
+                        if ( isset($pattern_specs[1]) ) {
+                            $_json_array = json_decode($foreignvalue,true);
+                            if ( "$_json" == null ) {
+	            				$success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern."nicht vorgesehen.";
+                            } else {
+                                if ( $pattern_spec[1] == "last" ) { $pattern_spec[1] = sizeof(_json_array)-1; } else { $pattern_spec[1] = (int)$pattern_spec[1]; }
+                                if ( isset($_json_array[$pattern_spec[1]]) ) {
+                                    $foreignvalue = $_json_array[$pattern_spec[1]];
+                                } else {
+                                    $foreignvalue = "(ungesetzt)";
+                                }
+                                if ( isset($pattern_specs[2]) ) {
+                                    if ( ! is_array($foreignvalue) ) {
+                                        $success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten sind im Feld ".$pattern."nicht vorgesehen.";
+                                    } else {
+                                        if ( $pattern_spec[2] == "last" ) { $pattern_spec[2] = sizeof($PARAM[$pattern])-1; } else { $pattern_spec[2] = (int)$pattern_spec[2]; }
+                                        if ( isset($foreignvalue[$pattern_spec[2]]) ) {
+                                            $foreignvalue = $foreignvalue[$pattern_spec[2]];
+                                        } else {
+                                            $foreignvalue = "(ungesetzt)";
+                                        }
+                                    }
+                                }
+                            }
+                        }
 						$value = preg_replace('/\$'.$pattern.'/',_cleanup($foreignvalue),$value);
 					}
 				}
@@ -208,6 +270,26 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					}
 				}
 			}
+			//replace ENV values, e.g. $ENV(date)
+			if ( $needEnv ) {
+				unset($matches);
+				preg_match_all('/\$ENV\(\s*([^\s~]*)\s*\)/',$value,$matches);
+                if ( sizeof($matches[1]) > 0 ) {
+					for ( $i = 0; $i < sizeof($matches[1]); $i++ ) {
+                        switch($matches[1][$i]) {
+                            case "date":
+        						$value = str_replace($matches[0][$i],date('m.d.Y',$value));
+                                break;
+                            case "time":
+        						$value = str_replace($matches[0][$i],date('H:m',$value));
+                                break;
+                            case "datetime":
+        						$value = str_replace($matches[0][$i],date('m.d.Y H:m',$value));
+                                break;
+                        }
+                    }
+                }
+            }
 		}
 		$_tmpconfig[$header] = $value;
 	}

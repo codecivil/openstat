@@ -270,9 +270,9 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 				case 'insert':
 					//construct the array of roles:password pairs
 					$_secretroles = json_decode($PARAMETER['rolepwds'],true); // 'roleid': 'rolepasswd'
-					if ( $_secretroles == null ) { $_secretroles = array(); }
+					if ( "$_secretroles" == null ) { $_secretroles = array(); }
 					$_secretusers = json_decode($PARAMETER['userrolepwds'],true); // 'userid': 'rolepasswd'
-					if ( $_secretusers == null ) { $_secretusers = array(); }
+					if ( "$_secretusers" == null ) { $_secretusers = array(); }
 					if ( sizeof($_secretroles) + sizeof($_secretusers) == 0 ) { break; }
 					unset($PARAMETER['rolepwds']);
 					unset($PARAMETER['userrolepwds']);

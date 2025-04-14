@@ -786,7 +786,7 @@ function includeFunctions(string $scope, mysqli $conn)
 						} else {
 							$_function['iconclass'] = "fas fa-".$_function['iconname'];
 						}
-						if ( $_function['functionflags'] == '' OR $_function['functionflags'] == null ) { $_function['functionflags'] = '[]'; } ?>
+						if ( $_function['functionflags'] === '' OR $_function['functionflags'] === null ) { $_function['functionflags'] = '[]'; } ?>
 					<li><label 
 						class="unlimitedWidth"
 						onclick="callPHPFunction(this.closest('.functions').parentNode.querySelector('form.function'),'<?php echo($_function['functionmachine']); ?>','<?php echo($_function['functiontarget']); ?>','<?php echo($_function['functionclasses']); ?>')"

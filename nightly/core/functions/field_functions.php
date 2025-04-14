@@ -104,4 +104,92 @@ END:VEVENT
 	$_body .= "END:VCALENDAR";
 	return $_body;
 }
+
+//create Open Document files from templates covering different scenarios
+function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $conn) {
+	//this must be done at the very beginning of EVERY field function
+	//$_config contains the used function config after replacing placeholders by actual values
+	$_return = array('status' => 'OK', 'log' => array(), 'js' => ''); //log and js may be objects; have to be returned by any field function
+    /* _config structure
+     * 
+     * {
+     *  <namemachine>: [
+     *      {
+     *          "namereadable": <string>,
+     *          "description": <string>,
+     *          "src": <filename/path with suffix>, !rewuired,
+     *          "filename"; <string, placeholders...>,
+     *          "vars": {
+     *              <key used in odf without %%, only A-Z,0-9 allowed>: <string or placeholder, if statements...>
+     *           }
+     *      }, ...
+     *  ], ...
+     *}
+     */
+    $workdir = '../../core/templates/';
+    
+    //throw error if src is not set
+    if ( ! isset($_config['src']) ) { $_return['log']['error'] .= 'Templatequelldatei ist nicht gesetzt. '; $_return['status'] = "Fehler"; } 
+
+    $filetype = preg_replace('/.*\./','',$_config['src']);
+    $mimetype = array(
+        "ods" => "application/vnd.oasis.opendocument.spreadsheet",
+        "odt" => "application/vnd.oasis.opendocument.text",
+        "odp" => "application/vnd.oasis.opendocument.presentation"
+    );
+    
+    //throw error for unsupported file type
+    if ( ! isset($mimetype[$filetype]) ) { $_return['log']['error'] .= 'Der Dateityp der Templatequelldatei wird nicht unterstützt. '; $_return['status'] = "Fehler"; }
+ 
+    $zip = new ZipArchive;
+    $fileToModify = 'content.xml';
+    $now = date('Y-m-d_His');
+    //throw error if src does not exist or file(-system ) permissions are wrong
+    try { copy($workdir.$_config['src'],'/tmp/'.$_config['src'].'.'.$now); } catch (Throwable $e) { $_return['log']['error'] .= "Templatequelldatei existiert nicht oder /tmp ist nicht beschreibbar: " . $e->getMessage() . PHP_EOL;  $_return['status'] = "Fehler"; }
+    
+    //return if an error has occured
+    if ( $_return['status'] == "Fehler ") {
+        $_return['js'] = $_return['log']['error']; 
+        return $_return;
+    }
+    
+    if ($zip->open('/tmp/'.$_config['src'].'.'.$now) === TRUE) {
+        //get template content
+        $contentxml = $zip->getFromName($fileToModify);
+
+        //replace placeholders in ODF
+        if ( isset($_config['vars']) ) {
+            preg_match_all("/%([A-Z0-9_]*)%/",$contentxml,$placeholders);
+            $keys = $placeholders[1]; //takes the first bracket of the match
+            foreach( $keys as $key ) {
+                if ( isset($_config['vars'][$key]) ) {
+                    $contentxml = str_replace('%'.$key.'%',$_config['vars'][$key],$contentxml);
+                }
+            }
+        }
+
+        //Delete the old...
+        $zip->deleteName($fileToModify);
+        //Write the new...
+        $zip->addFromString($fileToModify, $contentxml);
+        //And write back to the filesystem.
+        $zip->close();
+        $export_file = fopen('/tmp/'.$_config['src'].'.'.$now,'r');
+        $export_odf = base64_encode(fread($export_file,filesize('/tmp/'.$_config['src'].'.'.$now)));
+        fclose($export_file);
+        unlink('/tmp/'.$_config['src'].'.'.$now);
+        
+        //determine new file name
+        // // take basname of src if not given
+        if ( ! isset($_config['filename']) ) { $_config['filename'] = preg_replace('/.*\//','',$_config['src']); }
+        $filenameparts = explode('.',$_config['filename'],2);
+        //alway add timestamp
+        $filename = $filenameparts[0].'-'.$now.'.'.$filenameparts[1];
+        $_js = array( "data" => "data:".$mimetype[$filetype].";charset=utf-8;base64,".$export_odf, "filename" => $filename); 
+        $_return['js'] = json_encode($_js);
+    } else {
+		$_return['log']['error'] .= 'Beim Erzeugen des ODF ist ein Fehler aufgetreten '; $_return['status'] = "Fehler";
+    }
+    return $_return;
+}
 ?>

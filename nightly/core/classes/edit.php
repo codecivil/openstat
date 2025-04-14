@@ -894,7 +894,7 @@ class OpenStatEdit {
 						$default = preg_replace('/\n/',' ',$default);
 						//$default = preg_replace('/\\/','',$default);
 						$default = json_decode($default,true);
-						if ( $default == null ) { break; }
+						if ( "$default" == null ) { break; }
 						function _nest(array $obj) {
 							?>
 							<ul class="json">
