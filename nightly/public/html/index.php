@@ -299,7 +299,7 @@ $_v = time();
 					<form method="post" class="statusForm" onchange="callFunction(this,'changeConfig').then(()=>{ window.location = '/'; }); ">
 						<legend><i class="fas fa-magic"></i></legend>
 						<select id="stylesSelect" name="css">
-							<option value="_" <?php if ( $_config['css'] == '') { ?>selected<?php }?>>default</option>
+							<option value="_" <?php if ( $_config['css'] === '') { ?>selected<?php }?>>default</option>
 							<?php
 							$_styles = glob('../css/main_*.css');
 							foreach ( $_styles as $_style ) {

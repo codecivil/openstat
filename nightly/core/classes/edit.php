@@ -807,8 +807,8 @@ class OpenStatEdit {
 							if ( isset($default_array[4002]) ) {
 								for ( $i = 0; $i < sizeof($default_array[4002]); $i++ )
 								{ 
-									if ( $default_array[4001][$i] == '' AND $default_array[4002][$i] == '' ) { continue; }
-									if ( $default_array[4001][$i] == '' ) { $default_array[4001][$i] = basename($default_array[4002][$i]); }
+									if ( $default_array[4001][$i] === '' AND $default_array[4002][$i] === '' ) { continue; }
+									if ( $default_array[4001][$i] === '' ) { $default_array[4001][$i] = basename($default_array[4002][$i]); }
 									?>
 									<div class="filesfield">
 										<label class="fullWidth"><?php echo($default_array[4001][$i]); ?>&nbsp;&nbsp;
@@ -875,7 +875,7 @@ class OpenStatEdit {
 						<div class="note note_edit" data-title="Notiz erstellen oder bearbeiten">
 							<label for="db_<?php echo($key.$rnd); ?>" class="onlyone"><?php echo($keyreadable); ?></label>
 							<input type="checkbox" id="note_delete_cb<?php echo($rnd); ?>" class="note_cb" onclick="note_delete(this)" hidden <?php echo($_disabled); ?>>
-							<input type="radio" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" value="" <?php if ( $default[0] == '' ) { echo(" checked "); } ?> id="note_empty_cb<?php echo($rnd); ?>" class="note_cb note_empty" hidden <?php echo($_disabled); ?>>
+							<input type="radio" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" value="" <?php if ( $default[0] === '' ) { echo(" checked "); } ?> id="note_empty_cb<?php echo($rnd); ?>" class="note_cb note_empty" hidden <?php echo($_disabled); ?>>
 							<?php foreach ( $_cbcolors as $_cbcolor ) {
 							?>
 							<input type="radio" onclick="note_show(this)" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>[]" value="<?php echo($_cbcolor); ?>" <?php if ( $default[0] == $_cbcolor ) { echo(" checked "); } ?> id="note_<?php echo($_cbcolor); ?>_cb<?php echo($rnd); ?>" class="note_cb note_<?php echo($_cbcolor); ?>" hidden <?php echo($_disabled); ?>>
@@ -894,7 +894,7 @@ class OpenStatEdit {
 						$default = preg_replace('/\n/',' ',$default);
 						//$default = preg_replace('/\\/','',$default);
 						$default = json_decode($default,true);
-						if ( "$default" == null ) { break; }
+						if ( "$default" === null ) { break; }
 						function _nest(array $obj) {
 							?>
 							<ul class="json">

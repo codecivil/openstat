@@ -10,9 +10,9 @@ function calAction(array $PARAMETER,mysqli $conn) {
 	//at the moment, massEditing works only on the same and chosen to be edited (!) calendar. Instead of the line below we should query the databse for the correct 
 	//calendar...
 	//this is wrong; you must be able to delete entries...
-	//if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] == '' ) { return; };
+	//if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] === '' ) { return; };
 	//!!! DEAL PROPERLY WITH EMPTY id_os_calendars: how to distinguish mass editing w/ no changing calendars and removing from calendar...
-	if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] == '' ) { $PARAMETER['id_os_calendars'] = ''; };
+	if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] === '' ) { $PARAMETER['id_os_calendars'] = ''; };
 	//is PARAMETER[id_<table>] alway JSON of an array? If not, make it here... (to do)
 	//parse massEditing table id array here and call _CALDAV functions repeatedly...
 	$_param_id_table = array();
@@ -67,7 +67,7 @@ function calAction(array $PARAMETER,mysqli $conn) {
 			$_old_entry = $_old_entry_array['result'][0]; //keynames as last array field
 		} 
 		//if massEditing and no id_os_calendars is set, take old value
-		if ( $flag_massEdit AND ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] == '' ) ) { $PARAMETER['id_os_calendars'] = $_old_entry['id_os_calendars']; } 
+		if ( $flag_massEdit AND ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] === '' ) ) { $PARAMETER['id_os_calendars'] = $_old_entry['id_os_calendars']; } 
 		unset($_stmt_array); $_stmt_array = array(); $_old_result = array();
 		if ( $_old_entry['id_os_calendars'] == $PARAMETER['id_os_calendars'] ) {
 			$_old_result = $_result; 
@@ -121,7 +121,7 @@ function _CALDAVInsert(array $PARAMETER, array $_result, array $_old_entry, arra
 	}
 	*/
 	//return if no calendar is set
-	if ( $PARAMETER['id_os_calendars'] == '' OR $PARAMETER['id_os_calendars'] == 'NULL' OR $PARAMETER['id_os_calendars'] == '_NULL_' ) { return; }
+	if ( $PARAMETER['id_os_calendars'] === '' OR $PARAMETER['id_os_calendars'] == 'NULL' OR $PARAMETER['id_os_calendars'] == '_NULL_' ) { return; }
 	//
 	$_id_table = $PARAMETER['id_'.$PARAMETER['table']];
 	//PUT request to calendar
@@ -284,7 +284,7 @@ function _CALDAVUpdate(array $PARAMETER, array $_result, array $_old_entry, arra
 {
 	//get caldav data of current entry in order to change it properly (and then do insert actions...)
 	//e.g. mass editing may not provide the id_os_calendars and they may differ...
-	if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] == '' ) { 
+	if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] === '' ) { 
 		unset($_stmt_array); $_stmt_array = array(); unset($_entry_array);
 		$_stmt_array['stmt'] = "SELECT id_os_calendars from view__".$PARAMETER['table']."__".$_SESSION['os_role']." WHERE id_".$PARAMETER['table']." = ? ";
 		$_stmt_array['str_types'] = "i";
@@ -293,7 +293,7 @@ function _CALDAVUpdate(array $PARAMETER, array $_result, array $_old_entry, arra
 		$PARAMETER['id_os_calendars'] = execute_stmt($_stmt_array,$conn)['result']['id_os_calendars'][0];
 	}
 	//delete entry if calendar association is empty now
-	if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] == '' OR $PARAMETER['id_os_calendars'] == 'NULL' OR $PARAMETER['id_os_calendars'] == '_NULL_' ) {
+	if ( ! isset($PARAMETER['id_os_calendars']) OR $PARAMETER['id_os_calendars'] === '' OR $PARAMETER['id_os_calendars'] == 'NULL' OR $PARAMETER['id_os_calendars'] == '_NULL_' ) {
 		_CALDAVDelete($PARAMETER,$_result,$_old_entry,$_old_result,$conn);
 		return;
 	}

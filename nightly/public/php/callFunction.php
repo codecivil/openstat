@@ -46,7 +46,7 @@ $call_function = $PARAMETER['X_FUNCTION_CALL']; unset($PARAMETER['X_FUNCTION_CAL
 while ( $tries < $_maxtries AND ( ( isset($return['dbMessageGood']) AND $return['dbMessageGood'] == "false" ) OR ( is_string($return) AND strpos($return,'class="dbMessage false"') != false ) ) ) {
 	try { 
 		// Create connection
-		if ( $username == '' OR $password == '') {
+		if ( $username === '' OR $password === '') {
 			$conn = null;
 		} else { 
 			$conn = new mysqli($servername, $username, $password, $dbname);

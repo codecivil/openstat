@@ -89,7 +89,7 @@ class OpenStatAuth {
 						}
 					}
 					//this is if the secret is encrypted with user password (not implemented)
-					if ( $_result_user['secretname'] != '' AND $_result_user['secretname'] != 'NULL' ) {
+					if ( $_result_user['secretname'] !== '' AND $_result_user['secretname'] !== null AND $_result_user['secretname'] != 'NULL' ) {
 						$_SESSION['os_secret'][$_result_user['secretname']] = sodium_crypto_secretbox_open($_result_user['password'],$_result_user['nonce'],$this->gen_key($_result_user['salt'],$this->passwd)['key']);
 					//
 					} else {

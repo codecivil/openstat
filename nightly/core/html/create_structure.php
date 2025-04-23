@@ -128,7 +128,7 @@ if ( ! isset($_SESSION['user_class']) ) {
     }
 }
 
-if ( $_SESSION['user_class'] == '' ) {
+if ( $_SESSION['user_class'] === '' ) {
 ?>
 <div>Nicht genügend Rechte. Bitt melden Sie sich mit anderen Logindaten an.</div>
 <div><a href="https://<?php echo($_SERVER['HTTP_HOST']); ?>/html/admin.php">openStatAdmin Login</a></div>
@@ -270,9 +270,9 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 				case 'insert':
 					//construct the array of roles:password pairs
 					$_secretroles = json_decode($PARAMETER['rolepwds'],true); // 'roleid': 'rolepasswd'
-					if ( "$_secretroles" == null ) { $_secretroles = array(); }
+					if ( "$_secretroles" === null ) { $_secretroles = array(); }
 					$_secretusers = json_decode($PARAMETER['userrolepwds'],true); // 'userid': 'rolepasswd'
-					if ( "$_secretusers" == null ) { $_secretusers = array(); }
+					if ( "$_secretusers" === null ) { $_secretusers = array(); }
 					if ( sizeof($_secretroles) + sizeof($_secretusers) == 0 ) { break; }
 					unset($PARAMETER['rolepwds']);
 					unset($PARAMETER['userrolepwds']);
@@ -350,7 +350,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
 				case 'edit':
 				//do not allow password change to be recorded in os_users if there is no rolepwd
 					global $PARAMETER;
-					if ( ! isset($PARAMETER['rolepwd']) OR $PARAMETER['rolepwd'] == '' ) { unset($PARAMETER['pwdhash']); };
+					if ( ! isset($PARAMETER['rolepwd']) OR $PARAMETER['rolepwd'] === '' ) { unset($PARAMETER['pwdhash']); };
 					break;
 			 }
 			 break;
@@ -1195,7 +1195,7 @@ function _adminActionAfter(array $PARAMETER, mysqli $conn) {
 function _dbAction(array $PARAMETER,mysqli $conn) {
 	$message = "";
 	if ( ! isset($PARAMETER['dbAction']) ) { $PARAMETER['dbAction'] = ''; }
-	//if ( ! isset($PARAMETER['table']) OR $PARAMETER['table'] == '' ) { $PARAMETER['table'] = 'os_tables'; }
+	//if ( ! isset($PARAMETER['table']) OR $PARAMETER['table'] === '' ) { $PARAMETER['table'] = 'os_tables'; }
 	switch($PARAMETER['dbAction']) {
 		case 'insert':
 			$into = " INTO `" . $PARAMETER['table'] . "` ";
@@ -1437,7 +1437,7 @@ function recreateView(string $_propertable, mysqli $conn) {
 				{
 					//added parentid on 20211109
 					//added test for subtables 20220319
-					if ( $_TABLES_PARENTMACHINE_ARRAY[$_tableid] == '' AND ( in_array($PARAMETER['roleid'],json_decode($_allowed_roles,true)) OR in_array($PARAMETER['parentid'],json_decode($_allowed_roles,true)) ) ) {
+					if ( $_TABLES_PARENTMACHINE_ARRAY[$_tableid] === '' AND ( in_array($PARAMETER['roleid'],json_decode($_allowed_roles,true)) OR in_array($PARAMETER['parentid'],json_decode($_allowed_roles,true)) ) ) {
 						$CREATEVIEW_ID .= 'id_'.$_TABLES_ARRAY[$_tableid].$CREATEVIEW_KOMMA;
 					}	
 				}

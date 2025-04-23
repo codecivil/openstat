@@ -8,7 +8,7 @@ function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$
 			break;
 		case 1002:  
 			if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
-			if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
+			if ( $separator === '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
 			$value_combined = array_combine($tmpvalue,$value);
 			foreach ( $value_combined as $von=>$bis ) {
 				$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
@@ -31,7 +31,7 @@ function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$
 			$value_combined = array_combine($tmpvalue,$value);
 			foreach ($value_combined as $colors => $text) {
 				$filter_results .= $komma . $colors . _cleanup($text);
-				if ( $separator == '' ) { $komma = $_newkomma; } else { $komma = $separator; }
+				if ( $separator === '' ) { $komma = $_newkomma; } else { $komma = $separator; }
 			} 
 			break;
 		case 5001:  	
@@ -43,7 +43,7 @@ function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$
 		case 5002:  
 //				if ( json_encode($value) == '[""]' ) { $value = array('1000000000'); };
 			if ( json_encode($value) == '[""]' ) { $value = array('[unbestimmt]'); };
-			if ( $separator == '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
+			if ( $separator === '' ) { $separator = ', <br /><span style="opacity:0"><b>'.$keyreadable.'</b> = </span>'; }
 			$value_combined = array_combine($tmpvalue,$value);
 			foreach ( $value_combined as $von=>$bis ) {
 				$filter_results .= $komma . ' von ' . _cleanup($von) . ' bis '. _cleanup($bis); $komma = $separator;
@@ -84,10 +84,10 @@ function _addToFilterStatement ($values,$filter_results,$komma,$_newkomma = '',$
 		case 3001:
 			break;
 		default: 
-			if ( $emptyisall AND $value == '' ) { $value = '[ungefiltert]'; }
+			if ( $emptyisall AND $value === '' ) { $value = '[ungefiltert]'; }
 			if ( $value != '_all' AND $index < 6001 ) { 
 				$filter_results .= $komma . _cleanup($value); 
-				if ( $separator == '' ) { $komma = $_newkomma; } else { $komma = $separator; }
+				if ( $separator === '' ) { $komma = $_newkomma; } else { $komma = $separator; }
 			}; 
 			break;
 	}
@@ -188,7 +188,7 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 			}
 		}
 	}
-	if ( $filter_results == '' ) { $filter_results = "Keine"; }
+	if ( $filter_results === '' ) { $filter_results = "Keine"; }
 	return $filter_results;
 }
 
@@ -501,7 +501,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 						if ( ! isset($config['filters'][$key][1001]) ) { $value = $row[$key]; break; }
 						$mustresort = true;
 						for ( $ii = 0; $ii < sizeof($config['filters'][$key][1001]); $ii++ ) {
-							if ( strtotime($row[$key]) >= strtotime($config['filters'][$key][1001][$ii]) AND  ( strtotime($row[$key]) <= strtotime($config['filters'][$key][1002][$ii]) OR $config['filters'][$key][1002][$ii] == '' ) )
+							if ( strtotime($row[$key]) >= strtotime($config['filters'][$key][1001][$ii]) AND  ( strtotime($row[$key]) <= strtotime($config['filters'][$key][1002][$ii]) OR $config['filters'][$key][1002][$ii] === '' ) )
 							{
 								if ( isset($config['filters'][$key][1003][$ii]) AND $config['filters'][$key][1003][$ii] != '' ) {
 									$result[$result_index][$keys[$i]] = $config['filters'][$key][1003][$ii];
@@ -517,7 +517,7 @@ function generateStatTable (array $stmt_array, mysqli $conn, string $table = 'os
 						if ( ! isset($config['filters'][$key][5001]) ) { $value = $row[$key]; break; }
 						$mustresort = true;
 						for ( $ii = 0; $ii < sizeof($config['filters'][$key][5001]); $ii++ ) {
-							if ( $row[$key] >= $config['filters'][$key][5001][$ii] AND  ( $row[$key] <= $config['filters'][$key][5002][$ii] OR $config['filters'][$key][5002][$ii] == '' ) )
+							if ( $row[$key] >= $config['filters'][$key][5001][$ii] AND  ( $row[$key] <= $config['filters'][$key][5002][$ii] OR $config['filters'][$key][5002][$ii] === '' ) )
 							{
 								$result[$result_index][$keys[$i].'_value'] = $result[$result_index][$keys[$i]];
 								if ( isset($config['filters'][$key][5003][$ii]) AND $config['filters'][$key][5003][$ii] != '' ) {

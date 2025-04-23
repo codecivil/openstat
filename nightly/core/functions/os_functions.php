@@ -662,7 +662,7 @@ function trafficLight(array $PARAM, mysqli $conn)
 	for ( $i = 0; $i < sizeof($_table_result); $i++ ) {
 		$icon[$_table_result[$i]['tablemachine']] = $_table_result[$i]['iconname'];
 		$tableidentifiers[$_table_result[$i]['tablemachine']] = $_table_result[$i]['identifiers'];
-		if ( $tableidentifiers[$_table_result[$i]['tablemachine']] == '') {
+		if ( $tableidentifiers[$_table_result[$i]['tablemachine']] === '') {
 			$tableidentifiers[$_table_result[$i]['tablemachine']] = array();
 		} else {
 			$tableidentifiers[$_table_result[$i]['tablemachine']] = json_decode($tableidentifiers[$_table_result[$i]['tablemachine']]);

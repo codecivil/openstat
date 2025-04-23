@@ -60,7 +60,7 @@ function _cleanup($value,$separator = '<br />')
 			}
 		}
         //replace array of empty strings by empty string, e.g for NOTES
-        if ( implode('',array_map("serialize",$values)) == '' ) { $values = array(''); } //triggers warning when $values entries are again arrays
+        if ( implode('',array_map("serialize",$values)) === '' ) { $values = array(''); } //triggers warning when $values entries are again arrays
 		//format compound fields
 		if ( is_array($values[0]) ) {
 			$komma = '';
@@ -141,7 +141,7 @@ function _strip_tags($value,$length = -1)
 		}
 		$value = $border.substr(strip_tags($value),0,$length).$dots.$border;
 	}
-	if ( $value == '' ) { $value = '[k.A.]'; }
+	if ( $value === '' ) { $value = '[k.A.]'; }
 	return $value;
 }
 ?>

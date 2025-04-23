@@ -1,3 +1,9 @@
+#v1.13.1
+======
+23.04.2025
+
+* stricter equality tests for PHP < 8 mostly
+
 #v1.13.0
 ======
 14.04.2025

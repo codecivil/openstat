@@ -117,7 +117,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			$_stmt_array['str_types'] = "s";
 			$_stmt_array['arr_values'] = $PARAMETER['table'];
 			$_identifiers = execute_stmt($_stmt_array,$conn)['result']['identifiers'][0];
-			if ( $_identifiers == '' ) { $_identifiers = array(); } else { $_identifiers = json_decode($_identifiers); }
+			if ( $_identifiers === '' ) { $_identifiers = array(); } else { $_identifiers = json_decode($_identifiers); }
 			$IDPARAM = array();
 			foreach($_identifiers as $identifier) 
 			{
@@ -136,7 +136,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			//foreach($IDPARAM as $key=>$value) //ok, but if at import e.g. all idenifiers coincide other data may have been updated, so we must be able to choose the new data somehow!
 			foreach($PARAMETER as $key=>$value)
 			{
-				if ( substr($key,0,strlen($PARAMETER['table'])) === $PARAMETER['table'] AND $value != '' ) {
+				if ( substr($key,0,strlen($PARAMETER['table'])) === $PARAMETER['table'] AND $value !== '' ) {
 				// $value != 'none' AND $value != '' AND $key !='id_'.$PARAMETER['table'] AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
 					$properkey_array = explode('__',$key,2);
 					$properkey = $properkey_array[sizeof($properkey_array)-1];
@@ -194,7 +194,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 				$values = " VALUES ";
 				foreach($PARAMETER as $key=>$value)
 				{
-					if ( $value != 'none' AND $value != '' AND $key !='id_'.$PARAMETER['table'] AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
+					if ( $value !== 'none' AND $value !== '' AND $key !='id_'.$PARAMETER['table'] AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
 						$properkey_array = explode('__',$key,2);
 						$properkey = $properkey_array[sizeof($properkey_array)-1];
 						$into .= $komma . "`" . $properkey . "`";
@@ -277,7 +277,8 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			$str_types = '';
 			foreach($PARAMETER as $key=>$value)
 			{
-				if ( $value != 'none' AND $value != '' AND $key != 'id_'.$PARAMETER['table'] AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
+                //$value can now be number, e.g. 0, so we have to compare strictly; adapt this also at other cases...
+				if ( $value !== 'none' AND $value !== '' AND $key != 'id_'.$PARAMETER['table'] AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
 					$properkey_array = explode('__',$key,2);
 					$properkey = $properkey_array[sizeof($properkey_array)-1];
 					if ( "$value" == "_NULL_" OR "$value" == "0001-01-01" ) {
@@ -320,7 +321,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 			$str_types = '';
 			foreach($PARAMETER as $key=>$value)
 			{
-				if ( $value != 'none' AND $value != '' AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
+				if ( $value !== 'none' AND $value !== '' AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
 					$where .= $_and . "`". $key . "` LIKE CONCAT('%',?,'%')";
 					$_and = " AND ";
 					$filtered = 1;
@@ -598,7 +599,7 @@ function getDetails($PARAMETER,$conn)
 							<label class="unlimitedWidth" onclick="_toggleEnabled(<?php echo($_enablernd); ?>);"><i class="fas fa-pen-square"></i></label>
 							<div id="enablable<?php echo($_enablernd); ?>" class="disabled">
 						<?php }
-						if ( ! isset($default) OR $default == '' ) { ?>
+						if ( ! isset($default) OR $default === '' ) { ?>
 								<div class='ID_<?php echo($_tmp_table); ?>' id="NeedIDForDrag_<?php echo(rand(0,2147483647)); ?>" draggable="true" ondragover="allowDrop(event)" ondrop="dropOnDetails(event,this)" ondragstart="dragOnDetails(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)">
 									<label class="unlimitedWidth" oncontextmenu="return transportAttribution(this)"><i class="fas fa-<?php echo($icon[$_tmp_table]); ?>"></i> (keine <?php echo($_noattribution); ?>Zuordnung)</label>
 									<input type="text" hidden value="<?php echo($default); ?>" <?php echo($_enabledisabled); ?> name="<?php echo($key); ?>" class="inputid" />

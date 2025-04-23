@@ -64,13 +64,13 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 								//case: no confignames
 								if ( ! isset($_flagvalue[$configname]) ) {
 									foreach ( $_flagvalue as $_flagtable ) {
-										if ( ! isset($PARAM['id_'.$_flagtable]) OR $PARAM['id_'.$_flagtable] == '' ) {
+										if ( ! isset($PARAM['id_'.$_flagtable]) OR $PARAM['id_'.$_flagtable] === '' ) {
 											$_ontables = false;
 										}
 									}
 								} else {
 									foreach ( $_flagvalue[$configname] as $_flagtable ) {
-										if ( ! isset($PARAM['id_'.$_flagtable]) OR $PARAM['id_'.$_flagtable] == '' ) {
+										if ( ! isset($PARAM['id_'.$_flagtable]) OR $PARAM['id_'.$_flagtable] === '' ) {
 											$_ontables = false;
 										}
 									}
@@ -161,7 +161,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					if ( isset($PARAM[$pattern]) ) {
                         if ( isset($pattern_specs[1]) ) {
                             $_json_array = json_decode($PARAM[$pattern],true);
-                            if ( "$_json" == null ) {
+                            if ( "$_json" === null ) {
 	            				$success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern."nicht vorgesehen.";
                             } else {
                                 if ( $pattern_spec[1] == "last" ) { $pattern_spec[1] = sizeof(_json_array)-1; } else { $pattern_spec[1] = (int)$pattern_spec[1]; }
@@ -206,7 +206,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					foreach ( $foreignfields as $pattern => $foreignvalue ) {
                         if ( isset($pattern_specs[1]) ) {
                             $_json_array = json_decode($foreignvalue,true);
-                            if ( "$_json" == null ) {
+                            if ( "$_json" === null ) {
 	            				$success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern."nicht vorgesehen.";
                             } else {
                                 if ( $pattern_spec[1] == "last" ) { $pattern_spec[1] = sizeof(_json_array)-1; } else { $pattern_spec[1] = (int)$pattern_spec[1]; }
@@ -472,8 +472,8 @@ function similarity_asym(string $string1,string $string2) {
 	//string1 = string1 + ' ';
 	//string2 = string2 + ' ';
 	//
-	if ( $string1 == '' ) { $string1 = ' '; }
-	if ( $string2 == '' ) { $string2 = ' '; }
+	if ( $string1 === '' ) { $string1 = ' '; }
+	if ( $string2 === '' ) { $string2 = ' '; }
 	$string1 = substr($string1,0,1).strtolower(substr($string1,1));
 	$string2 = substr($string2,0,1).strtolower(substr($string2,1));
 	$sim = 0;
