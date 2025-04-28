@@ -5,11 +5,15 @@ function emailTo(success) {
 }
 
 //createFromTemplate js function
-// _filestring: string
+// _filestring: string of an array
 function createFromTemplate(_filestring) {
-	let _file = JSON.parse(_filestring);
-    let _download = document.createElement('a');
-    _download.href = _file.data;
-    _download.download = _file.filename;
-    _download.click();
+    console.log(_filestring);
+    let _filearray = JSON.parse(_filestring);
+    _filearray.forEach(_file => {
+        _file = JSON.parse(_file);
+        let _download = document.createElement('a');
+        _download.setAttribute('href', _file.data);
+        _download.setAttribute('download', _file.filename);
+        _download.click();
+    });
 }

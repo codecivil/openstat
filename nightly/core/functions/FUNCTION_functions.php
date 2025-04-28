@@ -9,7 +9,7 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 	// What is the easiest way to find fields of type FUNCTION?
 	$FUNCTIONPARAM = array();
 	foreach ( $PARAM as $rawkey => $value ) {
-		try { json_decode($value); } catch(Exception $err) { continue; };
+        if ( ! json_decode((string)$value) ) { continue; };
 		if ( isset(json_decode($value,true)['type']) AND json_decode($value,true)['type'] == "FUNCTION" ) {
 			$FUNCTIONPARAM[] = $value;
 		}
@@ -36,7 +36,7 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 				if ( in_array("ONCHANGE",$_flags) ) {
 					$_onflag = true;
 					//execute only if a trigger field has changed
-					if ( json_encode($param['initial']) != json_encode($param['changed']) ) { $_goon = true; }
+					if ( isset($param['changed']) AND json_encode($param['initial']) != json_encode($param['changed']) ) { $_goon = true; }
 				}
 				if ( in_array("ONINSERT",$_flags) ) {
 					$_onflag = true;
@@ -108,9 +108,9 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 					//prepare pass to js
 					$passtojs_array[] = $return['js'];
 				}
-				$passtojs = "'".json_encode($passtojs_array)."'";
+				$passtojs = "'".base64_encode(json_encode($passtojs_array,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))."'";
 				?>
-				<img src="" onerror="<?php html_echo($function.'('.$passtojs.')'); ?>">
+				<img src="" onerror="<?php html_echo($function.'(atob('.$passtojs.'))'); ?>">
 				<?php
 			}
 		}
@@ -121,7 +121,12 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 	$_tmpconfig = array();
 	$success = array("value" => true, "error" => '');
 	foreach ( $_config as $header => $value ) {
-		if ( gettype($value) == "array" ) { $value = FUNCTIONreplacePlaceholders($value,$trigger,$PARAM,$conn); }
+		if ( gettype($value) == "array" ) {
+            $tmpreturn = FUNCTIONreplacePlaceholders($value,$trigger,$PARAM,$conn); 
+            $value = $tmpreturn['return'];
+            $success['value'] = $success['value'] AND $tmpreturn['success']['value'];
+            $success['error'] .= $tmpreturn['success']['error']; 
+        }
 		else {
 			$needProfiles = false; //initialize if we need to look up profiles
 			$needEnv = false; //initialize if we need to look up profiles
@@ -142,14 +147,15 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 			foreach ( $matches[1] as $pattern_specs ) {
                 //handle multiple and combined fields, e.g. opsz_vermittlungslisten__vermitteltzu[2][last]
                 $pattern_split = explode('[',$pattern_specs);
-                $pattern = $_pattern_split[0];
+                $pattern = $pattern_split[0];
+                unset($pattern_component);
+                unset($pattern_entry);
                 if ( isset($pattern_split[2]) ) { 
                     $pattern_component = (int)str_replace(']','',$pattern_split[1]);
                     $pattern_entry = str_replace(']','',$pattern_split[2]);
                 } elseif ( isset($pattern_split[1]) ) {
                     $pattern_entry = str_replace(']','',$pattern_split[1]);
                 }
-                //to be continued
 				if ( strpos($pattern,'PROFILE') === 0 ) { $needProfiles = true; continue; }
 				if ( strpos($pattern,'ENV') === 0 ) { $needEnv = true; continue; }
 				[$pattern_table,$pattern_key] = explode('__',$pattern,2);
@@ -159,35 +165,34 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = '.$PARAM['id_'.$pattern_table],$need['where']) ) { $need['where'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = '.$PARAM['id_'.$pattern_table]; }					
 				} else {	
 					if ( isset($PARAM[$pattern]) ) {
-                        if ( isset($pattern_specs[1]) ) {
-                            $_json_array = json_decode($PARAM[$pattern],true);
-                            if ( "$_json" === null ) {
-	            				$success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern."nicht vorgesehen.";
+                        unset($_json_array);
+                        if ( isset($pattern_entry) ) {
+                            $_json_array = json_decode(json_encode($PARAM[$pattern]),true);
+                            if ( ! is_array($_json_array) ) {
+	            				$success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern." nicht vorgesehen.";
                             } else {
-                                if ( $pattern_spec[1] == "last" ) { $pattern_spec[1] = sizeof(_json_array)-1; } else { $pattern_spec[1] = (int)$pattern_spec[1]; }
-                                if ( isset($_json_array[$pattern_spec[1]]) ) {
-                                    $PARAM[$pattern] = $_json_array[$pattern_spec[1]];
-                                } else {
-                                    $PARAM[$pattern] = "(ungesetzt)";
-                                }
-                                if ( isset($pattern_specs[2]) ) {
-                                    if ( ! is_array($PARAM[$pattern]) ) {
-                                        $success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten sind im Feld ".$pattern."nicht vorgesehen.";
+                                if ( isset($pattern_component) ) {
+                                    if ( ! isset($_json_array[$pattern_component]) OR ! is_array($_json_array[$pattern_component]) ) {
+                                        $success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponente ".$pattern_component." ist im Feld ".$pattern." nicht vorgesehen.";
                                     } else {
-                                        if ( $pattern_spec[2] == "last" ) { $pattern_spec[2] = sizeof($PARAM[$pattern])-1; } else { $pattern_spec[2] = (int)$pattern_spec[2]; }
-                                        if ( isset($PARAM[$pattern][$pattern_spec[2]]) ) {
-                                            $PARAM[$pattern] = $PARAM[$pattern][$pattern_spec[2]];
-                                        } else {
-                                            $PARAM[$pattern] = "(ungesetzt)";
-                                        }
+                                        $_json_array = $_json_array[$pattern_component];
                                     }
+                                }
+                                if ( $pattern_entry == "last" ) { $pattern_entry = sizeof($_json_array)-1; } else { $pattern_entry = (int)$pattern_entry; }
+                                if ( isset($_json_array[$pattern_entry]) ) {
+                                    $_json_array = $_json_array[$pattern_entry];
+                                } else {
+                                    $_json_array = "(ungesetzt)";
                                 }
                             }
                         }
-						$value = preg_replace('/\$'.$pattern.'/',_cleanup($PARAM[$pattern]),$value);
+						$value = preg_replace('/\$'.str_replace('[','\[',str_replace(']','\]',$pattern_specs)).'/',_cleanup($_json_array),$value);
 					} else {
 						//$value = preg_replace('/\$'.$pattern.'/','(ungesetzt)',$value);
 						//better: get that value; this makes it compatible to mass editing
+                        //
+                        //$PARAM['id_'.$pattern_table] might be a number, not an array: this makes it compatible to mass editing (I think):
+                        if ( ! is_array($PARAM['id_'.$pattern_table]) ) { $PARAM['id_'.$pattern_table] = array($PARAM['id_'.$pattern_table]); }
 						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern,$need['select']) ) { $need['select'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern; }
 						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')',$need['where']) ) { $need['where'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')'; }					
 					}
@@ -197,6 +202,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 			if ( sizeof($need['select']) > 0 ) {
 				unset($stmt_array);
 				$stmt_array = array();
+                //to be continued: this seems not to work...
 				$stmt_array['stmt'] = "SELECT DISTINCT " . implode(',',$need['select']) . " FROM " . implode(' LEFT JOIN ',$need['from']) . " WHERE " . implode(' AND ',$need['where']); 
 				$foreignfields = execute_stmt($stmt_array,$conn,true);
 				if (! isset($foreignfields['result'])) {
@@ -204,32 +210,45 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 				} else {
 					$foreignfields = $foreignfields['result'][0]; //multiple ids are handled by FUNCTIONAction, here there must be only one table id
 					foreach ( $foreignfields as $pattern => $foreignvalue ) {
-                        if ( isset($pattern_specs[1]) ) {
-                            $_json_array = json_decode($foreignvalue,true);
-                            if ( "$_json" === null ) {
-	            				$success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern."nicht vorgesehen.";
-                            } else {
-                                if ( $pattern_spec[1] == "last" ) { $pattern_spec[1] = sizeof(_json_array)-1; } else { $pattern_spec[1] = (int)$pattern_spec[1]; }
-                                if ( isset($_json_array[$pattern_spec[1]]) ) {
-                                    $foreignvalue = $_json_array[$pattern_spec[1]];
+                        //look for components and multiple field entries
+                        unset($matches);
+                        preg_match_all('/\$('.$pattern.'[^ ,\$\"\'\.\;\:\!\?\)]*)/',$value,$matches);
+                        foreach ( $matches[1] as $pattern_specs ) {
+                            //handle multiple and combined fields, e.g. opsz_vermittlungslisten__vermitteltzu[2][last]
+                            $pattern_split = explode('[',$pattern_specs);
+                            $pattern = $pattern_split[0];
+                            unset($pattern_component);
+                            unset($pattern_entry);
+                            if ( isset($pattern_split[2]) ) { 
+                                $pattern_component = (int)str_replace(']','',$pattern_split[1]);
+                                $pattern_entry = str_replace(']','',$pattern_split[2]);
+                            } elseif ( isset($pattern_split[1]) ) {
+                                $pattern_entry = str_replace(']','',$pattern_split[1]);
+                            }
+                            
+                            unset($_json_array);
+                            if ( isset($pattern_entry) ) {
+                                $_json_array = json_decode($foreignvalue,true);
+                                if ( $_json_array === null ) {
+                                    $success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten oder multiple Einträge sind im Feld ".$pattern." nicht vorgesehen.";
                                 } else {
-                                    $foreignvalue = "(ungesetzt)";
-                                }
-                                if ( isset($pattern_specs[2]) ) {
-                                    if ( ! is_array($foreignvalue) ) {
-                                        $success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponenten sind im Feld ".$pattern."nicht vorgesehen.";
-                                    } else {
-                                        if ( $pattern_spec[2] == "last" ) { $pattern_spec[2] = sizeof($PARAM[$pattern])-1; } else { $pattern_spec[2] = (int)$pattern_spec[2]; }
-                                        if ( isset($foreignvalue[$pattern_spec[2]]) ) {
-                                            $foreignvalue = $foreignvalue[$pattern_spec[2]];
+                                    if ( isset($pattern_component) ) {
+                                        if ( ! isset($_json_array[$pattern_component]) OR ! is_array($_json_array[$pattern_component]) ) {
+                                            $success['value'] = false; $success['error'] = __FUNCTION__ . ": Komponente ".$pattern_component." ist im Feld ".$pattern." nicht vorgesehen.";
                                         } else {
-                                            $foreignvalue = "(ungesetzt)";
+                                            $_json_array = $_json_array[$pattern_component];
                                         }
+                                    }
+                                    if ( $pattern_entry == "last" ) { $pattern_entry = sizeof($_json_array)-1; } else { $pattern_entry = (int)$pattern_entry; }
+                                    if ( isset($_json_array[$pattern_entry]) ) {
+                                        $foreignvalue = $_json_array[$pattern_entry];
+                                    } else {
+                                        $foreignvalue = "(ungesetzt)";
                                     }
                                 }
                             }
+                            $value = preg_replace('/\$'.$pattern_specs.'/',_cleanup($foreignvalue),$value);
                         }
-						$value = preg_replace('/\$'.$pattern.'/',_cleanup($foreignvalue),$value);
 					}
 				}
 			}
@@ -278,13 +297,13 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					for ( $i = 0; $i < sizeof($matches[1]); $i++ ) {
                         switch($matches[1][$i]) {
                             case "date":
-        						$value = str_replace($matches[0][$i],date('m.d.Y',$value));
+        						$value = str_replace($matches[0][$i],date('d.m.Y'),$value);
                                 break;
                             case "time":
-        						$value = str_replace($matches[0][$i],date('H:m',$value));
+        						$value = str_replace($matches[0][$i],date('H:m'),$value);
                                 break;
                             case "datetime":
-        						$value = str_replace($matches[0][$i],date('m.d.Y H:m',$value));
+        						$value = str_replace($matches[0][$i],date('d.m.Y H:m'),$value);
                                 break;
                         }
                     }
@@ -300,7 +319,12 @@ function FUNCTIONparseIfs(array $_config) {
 	$success = array( "value" => true, "error" => "" );
 	$_tmpconfig = array();
 	foreach ( $_config as $header => $value ) {
-		if ( gettype($value) == "array" ) { $value = FUNCTIONparseIfs($value); }
+		if ( gettype($value) == "array" ) {
+            $tmpreturn = FUNCTIONparseIfs($value); 
+            $value = $tmpreturn['return'];
+            $success['value'] = $success['value'] AND $tmpreturn['success']['value'];
+            $success['error'] .= $tmpreturn['success']['error'];
+        }
 		else {
 			//find all %%if without any other %%if until %%endif (deepest nested)
 			//and begin replacing there

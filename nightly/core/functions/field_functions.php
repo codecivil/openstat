@@ -185,8 +185,8 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
         $filenameparts = explode('.',$_config['filename'],2);
         //alway add timestamp
         $filename = $filenameparts[0].'-'.$now.'.'.$filenameparts[1];
-        $_js = array( "data" => "data:".$mimetype[$filetype].";charset=utf-8;base64,".$export_odf, "filename" => $filename); 
-        $_return['js'] = json_encode($_js);
+        $_js = array( "data" => "data:".$mimetype[$filetype].";charset=utf-8;base64,".$export_odf, "filename" => $filename, "test" => $_config['vars'] ); 
+        $_return['js'] = json_encode($_js,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } else {
 		$_return['log']['error'] .= 'Beim Erzeugen des ODF ist ein Fehler aufgetreten '; $_return['status'] = "Fehler";
     }

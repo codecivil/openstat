@@ -281,7 +281,7 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 				if ( $value !== 'none' AND $value !== '' AND $key != 'id_'.$PARAMETER['table'] AND $key != 'dbAction' AND $key != 'dbMessage' AND $key != 'table' AND $key != 'key' AND $key != 'genkey' AND $key != 'rolepwd') {
 					$properkey_array = explode('__',$key,2);
 					$properkey = $properkey_array[sizeof($properkey_array)-1];
-					if ( "$value" == "_NULL_" OR "$value" == "0001-01-01" ) {
+					if ( "$value" === "_NULL_" OR "$value" === "0001-01-01" ) {
                     //second test without quotes was returning true for $value = 1 in php7.3
 						$set .= $komma . "`" . $properkey . "`= NULL";						
 						$komma = ","; //added 20230904; should be correct

@@ -1,3 +1,11 @@
+#v1.14.0
+======
+28.04.2025
+
+* field function parsing fully adapted to replacing template variables by 
+  components of combi fields
+* readme.odt as example template added in core/templates
+
 #v1.13.1
 ======
 23.04.2025
