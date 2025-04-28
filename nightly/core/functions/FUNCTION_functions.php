@@ -194,7 +194,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
                         //$PARAM['id_'.$pattern_table] might be a number, not an array: this makes it compatible to mass editing (I think):
                         if ( ! is_array($PARAM['id_'.$pattern_table]) ) { $PARAM['id_'.$pattern_table] = array($PARAM['id_'.$pattern_table]); }
 						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern,$need['select']) ) { $need['select'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.'.$pattern_key.' AS '.$pattern; }
-						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')',$need['where']) ) { $need['where'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',json_decode($PARAM['id_'.$pattern_table])).')'; }					
+						if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',$PARAM['id_'.$pattern_table]).')',$need['where']) ) { $need['where'][] = "view__".$pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table.' IN ('.implode(',',$PARAM['id_'.$pattern_table]).')'; }					
 					}
 				}
 			}

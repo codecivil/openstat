@@ -305,6 +305,12 @@ function dbAction(array $_PARAMETER,mysqli $conn) {
 				$set .= $komma . "`" . $derivedkey . "` = DEFAULT(`" . $derivedkey . "`)";
 				$komma = ",";
 			}
+            //PARAMETER[id_<table>] might be a  number, not a string of an array... find out when this happens and handle here or there
+            // to be continued
+            //PARAMETER[id_<table>] might be an array, not a string
+            if ( is_array($PARAMETER['id_'.$PARAMETER['table']]) ) {
+                $PARAMETER['id_'.$PARAMETER['table']] = json_encode($PARAMETER['id_'.$PARAMETER['table']]);
+            }
 			$stmt = "UPDATE `view__" . $PARAMETER['table'] . "__" . $_SESSION['os_role']. "`" . $set . " WHERE id_".$PARAMETER['table']." IN (" . implode(',',json_decode($PARAMETER['id_'.$PARAMETER['table']])) . ");";
 			if ( sizeof(json_decode($PARAMETER['id_'.$PARAMETER['table']],true)) > 1 ) {
 				$message = "Einträge ". implode(',',json_decode($PARAMETER['id_'.$PARAMETER['table']],true)) . " wurden geändert.";
