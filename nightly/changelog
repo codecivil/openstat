@@ -1,3 +1,15 @@
+#v1.14.2
+======
+28.04.2025
+
+* fixes in id field handling in getDetails and newEntry
+
+#v1.14.1
+======
+28.04.2025
+
+* fixes in id field handling in FUNCTION_functions
+
 #v1.14.0
 ======
 28.04.2025

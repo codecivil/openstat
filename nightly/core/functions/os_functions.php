@@ -69,7 +69,7 @@ function newEntry(array $PARAM,$conn) {
 			$table = array($_array['massEdit'][0]); unset($_array['massEdit'][0]);
 			foreach ( $_array['massEdit'] as $_json ) {
 				$_tmparray = json_decode($_json,true);
-				if ( isset($_tmparray['id_'.$maintable]) ) { $id[] = $_tmparray['id_'.$maintable]; }
+				if ( isset($_tmparray['id_'.$maintable]) ) { $id[] = (int)$_tmparray['id_'.$maintable]; }
 			}
 			unset($_tmparray);
 		} else {
@@ -80,7 +80,7 @@ function newEntry(array $PARAM,$conn) {
 		$PARAMETER = json_decode($STRINGPARAMETER['trash'],true);
 		if ( ! isset($PARAMETER['table']) ) { $table = array('os_all'); } else { $table = $PARAMETER['table']; }; */
 		$table = $_array['table'];
-		$id = array($_array['id_'.$maintable]);
+		$id = array((int)$_array['id_'.$maintable]);
 	}
 	$PARAM = $_array;
 	

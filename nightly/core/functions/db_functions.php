@@ -395,6 +395,8 @@ function getDetails($PARAMETER,$conn)
 		} 
 	}
 	//}
+    //make id an array of integers, to be safe...
+    foreach ( $id as $index => $singleid ) { $id[$index] = (int)$singleid; }
 	//get config
 	$_config = getConfig($conn);
 	//
