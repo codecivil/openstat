@@ -126,7 +126,7 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
      *  ], ...
      *}
      */
-    $workdir = '../../core/templates/';
+    $workdirs = ['../../core/templates/','../../vendor/templates/']; //later entries win over former ones
     
     //throw error if src is not set
     if ( ! isset($_config['src']) ) { $_return['log']['error'] .= 'Templatequelldatei ist nicht gesetzt. '; $_return['status'] = "Fehler"; } 
@@ -141,6 +141,16 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
     //throw error for unsupported file type
     if ( ! isset($mimetype[$filetype]) ) { $_return['log']['error'] .= 'Der Dateityp der Templatequelldatei wird nicht unterstützt. '; $_return['status'] = "Fehler"; }
  
+    //find correct workdir
+    $workdir = '';
+    foreach( $workdirs as $potential_workdir ) {
+        if ( file_exists($potential_workdir.'/'.$_config['src']) ) {
+            $workdir = $potential_workdir;
+        }
+    }
+    
+    if ( $workdir == '' ) {  $_return['log']['error'] .= "Templatequelldatei ".$_config['src']."existiert nicht.";  $_return['status'] = "Fehler"; };
+    
     $zip = new ZipArchive;
     $fileToModify = 'content.xml';
     $now = date('Y-m-d_His');
