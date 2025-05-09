@@ -6,6 +6,7 @@ if ( ! isset($_SESSION['os_user']) ) { header('Location:/login.php'); exit(); } 
 
 require_once('../../core/data/filedata.php');
 require_once('../../core/data/serverdata.php');
+require_once('../../core/data/debugdata.php');
 
 //include system functions
 $core = glob('../../core/functions/*.php');

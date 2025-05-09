@@ -109,11 +109,11 @@ END:VEVENT
 function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $conn) {
 	//this must be done at the very beginning of EVERY field function
 	//$_config contains the used function config after replacing placeholders by actual values
-	$_return = array('status' => 'OK', 'log' => array(), 'js' => ''); //log and js may be objects; have to be returned by any field function
+	$_return = array('status' => 'OK', 'log' => array(), 'js' => '', 'message' => array('ok' => 'true', 'text' => '')); //log and js may be objects; have to be returned by any field function
     /* _config structure
      * 
      * {
-     *  <namemachine>: [
+     *  <namemachine>:
      *      {
      *          "namereadable": <string>,
      *          "description": <string>,
@@ -123,8 +123,7 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
      *              <key used in odf without %%, only A-Z,0-9 allowed>: <string or placeholder, if statements...>
      *           }
      *      }, ...
-     *  ], ...
-     *}
+     * }
      */
     $workdirs = ['../../core/templates/','../../vendor/templates/']; //later entries win over former ones
     
@@ -160,6 +159,8 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
     //return if an error has occured
     if ( $_return['status'] == "Fehler ") {
         $_return['js'] = $_return['log']['error']; 
+        $_return['message']['ok'] = "false";
+        $_return['message']['text'] = $_return['log']['error']; 
         return $_return;
     }
     
@@ -197,8 +198,91 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
         $filename = $filenameparts[0].'-'.$now.'.'.$filenameparts[1];
         $_js = array( "data" => "data:".$mimetype[$filetype].";charset=utf-8;base64,".$export_odf, "filename" => $filename, "test" => $_config['vars'] ); 
         $_return['js'] = json_encode($_js,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $_return['message']['ok'] = "true";
+        $_return['message']['text'] = "Ein ODF wurde erzeugt und im Downloadordner gespeichert."; 
     } else {
 		$_return['log']['error'] .= 'Beim Erzeugen des ODF ist ein Fehler aufgetreten '; $_return['status'] = "Fehler";
+        $_return['message']['ok'] = "false";
+        $_return['message']['text'] = $_return['log']['error']; 
+    }
+    return $_return;
+}
+
+//create entry in another table based on given entry
+function createSubsequentEntry(array $_config,array $trigger,array $PARAM,mysqli $conn) {
+	//this must be done at the very beginning of EVERY field function
+	//$_config contains the used function config after replacing placeholders by actual values
+	$_return = array('status' => 'OK', 'log' => array(), 'js' => '', 'message' => array('ok' => 'true', 'text' => '')); //log and js may be objects; have to be returned by any field function
+    /* _config structure
+     * 
+     * {
+     *  <namemachine>:
+     *      {
+     *          "namereadable": <string>,
+     *          "description": <string>,
+     *          "srcTable": <string> tablemachine of given entry, 
+     *          "trgt": [
+     *              { "tablemachine": tablemachine of table where new entry is to be created,
+     *                 "keys": {
+     *                      <key of tablemachine>: <string>, ...
+     *                  }
+     *              }
+     *          ]
+     *      }, 
+     *   ...
+     * }
+     */
+    // return if table is wrong
+    if ( $_config['srcTable'] != $PARAM['table'] ) { return $_return; }
+    //
+    // from here on $_config['srcTable'] == $PARAM['table'] !!!
+    foreach ( $_config['trgt'] as $_singleconf ) {
+        //mass editing is cared for in FUNCIONAction, here we always have a single id value (in an array)
+        $_id = json_decode($PARAM["id_".$PARAM['table']],true)[0];
+        //
+        //attribute to src entry if tables are different
+        $_PARAMETER = array();
+        if ( $_singleconf['tablemachine'] != $_config['srcTable'] ) {
+            $_PARAMETER = array($_singleconf['tablemachine']."__id_".$PARAM['table'] => $_id);
+        }
+        //
+        foreach( $_singleconf['keys'] as $key => $value ) {
+            $_PARAMETER[$_singleconf['tablemachine'].'__'.$key] = $value;
+            //handle dates and datetimes heuristically
+            $_date = date_parse($value);
+            if ( $_date['error_count'] === 0 ) {
+                $_PARAMETER[$_singleconf['tablemachine'].'__'.$key] = $_date['year'].'-'.$_date['month'].'-'.$_date['day'].' '.$_date['hour'].':'.$_date['minute'].':'.$_date['second'];
+            }
+        }
+        $_PARAMETER['dbAction'] = "insertIfNotExists";
+        $_PARAMETER['table'] = $_singleconf['tablemachine'];
+        $_result = dbAction($_PARAMETER,$conn);
+        if ( strpos($_result,' false') > 0 ) {
+            $_return['status'] = 'Fehler';
+            $_return['log'] .= 'Beim Erzeugen des Eintrags in '.$_SESSION['tablenames'][$_PARAMETER['table']].' ist ein Fehler aufgetreten. ';
+            $_return['message']['ok'] = 'false';
+            $_return['message']['text'] .= 'Beim Erzeugen des Eintrags in '.$_SESSION['tablenames'][$_PARAMETER['table']].' ist ein Fehler aufgetreten. ';
+        } else {
+            //case: entry is generated
+            if ( preg_match('/^<[^>]*>{"id_'.$_PARAMETER['table'].'":[\d]*}<[^>]*>$/',$_result) == 0) {
+                $_id = -1;
+                foreach ( $_SESSION['insert_id'] as $insertedidstring ) {
+                    if ( preg_match('/id_'.$_PARAMETER['table'].'/', $insertedidstring) == 1 ) {
+                        $_id = json_decode($insertedidstring,true)['id_'.$_PARAMETER['table']];
+                    }
+                }
+                if ( $_id > 0 ) {
+                    $_return['message']['text'] .= 'Ein <a onclick="document.querySelector(\'#detailsForm'.$_PARAMETER['table'].$_id.'\').onsubmit()">neuer Eintrag</a> wurde in '.$_SESSION['tablenames'][$_PARAMETER['table']].' erzeugt. ';
+                } else {
+                    $_return['message']['text'] .= json_encode($_SESSION['insert_id']).'Ein neuer Eintrag wurde in '.$_SESSION['tablenames'][$_PARAMETER['table']].' erzeugt. ';
+                }
+            //case: entry exists
+            } else {
+                $_id = json_decode(preg_replace('/<[^>]*>/','',$_result),true)['id_'.$_PARAMETER['table']];
+                $_return['message']['text'] .= 'Ein <a onclick="document.querySelector(\'#detailsForm'.$_PARAMETER['table'].$_id.'\').onsubmit()">zugehöriger Eintrag</a> in '.$_SESSION['tablenames'][$_PARAMETER['table']].' existiert bereits. ';
+            }
+        }
+        $_return['js'] .= $_result;
     }
     return $_return;
 }

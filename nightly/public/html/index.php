@@ -175,6 +175,7 @@ $_v = time();
 	<script type="text/javascript" src="/js/os.js?v=<?php echo($_v);?>"></script>
 	<script type="text/javascript" src="/js/import.js?v=<?php echo($_v);?>"></script>
 	<script type="text/javascript" src="/js/fieldfunctions.js?v=<?php echo($_v);?>"></script>
+	<script type="text/javascript" src="/js/utils.js?v=<?php echo($_v);?>"></script>
     <?php
     if ( isset($_SESSION['additional_js']) ) {
         forEach( $_SESSION['additional_js'] as $js ) {

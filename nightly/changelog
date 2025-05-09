@@ -1,3 +1,14 @@
+#v1.15.0
+======
+09.05.2025
+
+* FUNCTIONs work in combined fields; they are always "UNCHECKED" in order to work
+  around the "double entry" bug for FUNCTIONs in combined fields
+* placeholders in FUNCTION configs can contain entry number [this] referring
+  to the entry the FUNCTION checkbox is part of
+* field function createSubsequentEntry created and registered
+  It generates new table entries based on an existing
+
 #v1.14.3
 ======
 02.05.2025

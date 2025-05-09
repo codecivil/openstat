@@ -1,0 +1,3 @@
+-- register functions createFromTemplate and createSubsequentEntry
+INSERT  INTO `os_functions` (`iconname`,`functionmachine`,`functionreadable`,`functionscope`,`allowed_roles`) SELECT 'file','createFromTemplate','ODF erzeugen','FIELD','[0]' FROM DUAL WHERE  (SELECT count(functionmachine) FROM `os_functions` where functionmachine = 'createFromTemplate') = 0;
+INSERT  INTO `os_functions` (`iconname`,`functionmachine`,`functionreadable`,`functionscope`,`allowed_roles`) SELECT 'star','createSubsequentEntry','assoziierten Eintrag erzeugen','FIELD','[0]' FROM DUAL WHERE  (SELECT count(functionmachine) FROM `os_functions` where functionmachine = 'createSubsequentEntry') = 0;

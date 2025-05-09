@@ -403,6 +403,8 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 /* sticky for assignments? takes too much space? */
 .details .assignment { position: sticky; top: 9.2rem; overflow: hidden; z-index: 500; margin: 0.5rem; padding: 0.5rem; background: var(--background-details); border-radius: 5px; border-bottom: 1px solid black; box-shadow: 0 2px 5px #444; width: auto; }
 .details .db_headline_wrapper { position: sticky; top: 5.2rem; overflow: hidden; z-index: 501; background: var(--background-details); }
+.details a { text-decoration: underline; font-style: italic; }
+.details a:hover { cursor: pointer; }
 .details label {float: left; width: 12rem; text-align: right; padding-right: 1%; margin-top: 0.5rem; }
 .details .checkbox label {float: none; width: auto; text-align: left; padding-right: 0; margin-top: 0; }
 .details .functions label { margin-top: 0; }

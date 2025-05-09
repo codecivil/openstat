@@ -17,3 +17,8 @@ function createFromTemplate(_filestring) {
         _download.click();
     });
 }
+
+function createSubsequentEntry(_result) {
+    //display it in alsoimportant? Or how to get message section of orig entry?
+    document.querySelector('#alsoimportant').innerHTML = _result;
+}

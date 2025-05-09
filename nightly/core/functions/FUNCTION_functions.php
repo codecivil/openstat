@@ -1,24 +1,34 @@
 <?php
 /*
  * $PARAM is the form containing values of table entries
- * $param is the initial/changed status info of the function table entry
+ * $param is the initial/changed status info of the function table entry and the value of 'this' (entry number of multiple fields)
  * a FIELD function has parameters ($param,$PARAM,$conn)
  * and may get profile info by certain extra functions like getProfile($searchstring,$profilefieldname)
 */ 
 function FUNCTIONAction (array $PARAM, mysqli $conn) {
 	// What is the easiest way to find fields of type FUNCTION?
-	$FUNCTIONPARAM = array();
-	foreach ( $PARAM as $rawkey => $value ) {
-        if ( ! json_decode((string)$value) ) { continue; };
-		if ( isset(json_decode($value,true)['type']) AND json_decode($value,true)['type'] == "FUNCTION" ) {
-			$FUNCTIONPARAM[] = $value;
-		}
-	}
+    function getFUNCTIONs(array $PARAM, $FUNCTIONPARAM = array()) {
+        foreach ( $PARAM as $rawkey => $value ) {
+            $_this = intdiv((int)$rawkey,2); //strange formula: due to "none" being sent as first field entry for combined fields thus
+                                             // doubling the number of entries in the function field
+            if ( gettype($value) == "array" ) {
+                $FUNCTIONPARAM = getFUNCTIONs($value,$FUNCTIONPARAM);
+            }
+            if ( ! json_decode((string)$value) ) { continue; };
+            if ( isset(json_decode($value,true)['type']) AND json_decode($value,true)['type'] == "FUNCTION" ) {
+                $valuewithcontext = json_encode(array_merge(json_decode($value,true),array("this" => $_this)));
+                $FUNCTIONPARAM[] = $valuewithcontext;
+            }
+        }
+        return $FUNCTIONPARAM;
+    }
+    $FUNCTIONPARAM = getFUNCTIONs($PARAM);
 	//execute any function with its status parameter as argument
 	foreach ( $FUNCTIONPARAM as $functionjson ) {
 		$functions = json_decode($functionjson,true)['functions'];
 		$param = json_decode($functionjson,true)['status'];
-		foreach ( $functions as $functionwithconfig ) {
+		$param['this'] = json_decode($functionjson,true)['this'];
+        foreach ( $functions as $functionwithconfig ) {
 			if ( $functionwithconfig == "none" ) { continue; }
 			if ( $functionwithconfig != '' ) {
 				//separate functionname and config part
@@ -110,8 +120,14 @@ function FUNCTIONAction (array $PARAM, mysqli $conn) {
 				}
 				$passtojs = "'".base64_encode(json_encode($passtojs_array,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))."'";
 				?>
-				<img src="" onerror="<?php html_echo($function.'(atob('.$passtojs.'))'); ?>">
+				<img src="" onerror="<?php html_echo($function.'(b64DecodeUnicode('.$passtojs.'))'); ?>">
 				<?php
+                //handle message array
+                if ( isset($return['message']) AND is_array($return['message']) AND isset($return['message']['ok']) AND isset($return['message']['text']) ) {
+                    $messageb64 = "'".base64_encode($return['message']['text'])."'";
+                    ?>
+                    <img src="" onerror="document.querySelector('#message<?php html_echo($PARAM['table'].json_decode($PARAM['id_'.$PARAM['table']])[0]); ?>').innerHTML += '<div class=\'dbMessage <?php html_echo($return['message']['ok']); ?>\'>'+b64DecodeUnicode(<?php html_echo($messageb64); ?>)+'</div>'">
+                <?php }
 			}
 		}
 	}
@@ -145,7 +161,7 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 			preg_match_all('/\$([^ ,\$\"\'\.\;\:\!\?\)]*)/',$value,$matches);
 			$need = array("select" => array(), "from" => array("view__".$PARAM['table']."__".$_SESSION['os_role']), "on" => array(), "where" => array());
 			foreach ( $matches[1] as $pattern_specs ) {
-                //handle multiple and combined fields, e.g. opsz_vermittlungslisten__vermitteltzu[2][last]
+                //handle multiple and combined fields, e.g. opsz_vermittlungslisten__vermitteltzu[2][last|this]
                 $pattern_split = explode('[',$pattern_specs);
                 $pattern = $pattern_split[0];
                 unset($pattern_component);
@@ -178,7 +194,17 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
                                         $_json_array = $_json_array[$pattern_component];
                                     }
                                 }
-                                if ( $pattern_entry == "last" ) { $pattern_entry = sizeof($_json_array)-1; } else { $pattern_entry = (int)$pattern_entry; }
+                                switch($pattern_entry) {
+                                    case "last":
+                                        $pattern_entry = sizeof($_json_array)-1;
+                                        break;
+                                    case "this":
+                                        $pattern_entry = (int)$trigger['this'];
+                                        break;
+                                    default:
+                                        $pattern_entry = (int)$pattern_entry;
+                                        break;
+                                }
                                 if ( isset($_json_array[$pattern_entry]) ) {
                                     $_json_array = $_json_array[$pattern_entry];
                                 } else {
@@ -239,7 +265,17 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
                                             $_json_array = $_json_array[$pattern_component];
                                         }
                                     }
-                                    if ( $pattern_entry == "last" ) { $pattern_entry = sizeof($_json_array)-1; } else { $pattern_entry = (int)$pattern_entry; }
+                                    switch($pattern_entry) {
+                                        case "last":
+                                            $pattern_entry = sizeof($_json_array)-1;
+                                            break;
+                                        case "this":
+                                            $pattern_entry = (int)$trigger['this'];
+                                            break;
+                                        default:
+                                            $pattern_entry = (int)$pattern_entry;
+                                            break;
+                                    }
                                     if ( isset($_json_array[$pattern_entry]) ) {
                                         $foreignvalue = $_json_array[$pattern_entry];
                                     } else {

@@ -1551,8 +1551,23 @@ function _FUNCTIONobserveChanges(el) {
 function _FUNCTIONStatus(el,statusname) {
 	if ( ! statusname ) { let statusname = 'initial'; }
 	inputfield = el.closest('.edit_wrapper');
-	if ( inputfield.querySelector('div[id$=_conditions]') ) { 
+	/*if ( inputfield.querySelector('div[id$=_conditions]') ) { 
 		_conditions_element = el.closest('.edit_wrapper').querySelector('div[id$=_conditions]');
+	}*/
+    let id_escaped = el.id.replace('[','\\[').replace(']','\\]');
+    //get from img hack images or select element to proper checkbox element
+    const maxsteps = 10;
+    let _step = 0;
+    while ( ( id_escaped == '' || ! el.matches('input') ) && _step < maxsteps ) {
+        _step++;
+        el = el.previousElementSibling;
+        if ( el.matches('input') ) {
+            id_escaped = el.id.replace('[','\\[').replace(']','\\]');
+        } 
+    }
+    console.log('id_escaped',id_escaped);
+    if ( inputfield.querySelector('div[id='+id_escaped+'_conditions]') ) { 
+		_conditions_element = el.closest('.edit_wrapper').querySelector('div[id='+id_escaped+'_conditions]');
 	}
 	let _status = new Object();
 	if ( _conditions_element != undefined ) {
@@ -1570,7 +1585,7 @@ function _FUNCTIONStatus(el,statusname) {
 		}
 	}
 	try {
-		function_field_obj = JSON.parse(inputfield.querySelector('.db_function_field').value);
+		function_field_obj = JSON.parse(inputfield.querySelector('#'+id_escaped+' ~ .db_function_field').value);
 	} catch(e) {
 		function_field_obj = new Object();
 	}
@@ -1580,11 +1595,12 @@ function _FUNCTIONStatus(el,statusname) {
 	function_field_obj.functions = new Array();
 	function_field_obj.type = 'FUNCTION';
 	//functions must be empty if execution box is not checked
-	if ( inputfield.querySelector('.db_function_check').checked ) {
-		for ( let option of inputfield.querySelector('.db_function_functions').options ) { if (! option.disabled) {function_field_obj.functions.push(option.value);} }
+	if ( el.checked ) {
+		for ( let option of inputfield.querySelector('#'+id_escaped+' ~ .db_function_functions').options ) { if (! option.disabled) {function_field_obj.functions.push(option.value);} }
 	} else {
 		function_field_obj.functions = ["none"];
 	}
-	inputfield.querySelector('.db_function_field').value = JSON.stringify(function_field_obj);
+	inputfield.querySelector('#'+id_escaped+' ~ .db_function_field').value = JSON.stringify(function_field_obj);
+    console.log(inputfield.querySelector('#'+id_escaped+' ~ .db_function_field').value);
 	return false
 }

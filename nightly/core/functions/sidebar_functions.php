@@ -199,6 +199,9 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					unset($_result);
 					$_result = $_result_array['result'];
 					$_result_normal = $_result_array_normal['result'];
+                    //set tablename translation as session variable (other functions need that...)
+                    $_SESSION['tablenames'] = array_combine($_result_normal['tablemachine'],$_result_normal['tablereadable']);
+                    //back to sidebar...
 					foreach ( $_config_tables as $table_index => $checked_tablemachine )
 					{
 						$_table = $_result[array_search($checked_tablemachine,$_result_normal['tablemachine'])];

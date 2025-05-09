@@ -1,3 +1,16 @@
+#v1.15.0
+======
+09.05.2025
+
+* openStatAdmin:
+  * Feldfunktionen können Teil von Kombifeldern werden
+  * createSubsequentEntry: Feldfunktion zur Erzeugung neuer
+    Tabelleneinträge basierend auf dem das Funktionsfeld
+    enthaltende
+  * Platzhalter in Konfigruationen von Feldfunktionen können
+    auf den Kombieintrag, der die Funktion enthält mittels 
+    [this] zurückgreifen
+
 #v1.14.0
 ======
 

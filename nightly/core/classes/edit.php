@@ -337,6 +337,9 @@ class OpenStatEdit {
 		}
 		//preliminary: compound structures
 		if ( $_result['compound'] ) {
+            //FUNCTIONS in compunds are always unchecked as long as the double entry bug persists
+            $_result['FUNCTIONchecked'] = "false";
+            //
 			$_default_array = json_decode($default,true);
 			$_arrayed = '[]'; //inputs as arrays
 			?>
@@ -524,6 +527,9 @@ class OpenStatEdit {
 							php will send the value of the second: also ok
 							
 							but I admit, it's a bit shaky and not good to maintain...
+                            
+                            even more: it is not compatible to combined fields, where the field name ends on [], so BOTH fields
+                            are submitted! This then has to be fixed in FUNCTIONAction's getFUNCTIONs function.'
 						-->
 							<?php foreach ( $_show_option as $value ) {
 								if ( $value == "none" ) { continue; }
