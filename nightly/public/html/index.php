@@ -65,6 +65,20 @@ require_once('../../core/frontend_functions.php');
 require_once('../../core/getParameters.php');
 */
 
+//get instance version
+$instanceinfo = glob('../../changelog.*');
+$instance_info = array("instanceslug" => "", "instanceversion" => "");
+
+foreach ( $instanceinfo as $_instanceinfo )
+{
+	$instance_info['instanceslug'] = substr($_instanceinfo,16);
+	try {
+        $instance_info['instanceversion'] = trim(fgets(fopen($_instanceinfo, 'r')));
+    } catch(Exception $e) {
+        $instance_info['instanceversion'] = "n/a";
+    }
+}
+
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'logout' ) { logout(); }
 if ( isset($PARAMETER['submit']) AND $PARAMETER['submit'] == 'changePassword' ) { 
 	$vtime = floor(time()/300);
@@ -328,7 +342,8 @@ $_v = time();
 			<input form="osInfoForm" type="checkbox" hidden id="osInfo" class="userInfo">
 			<div>
 				<b>Letztes Update:</b>: <?php html_echo($versiondate); ?> <label for="wasistneu" class="whatsnew" onclick="myScrollIntoView(document.getElementById('wasistneu_wrapper'))">Was ist neu?</label><br />
-				<b>Version:</b> <?php html_echo($versionnumber); ?><br />
+				<b>openStat-Version:</b> <?php html_echo($versionnumber); ?><br />
+				<b>Instanz:</b> <?php html_echo($instance_info['instanceslug'].'-'.$instance_info['instanceversion']); ?><br />
 				<b>Mindestversionen:</b><br />
                 <b>&nbsp;Firefox:</b> <?php html_echo($firefox_least_featureversion); ?>+<br />
                 <b>&nbsp;Chrome:</b> <?php html_echo($chrome_least_version); ?>+<br />

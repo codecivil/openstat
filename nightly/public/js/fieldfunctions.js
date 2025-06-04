@@ -1,7 +1,8 @@
 //emailTo js function
 // success: string
+// obsolete: success message is now displayed in entry message div
 function emailTo(success) {
-	alert(success);
+	console.log(success);
 }
 
 //createFromTemplate js function

@@ -1,7 +1,13 @@
 <?php
+/* THIS IS THE EXAMPLE SETTINGS FILE SHIPPED WITJ THE PACKAGE
+ * ON INSTALLATION PLEASE COPY IT TO settings.php AND ADAPT settings.php
+ * TO YOUR NEEDS. UPDATES MAY INTRODUCE NEW SETTINGS, SO PLEASE COMPARE
+ * settings.php.dist WITH YOUR settings.php ON A REGULAR BASIS.
+*/
+
 //Settings for the openStat server instance
 
-//Enable debug (see core/data/debugdata.php for path and filename settings)
+//Enable debug by uncommenting (see core/data/debugdata.php for path and filename settings)
 //$_SESSION['DEBUG'] = true;
 
 //Default page size for results if no value was set as yet by the user

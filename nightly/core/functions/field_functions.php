@@ -15,7 +15,7 @@
 function emailTo(array $_config,array $trigger,array $PARAM,mysqli $conn) {
 	//this must be done at the very beginning of EVERY field function
 	//$_config contains the used function config after replacing placeholders by actual values
-	$_return = array('log' => '', 'js' => ''); //log and js may be objects; have to be returned by any field function
+	$_return = array('status' => 'OK', 'log' => array(), 'js' => '', 'message' => array('ok' => 'true', 'text' => '')); //log and js may be objects; have to be returned by any field function
 	/* $result = FUNCTIONpreprocess(__FUNCTION__,$configname,$trigger,$PARAM,$conn);
 	if ( ! $result['success']['value'] ) {
 		$_return['log'] = __FUNCTION__ .': '.$result['success']['error']; 
@@ -51,11 +51,12 @@ function emailTo(array $_config,array $trigger,array $PARAM,mysqli $conn) {
 	}
 	if ( sendmail($_config) ) {
 		$_return['status'] = "OK"; 
-		$_return['js'] = "e-Mail an ".$_config['To']." wurde erfolgreich gesendet."; 
+		$_return['message']['text'] = "e-Mail an ".$_config['To']." wurde erfolgreich gesendet."; 
 	} else {
 		$_return['status'] = "Fehler";
 		$_return['log']['error'] = "e-Mail konnte nicht versendet werden.";
-		$_return['js'] = "e-Mail konnte nicht gesendet werden.";
+        $_return['message']['ok'] = "false";
+		$_return['message']['text'] = "e-Mail konnte nicht gesendet werden.";
 	}
 	return $_return;
 }
@@ -151,7 +152,7 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
     if ( $workdir == '' ) {  $_return['log']['error'] .= "Templatequelldatei ".$_config['src']."existiert nicht.";  $_return['status'] = "Fehler"; };
     
     $zip = new ZipArchive;
-    $fileToModify = 'content.xml';
+    $filesToModify = array('content.xml','styles.xml');
     $now = date('Y-m-d_His');
     //throw error if src does not exist or file(-system ) permissions are wrong
     try { copy($workdir.$_config['src'],'/tmp/'.$_config['src'].'.'.$now); } catch (Throwable $e) { $_return['log']['error'] .= "Templatequelldatei existiert nicht oder /tmp ist nicht beschreibbar: " . $e->getMessage() . PHP_EOL;  $_return['status'] = "Fehler"; }
@@ -165,24 +166,26 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
     }
     
     if ($zip->open('/tmp/'.$_config['src'].'.'.$now) === TRUE) {
-        //get template content
-        $contentxml = $zip->getFromName($fileToModify);
+        foreach( $filesToModify as $fileToModify ) {
+            //get template content
+            $contentxml = $zip->getFromName($fileToModify);
 
-        //replace placeholders in ODF
-        if ( isset($_config['vars']) ) {
-            preg_match_all("/%([A-Z0-9_]*)%/",$contentxml,$placeholders);
-            $keys = $placeholders[1]; //takes the first bracket of the match
-            foreach( $keys as $key ) {
-                if ( isset($_config['vars'][$key]) ) {
-                    $contentxml = str_replace('%'.$key.'%',$_config['vars'][$key],$contentxml);
+            //replace placeholders in ODF
+            if ( isset($_config['vars']) ) {
+                preg_match_all("/%([A-Z0-9_]*)%/",$contentxml,$placeholders);
+                $keys = $placeholders[1]; //takes the first bracket of the match
+                foreach( $keys as $key ) {
+                    if ( isset($_config['vars'][$key]) ) {
+                        $contentxml = str_replace('%'.$key.'%',$_config['vars'][$key],$contentxml);
+                    }
                 }
             }
-        }
 
-        //Delete the old...
-        $zip->deleteName($fileToModify);
-        //Write the new...
-        $zip->addFromString($fileToModify, $contentxml);
+            //Delete the old...
+            $zip->deleteName($fileToModify);
+            //Write the new...
+            $zip->addFromString($fileToModify, $contentxml);
+        }
         //And write back to the filesystem.
         $zip->close();
         $export_file = fopen('/tmp/'.$_config['src'].'.'.$now,'r');

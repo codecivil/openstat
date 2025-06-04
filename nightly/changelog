@@ -1,3 +1,18 @@
+#v1.15.1
+======
+04.06.2025
+
+* 04.06.2025
+
+* field function createFromTemplate searches conntent.xml and styles.xml for placeholders
+
+* 13.05.2025
+
+* fix: updateOS now preserves settings.php also on openStat-Updates (on instance updates
+  it already worked before); new settings templates are now shipped as settings.php.dist
+  
+* emailTo now displays status messages in the entry's message section instead alerting it
+
 #v1.15.0
 ======
 09.05.2025

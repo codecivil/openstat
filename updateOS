@@ -81,6 +81,10 @@ mkdir "$WEBDIR/$VERSION" 2>/dev/null && {
 		cp -a "$WEBDIR/v1.0/vendor/js/" "$WEBDIR/$VERSION/public/"
 		cp -a "$WEBDIR/v1.0/plugins/" "$WEBDIR/$VERSION/"
 		cp -a "$WEBDIR/$VERSION/plugins-config"/* "$WEBDIR/$VERSION/plugins/"
+        #preserve settings.php (updates distribute settings.php.dist from now on)
+        cp -a "$WEBDIR/latest/settings.php" "$WEBDIR/$VERSION/settings.php"
+        #use package version of settings.php if none is present
+        [[ -f "$WEBDIR/$VERSION/settings.php" ]] || cp -a "$WEBDIR/$VERSION/settings.php.dist" "$WEBDIR/$VERSION/settings.php"
 		# cleanup
 		rm "$WEBDIR/latest"
 		ln -s "$WEBDIR/$VERSION" "$WEBDIR/latest"
