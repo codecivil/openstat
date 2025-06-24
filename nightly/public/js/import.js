@@ -167,7 +167,7 @@ function _nowmatch(_importel,_files,_fileheaders,i,_oldmatch) {
 	var el = _importel.closest('.popup');
 	//console.log(_fileheaders);
 	//get the table headers
-	_tableheaders = JSON.parse(el.querySelector('.headers').innerText)['keyreadable'];
+	_tableheaders = JSON.parse(el.querySelector('.headers').innerText)['keyreadable'].map((h) => h.split(':')[0]); //remove specifics of combined fields
 	_match = match(_fileheaders,_tableheaders);
 	//console.log(_match);
 	for ( var j = 0; j < _match.length; j++ ) {
@@ -416,7 +416,7 @@ function importJS(el,subtables) {
 										//console.log('edittype: '+k+' '+_tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST"));
 										if ( _matchedIndex[k] && ( _tableheadersfull['edittype'][_matchedIndex[k]].indexOf("LIST") == 0 || _tableheadersfull['edittype'][_matchedIndex[k]] == "CHECKBOX" ) ) {
 											for ( var c = 0; c < _choices.length; c++ ) {
-												var _matchthis = ( _choices[c] != '' ) ? _choices[c] : '*';
+												var _matchthis = ( _choices[c] != '' ) ? _choices[c].toString() : '*';
 												var _bestindex = match([_matchthis],_tableheadersfull['allowed_values'][_matchedIndex[k]]);
 												if ( _bestindex == -1 ) {
 													_choices[c] = '';

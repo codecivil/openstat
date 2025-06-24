@@ -1,3 +1,10 @@
+#v1.15.2
+======
+24.06.2025
+
+* conversion to string missing in import.js (l. 419)
+* table headers without combi fields specifics in import.js (l. 170)
+
 #v1.15.1
 ======
 04.06.2025
