@@ -892,6 +892,13 @@ function updateSelectionsOfThis(form,arg,responsetext) {
 	styleNotes();
 }
 
+// callback function for killRunningRequest
+function killRunningRequest(form,arg,responsetext) {
+    let sM = document.querySelector('#stopMessage');
+    sM.style.display = "inline";
+    setTimeout(function(){ sM.textContent = ""; sM.style.display = "none"; },2000);
+}
+
 function note_show(el) {
 	el.parentElement.querySelector('.note_wrapper textarea').style.visibility = "visible";
 	el.parentElement.style.opacity = 1;

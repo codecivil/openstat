@@ -1177,6 +1177,18 @@ function updateProfile(array $PARAM, mysqli $conn) {
 	return json_encode($_result);
 }
 
+function killRunningRequest(array $PARAM, mysqli $conn) {
+    if ( isset($_SESSION['running_connection_id']) ) {
+        $stmt_array = array();
+        $stmt_array['stmt'] = "KILL CONNECTION ".$_SESSION['running_connection_id'];
+        _execute_stmt($stmt_array,$conn);
+        unset($_SESSION['running_connection_id']);
+        return "Laufende Anfrage wurde abgebrochen.";
+    } else {
+        return "Es läuft gerade keine Anfrage.";
+    }
+}
+
 function datetime2icsTime(string $_datetime) {
 	preg_match('/(\d*)\.(\d*)\.(\d*)/',$_datetime,$matches);
 	if ( isset($matches[1]) ) {

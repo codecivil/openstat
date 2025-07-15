@@ -415,7 +415,11 @@ $_v = time();
 				<legend><i class="fas fa-list-ol" data-title="offene Einträge"></i></legend>
 				<select></select>
 			</form>
-		</div>		
+		</div>
+        <div id="stopRequest" data-title="Laufende Anfrage stoppen">
+            <span onclick="callPHPFunction('_','killRunningRequest','stopMessage')"><i class="fas fa-circle-stop"></i></span>
+            <span id="stopMessage"></span>
+        </div>		
 		<?php includeFunctions('GLOBAL',$conn); $conn->close(); //2021-07-15 ?>
 		<form method="POST" class="function" hidden></form> <!--only for technical purposes: so that includeFunctions has a form to refer to -->
 	</div> 

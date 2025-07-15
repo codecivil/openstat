@@ -1,3 +1,9 @@
+#v1.16.0
+======
+15.07.2025
+
+* experimental cancel button for stopping endless sql queries (not yet php procesing!)
+
 #v1.15.2
 ======
 24.06.2025

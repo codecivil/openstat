@@ -14,6 +14,14 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
     };
 	if (isset($stmt_array['message']) ) { $message = $stmt_array['message']; }
 	$dbMessage = ''; $dbMessageGood = '';
+    //catch process id for cancelling
+    //safer only for SELECTs?: if ( strpos($stmt_array['stmt'],'SELECT') === 0 AND strpos($stmt_array['stmt'],'CONNECTION_ID') === false ) {
+    //do not overwrite if already set (need to be able to cancel that!); do not save for KILL request
+    if ( ! isset($_SESSION['running_connection_id']) && strpos($stmt_array['stmt'],'CONNECTION_ID') === false && strpos($stmt_array['stmt'],'KILL') === false ) {
+        $stmt_conn = array();
+        $stmt_conn['stmt'] = "SELECT CONNECTION_ID() AS cid";
+        $_SESSION['running_connection_id'] = execute_stmt($stmt_conn,$conn)['result']['cid'][0];
+    }
 	//often saving of new entries is rejected; I think this is due to an overload of the mariadb server; so, cynic who I am, let's try it more often...
 	//this is due to a mariadb crash (caused by RAND probably); waiting for more than 10 seconds actually works... (but need to find a solution for the login,
 	//which takes 2 min in this setting...
@@ -54,6 +62,7 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 	$_return['dbMessage'] = $dbMessage;
 	$_return['dbMessageGood'] = $dbMessageGood;
 	if ( $conn AND $conn != null ) { $_return['insert_id'] = $conn->insert_id; }
+    unset($_SESSION['running_connection_id']);
 	return $_return;
 }
 
@@ -91,7 +100,6 @@ function flipResults(array $return) {
     }
     return $return;
 }
-
 
 function dbAction(array $_PARAMETER,mysqli $conn) {
 	$message = '';

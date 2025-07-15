@@ -1,4 +1,9 @@
-#1.15.2
+#v1.16.0
+======
+
+* Knopf in der Statusleiste zum Stoppen langer Datenbankabfragen (experimentell)
+
+#v1.15.2
 ======
 
 * Zwei Bugs in Importfunktion behoben
