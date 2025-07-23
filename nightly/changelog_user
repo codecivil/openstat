@@ -1,3 +1,9 @@
+#v1.16.1
+======
+
+* Defaultwert für Vorhersageschwelle auf 100 gesetzt (für Neuinstallationen)
+* updateOS aktualisiert
+
 #v1.16.0
 ======
 

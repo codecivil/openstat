@@ -1,3 +1,10 @@
+#v1.16.1
+======
+22.07.2025
+
+* default value of exec_forecast_threshold set to 100 insted of 0
+* updateOS preserves plugins delivered with an update once
+
 #v1.16.0
 ======
 15.07.2025
