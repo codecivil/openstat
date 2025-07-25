@@ -429,7 +429,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 							value="_shownot"
 							<?php if ( isset($checked[-1]) ) { ?> checked <?php } ?>
 						/>
-						<?php if ( _generateFilterStatementForKey($checked) != '' ) { $toggle_checked = "checked"; } else { $toggle_checked = ''; } ?>
+						<?php if ( ! in_array(_generateFilterStatementForKey($checked),array('','_shownot<br />')) ) { $toggle_checked = "checked"; } else { $toggle_checked = ''; } ?>
 						<input type="checkbox" hidden id="toggle<?php html_echo($tabledotkeymachine); ?>" class="toggle" <?php echo($toggle_checked); ?>>
 						<label for="toggle<?php html_echo($tabledotkeymachine); ?>">
 							<h2>

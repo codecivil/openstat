@@ -1,3 +1,10 @@
+#v1.17.0
+======
+24.07.2025
+
+* Editorupdate zu tincMCE-7.9.0
+* Keine Anzeige leerer Filtereinstellungen, auch wenn Filter ausgeblendet ist
+
 #v1.16.1
 ======
 
