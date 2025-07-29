@@ -300,6 +300,13 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 					$profilefield = $matches[3];
 					for ( $i = 0; $i < sizeof($matches[1]); $i++ ) {
 						$replaceby = '';
+                        //take own profile for "$PROFILE(~)"
+                        if ( $profilecompareto[$i] == "" AND $profilecomparestring == "" ) {
+                            $replaceby = json_decode($profiles[0],true)[$profilefield[$i]];
+    						$value = str_replace($matches[0][$i],_cleanup($replaceby),$value);
+                            continue;
+                        }
+                        //
 						$sim = 0.2; //threshold for calling it a hit
 						foreach ( $profiles as $profile ) {
 							$profile_array = json_decode($profile,true);

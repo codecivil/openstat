@@ -1,3 +1,10 @@
+#v1.17.1
+======
+29.07.2025
+
+* remove leading and trailing spaces from template names in createFromTemplate;
+  this makes it better compatible with %%if clauses
+
 #v1.17.0
 ======
 24.07.2025

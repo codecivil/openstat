@@ -130,7 +130,10 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
     
     //throw error if src is not set
     if ( ! isset($_config['src']) ) { $_return['log']['error'] .= 'Templatequelldatei ist nicht gesetzt. '; $_return['status'] = "Fehler"; } 
-
+    
+    //remove trailing spaces
+    $_config['src'] = preg_replace('/^[ ]*/','',preg_replace('/[ ]*$/','',$_config['src']));
+    $_return['log']['error'] .= $_config['src'].'; ';
     $filetype = preg_replace('/.*\./','',$_config['src']);
     $mimetype = array(
         "ods" => "application/vnd.oasis.opendocument.spreadsheet",
