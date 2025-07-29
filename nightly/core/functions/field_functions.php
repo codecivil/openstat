@@ -133,7 +133,6 @@ function createFromTemplate(array $_config,array $trigger,array $PARAM,mysqli $c
     
     //remove trailing spaces
     $_config['src'] = preg_replace('/^[ ]*/','',preg_replace('/[ ]*$/','',$_config['src']));
-    $_return['log']['error'] .= $_config['src'].'; ';
     $filetype = preg_replace('/.*\./','',$_config['src']);
     $mimetype = array(
         "ods" => "application/vnd.oasis.opendocument.spreadsheet",
