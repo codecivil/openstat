@@ -52,6 +52,10 @@ hr, .clear { clear: both; }
 /* JSON */
 .JSON ul { list-style: none; background: white; border: 1px solid black; padding: 0.2rem; }
 .JSON ul ul { border: none;}
+.JSON li.json_plus { width: 2rem; display: block;}
+.JSON ul.json li { padding: 0.2rem; height: 4rem; }
+.JSON ul.json li input { display: block;}
+.JSON input.json_key { font-weight: bold; background: var(--background-action); }
 /* end of JSON */
 
 input,select,textarea { font-size: 1rem;}

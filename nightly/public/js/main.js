@@ -520,3 +520,46 @@ function hierarchy(el,pm) {
 	el.parentElement.querySelector('.hierarchy').value = Math.max(1,Math.min(parseInt(_thisvalue)+parseInt(pm),max));
 	el.parentElement.querySelector('span').style.width = el.parentElement.querySelector('.hierarchy').value+"em";
 }
+
+//JSON encode a nested list
+function json_encode(el,obj,obj_root) {
+    let field = el.closest('.edit_wrapper');
+    let json_string_input = field.querySelector('.json_string');
+    if (! obj_root ) { obj_root = field.querySelector('ul.json'); }
+    if (! obj ) { obj = new Object(); }
+    function obj_gen(obj,obj_root) {
+        [...obj_root.children].filter(c => c.tagName == "LI").forEach(li => {
+            if ( li.querySelector('.json_key') && li.querySelector('.json_key').value.toUpperCase().replace(new RegExp(/[^A-Z]/,'g'),'') != '' ) {
+                li.querySelector('.json_key').value = li.querySelector('.json_key').value.toUpperCase().replace(new RegExp(/[^A-Z]/,'g'),'');
+                if ( li.querySelector('ul.json') ) {
+                    obj[li.querySelector('.json_key').value] = new Object();
+                    obj[li.querySelector('.json_key').value] = obj_gen(obj[li.querySelector('.json_key').value],li.querySelector('ul.json'));
+                } else {
+                    obj[li.querySelector('.json_key').value] = li.querySelector('.json_value').value;
+                }
+            }
+        });
+        return obj;
+    }
+    obj = obj_gen(obj,obj_root);
+    json_string_input.value = JSON.stringify(obj);
+}
+
+function addJSONKey(el) {
+    let ul = el.closest('ul');
+    let plus = ul.querySelector('.json_plus');
+    let li = document.createElement('li');
+    let input = document.createElement('input');
+    input.setAttribute('onchange','json_encode(this)');
+    input.setAttribute('spellcheck','false');
+    input.setAttribute('placeholder','Schlüssel');
+    input.classList.add('db_formbox','json_key');
+    li.appendChild(input);
+    input = document.createElement('input');
+    input.setAttribute('onchange','json_encode(this)');
+    input.setAttribute('spellcheck','false');
+    input.setAttribute('placeholder','Wert');
+    input.classList.add('db_formbox','json_value');
+    li.appendChild(input);
+    ul.insertBefore(li,plus);
+}

@@ -1,0 +1,9 @@
+# DO NOT SUBMIT EMPTY FIELDS! SORRY!
+#
+# create os_public as user table with 
+# full permissions for all
+#
+?table=os_tables&iconname=info&tablemachine=os_public&tablereadable=Öffentliche%20Infos&allowed_roles=%5B0%5D&delete_roles=%5B0%5D&dbAction=insert
+?table=os_public_permissions&keymachine=slug&keyreadable=Anzeigename&realid=5.000&typelist=VARCHAR(50)&edittype=TEXT&role_0=0&dbAction=insert
+?table=os_public_permissions&keymachine=tags&keyreadable=Tags&realid=6.000&typelist=TEXT&edittype=TEXT&role_0=0&dbAction=insert
+?table=os_public_permissions&keymachine=data&keyreadable=Daten&realid=7.000&typelist=TEXT&edittype=JSON&role_0=0&dbAction=insert

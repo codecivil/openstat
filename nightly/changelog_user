@@ -1,3 +1,14 @@
+#v1.18.0
+======
+03.08.2025
+
+* neue Tabelle "Öffentliche Infos" für Adressen von Behörden etc; 
+  "öffentlich" bedeutet hier, dass alle Nutzer Vollzugriff auf diese
+  Tabelle haben.
+* Editierbare JSON-Felder
+* Fix: Profiländerung war nicht möglich
+* Neues Feld "Funktion" im Profil
+
 #v1.17.1
 ======
 29.07.2025

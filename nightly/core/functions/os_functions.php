@@ -1084,9 +1084,9 @@ function showEmptyFields($PARAM,$conn) {
 //function scope: GLOBAL (in statusbar)
 //classes: profile section
 function editProfile(array $PARAM, mysqli $conn) {
-	$fields = array('vorname','name','telefon','email');
-	$inputtypes = array('name'=>'text','vorname'=>'text','telefon'=>'text','email'=>'email');
-	$datatypes = json_encode(array('name_private'=>'TEXT','vorname_private'=>'TEXT','telefon_private'=>'PHONE','email_private'=>'EMAIL')); //only the _private fields are visible (text) inputs
+	$fields = array('vorname','name','funktion','telefon','email');
+	$inputtypes = array('name'=>'text','vorname'=>'text','funktion'=>'text','telefon'=>'text','email'=>'email');
+	$datatypes = json_encode(array('name_private'=>'TEXT','vorname_private'=>'TEXT','funktion_private'=>'TEXT','telefon_private'=>'PHONE','email_private'=>'EMAIL')); //only the _private fields are visible (text) inputs
 	//to do: use these types...
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = 'SELECT * from os_userprofiles WHERE userid = ?';
@@ -1158,9 +1158,9 @@ function updateProfile(array $PARAM, mysqli $conn) {
 	if ( isset($PARAM['profile_exists']) ) {
 		unset($PARAM['profile_exists']);
 		unset($_stmt_array); $_stmt_array = array();
-		$_stmt_array['stmt'] = 'UPDATE os_userprofiles SET userid = ?,_private = ?,_machine = ?,_public = ?';
-		$_stmt_array['str_types'] = "isss";
-		$_stmt_array['arr_values'] = array($_SESSION['os_user'],$json['_private'],$json['_machine'],$json['_public']);
+		$_stmt_array['stmt'] = 'UPDATE os_userprofiles SET _private = ?,_machine = ?,_public = ? WHERE userid = ?';
+		$_stmt_array['str_types'] = "sssi";
+		$_stmt_array['arr_values'] = array($json['_private'],$json['_machine'],$json['_public'],$_SESSION['os_user']);
 		$_stmt_array['message'] = "Profil wurde aktualisiert.";
 		unset($_result);
 		$_result = _execute_stmt($_stmt_array,$conn); //with execute_stmt the dbMessage does not work, instead fails and $_result is null

@@ -111,7 +111,7 @@ class OpenStatEdit {
             if ( isset($matches[1]) ) {
                 $profilekeys = [];
                 foreach ( $matches[1] as $matchstring ) {
-                    if ( strpos($matchstring,'MY:') == 0 ) {
+                    if ( strpos($matchstring,'MY:') === 0 ) {
                         $_profileclass = "_private";
                         $_profilewhere = " WHERE userid = ".$_SESSION['os_user'];
                         $matchstring = substr($matchstring,3);
@@ -119,7 +119,7 @@ class OpenStatEdit {
                         $_profileclass = "_public";
                         $_profilewhere = "";
                     }
-                    preg_match_all('/\$([^\$]*)\$/',$matchstring,$prflkys);
+                    preg_match_all('/\$([a-z]*)\$/',$matchstring,$prflkys);
                     if ( isset($prflkys[1]) ) {
                         $profilekeys = array_merge($profilekeys,$prflkys[1]);
                         $profilekeys = array_unique($profilekeys);
@@ -137,13 +137,17 @@ class OpenStatEdit {
                 if ( isset($profiles) ) {
                     foreach ( $matches[1] as $matchstring ) {
                         $prflrplc = [];
-                        foreach ( $profilekeys as $profilekey ) {
-                            foreach ( $profiles as $profilestring ) {
+                        foreach ( $profiles as $profilestring ) {
+                            $tmpstring = $matchstring;
+                            foreach ( $profilekeys as $profilekey ) {
                                 $profile = json_decode($profilestring,true);
                                 if ( isset($profile[$profilekey]) ) {
-                                    $prflrplc[] = preg_replace('/\$'.$profilekey.'\$/',$profile[$profilekey],$matchstring);
+                                    $tmpstring = preg_replace('/\$'.$profilekey.'\$/',$profile[$profilekey],$tmpstring);
+                                } else {
+                                    $tmpstring = preg_replace('/\$'.$profilekey.'\$/','',$tmpstring);
                                 }
                             }
+                            if ( str_replace(' ','',$tmpstring) != '' ) { $prflrplc[] = $tmpstring.' Ⓟ'; };
                         }
                         $values = preg_replace('/_PROFILE\:'.preg_replace('/\$/','\\\$',$matchstring).'_/',implode('","',$prflrplc),$values);
                     }
@@ -153,6 +157,71 @@ class OpenStatEdit {
             }
             $conditions[$optionindex]['allowed_values'] = $values;
         }
+        //get public info data
+        //"_PUBLIC:<comma separated tag list without spaces>:<string>_": select public data from all profiles
+        //<string> is a string containing keynames surrounded by $, e.g. "$STRASSE$, $PLZ$ $ORT$"
+        //<string> must not contain _
+        //if <string> is empty, the slug of the entry is used
+        //keep in mind that public info key names are UPPERCASE
+        //works but gets disabled in js: work on this!
+        $_options = array();
+        if ( isset($conditions['allowed_values']) ) { $_options = $conditions['allowed_values']; }
+        foreach ( $conditions as $optionindex => $values_array ) {
+            $values = $values_array['allowed_values'];
+            preg_match_all('/_PUBLIC\:([^_\:]*):([^_]*)_/',$values,$matches);
+            unset($publicinfo);
+            if ( isset($matches[1]) ) {
+                $publictags = [];
+                $publicdata = '';
+                $public = [];
+                foreach ( $matches[1] as $_index => $matchstring ) {
+                    $expression = $matches[2][$_index];
+                    if ( count_chars($expression,0)["$"] > 1 ) { $publicdata = ', data'; }
+                    $publictags = explode(',',str_replace(' ','',$matchstring));
+                    $_like = "";
+                    $_liketemplate = "( REPLACE(' ','',tags) LIKE 'TAG,%' OR REPLACE(' ','',tags) LIKE '%,TAG,%' OR REPLACE(' ','',tags) LIKE '%,TAG' OR REPLACE(' ','',tags) = 'TAG' ) ";
+                    foreach ( $publictags as $tag ) {
+                        $_like .= $komma.str_replace('TAG',$tag,$_liketemplate);
+                        $komma = " AND ";
+                    }
+                    unset($_stmt_array); 
+                    $_stmt_array['stmt'] = "SELECT id_os_public, slug, tags".$publicdata." FROM `os_public` WHERE ".$_like." ORDER BY slug";
+                    unset($_result_array);
+                    $_public_array = execute_stmt($_stmt_array,$this->connection,true); 
+                    if ( isset($_public_array['dbMessageGood']) ) {
+                        $public = $_public_array['result'];
+                        //replace template:
+                        $pblcrplc = [];
+                        if ( isset($public['data']) ) {
+                            $exprinstance = $expression;
+                            foreach ( $public as $record ) {
+                                $data_array = json_decode($record['data']);
+                                preg_match_all('/\$([^\$]*)\$/',$expression,$matched_keys);
+                                $_missingkeys = false;
+                                foreach( $matched_keys as $matchedkey ) {
+                                    if ( isset($record[$matchedkey]) ) {
+                                        $exprinstance = preg_replace('/\$'.$matchedkey.'\$/',$record[$matchedkey],$exprinstance);
+                                    } else {
+                                        $_missingkeys = true;
+                                    }
+                                }
+                                if ( ! $_missingkeys ) {
+                                    $pblcrplc[] = $exprinstance;
+                                }
+                            }
+                        } else {
+                            foreach( $public as $record ) {
+                                $pblcrplc[] = $record['slug'].' (🛈'.$record[id_os_public].')';
+                            }
+                        }
+                        $pblcrplc = array_unique($pblcrplc);
+                        $values = str_replace($matches[0][$_index],'"'.implode('","',$pblcrplc).'"',$values);
+                    }
+                }
+            }
+            $conditions[$optionindex]['allowed_values'] = $values;
+        }
+
 		// get dependencies (conditions associated to depends_on_key)
 		unset($_stmt_array); 
 		//$_stmt_array['stmt'] = 'SELECT keymachine,referencetag,depends_on_key,depends_on_value,allowed_values FROM `'.$this->table.'_permissions` LEFT JOIN `'.$this->table.'_references` USING referencetag WHERE depends_on_key LIKE ?';
@@ -199,6 +268,9 @@ class OpenStatEdit {
 						$options = array_merge($options,json_decode($option,true));
 					}
 				}
+                //remove profile mark (will be added in edit if still applicable)
+                $options = array_map(array($this,'unmarkProfile'),$options);
+                //
 				unset($option); unset($_index);
 				//was: $options = array_diff($options,$_splice);
                 //array_diff cannot handle multidimensional arrays without un-/serializing
@@ -249,6 +321,9 @@ class OpenStatEdit {
 				$options = execute_stmt($_stmt_array,$this->connection);
                 if ( isset($options['result']) ) { $options = $options['result']; } else { $options = array(); };
                 if ( isset($options[$this->key]) ) { $options = $options[$this->key]; } else { $options = array(); };
+                //remove profile mark (will be added in edit if still applicable)
+                $options = array_map(array($this,'unmarkProfile'),$options);
+                //
 				break;
 		}
 		if ( is_array($options) AND sizeof($options) > 0 AND ( ! isset($options[0]) OR ! is_array($options[0]) ) ) {
@@ -256,12 +331,16 @@ class OpenStatEdit {
             //array_unique cannot handle multidimensional arrays, solution is to un-/serialize
             //see https://www.phpflow.com/php/remove-duplicates-from-multidimensional-array/
             $options = array_map("unserialize",array_unique(array_map("serialize",$options)));
-    			asort($options);
+            asort($options);
 		}
 		return array("options"=>$options, "conditions"=>$conditions, "dependencies"=>$dependencies);
 	}
 	
 	public function edit(string $_default, bool $_single = true) {
+        //if default comes from profile, temporarily remove this mark und save it for later
+        $_wasfromprofile = false;
+        if ( strpos($_default,'Ⓟ') > 0 ) { $_default = str_replace(' Ⓟ','',$_default); $_wasfromprofile = true; }
+        //
 		$default = $_default;
 		$_stmt_array = array();
         #virtual field needed defaultvalue, but we keep it a while to be on the safe side...
@@ -420,6 +499,18 @@ class OpenStatEdit {
                 } else {
                     $default = null;
                 }
+                //if $default is still in profile options, re-mark it and remove option without mark
+                if ( in_array($default.' Ⓟ',$options) ) { $options = array_diff($options,array($default)); $default .= ' Ⓟ'; }
+                //if default comes from os_public, update it (currently only possible if it is called by slug only)
+                if ( strpos($default,'🛈') > 0 ) {
+                    $id_os_public = (int) str_replace(')','',preg_replace('/.*🛈/','',$default));
+                    $_stmt_array = array();
+                    $_stmt_array['stmt'] = 'SELECT slug FROM os_public WHERE id_os_public = ?';
+                    $_stmt_array['str_types'] = 'i';
+                    $_stmt_array['arr_values'] = array($id_os_public);
+                    $default = execute_stmt($_stmt_array,$this->connection,true)['result'][0]['slug'].' (🛈'.$id_os_public.')';
+                }
+                //
 				$keyreadable = $_keyreadable_array[$indexedit];
 				//the name of input fields is not arrayed! Change this!
 				switch($_result['edittype']) {
@@ -896,25 +987,32 @@ class OpenStatEdit {
 							</div>
 						</div>
 						<?php break;
-					case 'JSON': //readonly data model
+					case 'JSON':
 						$default = preg_replace('/\n/',' ',$default);
+                        ?>
+						<input hidden <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> spellcheck="false" type="text" id="db_<?php echo($key.$rnd); ?>" name="<?php echo($this->table.'__'.$this->key.$_arrayed); ?>" class="db_formbox db_<?php echo($key); ?> json_string"  value="<?php echo($default); ?>">
+                        <?php
 						//$default = preg_replace('/\\/','',$default);
 						$default = json_decode($default,true);
-						if ( "$default" === null ) { break; }
+						if ( $default === null ) { $default = array("key" => ""); }
 						function _nest(array $obj) {
 							?>
 							<ul class="json">
 							<?php
 							foreach ( $obj as $_key => $_value ) {
 								?>
-								<li><b><?php html_echo($_key); ?>:</b>
+								<li>
+            						<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> onchange="json_encode(this)" spellcheck="false" type="text" class="db_formbox json_key" value="<?php html_echo($_key); ?>">
 								<?php
-								if ( gettype($_value) == 'array' ) { _nest($_value); } else { html_echo($_value); }
+								if ( gettype($_value) == 'array' ) { _nest($_value); } else { ?>
+            						<input <?php echo($_disabled.' '.$_onchange_text.' '.$_maxlength); ?> onchange="json_encode(this)" spellcheck="false" type="text" class="db_formbox json_value" value="<?php html_echo($_value); ?>">
+                                <?php }
 								?>
 								</li>
 							<?php
 							}
 							?>
+                                <li class="json_plus" onclick="addJSONKey(this)"><i class="fas fa-plus"></i></li>
 							</ul>
 							<?php
 						}
@@ -1117,6 +1215,7 @@ class OpenStatEdit {
 					case 'FREELONGER':
 					case 'EDITOR':
 					case 'FILESPATH':
+                    case 'JSON': //preliminary fulltext search of JSON string
 						?>
 							<label <?php echo($_searchfieldcompound); ?> onclick="addSearchfield(this);" data-title="Neues Suchfeld"><i class="fas fa-plus"></i></label>
 							<?php 
@@ -1711,6 +1810,10 @@ class OpenStatEdit {
 		}
 		return $_extracted;
 	}
+
+    protected function unmarkProfile(string $option) {
+        return str_replace(' Ⓟ','',$option);
+    }
 
 }
 
