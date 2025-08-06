@@ -1466,6 +1466,43 @@ function showEmptyFields(_form,_arg,resp) {
 	});
 }
 
+//callback function
+function loadPublicTemplates(_form,_arg,resp) {
+    if ( _form.closest('.popup_wrapper').querySelector('input.inputtable').value != "os_public" ) { return false; }
+	let el = _form.closest('.popup_wrapper');
+    el.querySelector('input.db_tags').addEventListener('change',showPublicTemplates);
+    showPublicTemplates(null,_form.closest('.popup_wrapper').querySelector('.db_tags'));
+    el.querySelector('.dbMessage').classList.add('true');
+    el.querySelector('.dbMessage').textContent = "Für Infovorlagen den Anzeigenamen einfach leer lassen. Leere Schlüsselnamen löschen das Feld beim Speichern."
+}
+
+//listener of loadPublicTemplates
+//warning: if same key hss different types of value (string, object) for dfferent templates, the resulting value type
+//is indeterministic; so use always same value type for same key!
+function showPublicTemplates(evt,el=null) {
+    if ( ! el ) { el = evt.target; }
+    if ( ! el.closest('form').querySelector('input.db_slug') ) { return false; }
+    let availableTemplates = JSON.parse(document.querySelector('#publicTemplates').textContent);
+    let templateList = el.value.replace(' ',).split(',');
+    //keys: take keys of templates with matching slug and remove duplicates
+    let templateObj = availableTemplates.filter(t=>templateList.includes(t['tags'])).reduce((acc,cur) => Object.assign(acc,JSON.parse(cur['data'])), {});
+    let target = el.closest('.popup_wrapper').querySelector('.db_data ul.json');
+    function generateUl(templateObj,target) {
+        Object.keys(templateObj).forEach(k => {
+            //add li's if not yet present
+            if ( [...target.querySelectorAll('li input.json_key')].filter(i => i.value == k).length == 0 ) {
+                if ( typeof templateObj[k] !== "string" ) {
+                    addJSONObj(target,k);
+                    generateUl(templateObj[k],target.querySelector('.key'+k));
+                } else {
+                    addJSONKey(target,k);
+                }
+            }
+        })
+    }
+    generateUl(templateObj,target);
+}
+
 function showOpenEntries(el) {
 	let _selectedValue = el.querySelector('select').value;
 	el.querySelector('select').innerHTML = '';

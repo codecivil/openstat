@@ -1,3 +1,15 @@
+#v1.19.0
+======
+06.08.2025
+
+* Fix: Bildschirmsperre kann wieder aufgehoben werden
+* openStatAdmin: 
+    * Öffentliche Infos (und Profile) nun als Listenreferenzen nutzbar
+    * Öffentliche Infos nun als Platzhalter in Feldfunktionen nutzbar
+    * FORMAT-Platzhalter für deutsche Formatierung von Daten und Zeiten in Feldfunktionen
+    * Fix: Abmelden funktioniert wieder sauber
+    * Fix: Debugmodus stört Loginprozess nicht mehr
+    
 #v1.18.0
 ======
 03.08.2025

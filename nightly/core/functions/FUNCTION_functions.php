@@ -145,7 +145,9 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
         }
 		else {
 			$needProfiles = false; //initialize if we need to look up profiles
+			$needPublic = false; //initialize if we need to look up profiles
 			$needEnv = false; //initialize if we need to look up profiles
+			$needFormat = false; //initialize if we need to look up profiles
 			//replace triggers
 			preg_match_all('/\$trigger\[([^\]]+\]\[[^\]]+)\]/',$value,$matches);
 			foreach ( $matches[1] as $pattern ) {
@@ -173,7 +175,9 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
                     $pattern_entry = str_replace(']','',$pattern_split[1]);
                 }
 				if ( strpos($pattern,'PROFILE') === 0 ) { $needProfiles = true; continue; }
+				if ( strpos($pattern,'PUBLIC') === 0 ) { $needPublic = true; continue; }
 				if ( strpos($pattern,'ENV') === 0 ) { $needEnv = true; continue; }
+				if ( strpos($pattern,'FORMAT') === 0 ) { $needFormat = true; continue; }
 				[$pattern_table,$pattern_key] = explode('__',$pattern,2);
 				if ( $pattern_table != $PARAM['table'] and isset($PARAM['id_'.$pattern_table]) ) {
 					if ( ! in_array("view__".$pattern_table."__".$_SESSION['os_role']." ON view__".$PARAM['table']."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = view__'. $pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table,$need['from']) ) { $need['from'][] = "view__".$pattern_table."__".$_SESSION['os_role']." ON view__".$PARAM['table']."__".$_SESSION['os_role'].'.id_'.$pattern_table.' = view__'. $pattern_table."__".$_SESSION['os_role'].'.id_'.$pattern_table; }
@@ -194,21 +198,25 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
                                         $_json_array = $_json_array[$pattern_component];
                                     }
                                 }
-                                switch($pattern_entry) {
-                                    case "last":
-                                        $pattern_entry = sizeof($_json_array)-1;
-                                        break;
-                                    case "this":
-                                        $pattern_entry = (int)$trigger['this'];
-                                        break;
-                                    default:
-                                        $pattern_entry = (int)$pattern_entry;
-                                        break;
-                                }
-                                if ( isset($_json_array[$pattern_entry]) ) {
-                                    $_json_array = $_json_array[$pattern_entry];
+                                if ( $pattern_entry == "all" ) {
+                                    $foreignvalue = implode(', ',$_json_array);
                                 } else {
-                                    $_json_array = "(ungesetzt)";
+                                    switch($pattern_entry) {
+                                        case "last":
+                                            $pattern_entry = sizeof($_json_array)-1;
+                                            break;
+                                        case "this":
+                                            $pattern_entry = (int)$trigger['this'];
+                                            break;
+                                        default:
+                                            $pattern_entry = (int)$pattern_entry;
+                                            break;
+                                    }
+                                    if ( isset($_json_array[$pattern_entry]) ) {
+                                        $_json_array = $_json_array[$pattern_entry];
+                                    } else {
+                                        $_json_array = "(ungesetzt)";
+                                    }
                                 }
                             }
                         }
@@ -265,26 +273,31 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
                                             $_json_array = $_json_array[$pattern_component];
                                         }
                                     }
-                                    switch($pattern_entry) {
-                                        case "last":
-                                            $pattern_entry = sizeof($_json_array)-1;
-                                            break;
-                                        case "this":
-                                            $pattern_entry = (int)$trigger['this'];
-                                            break;
-                                        default:
-                                            $pattern_entry = (int)$pattern_entry;
-                                            break;
-                                    }
-                                    if ( isset($_json_array[$pattern_entry]) ) {
-                                        $foreignvalue = $_json_array[$pattern_entry];
+                                    if ( $pattern_entry == "all" ) {
+                                        $foreignvalue = implode(', ',$_json_array);
                                     } else {
-                                        $foreignvalue = "(ungesetzt)";
+                                        switch($pattern_entry) {
+                                            case "last":
+                                                $pattern_entry = sizeof($_json_array)-1;
+                                                break;
+                                            case "this":
+                                                $pattern_entry = (int)$trigger['this'];
+                                                break;
+                                            default:
+                                                $pattern_entry = (int)$pattern_entry;
+                                                break;
+                                        }
+                                        if ( isset($_json_array[$pattern_entry]) ) {
+                                            $foreignvalue = $_json_array[$pattern_entry];
+                                        } else {
+                                            $foreignvalue = "(ungesetzt)";
+                                        }
                                     }
                                 }
                             }
-                            $value = preg_replace('/\$'.$pattern_specs.'/',_cleanup($foreignvalue),$value);
-                        }
+                           $pattern_specs = str_replace(']','\]',str_replace('[','\[',$pattern_specs));
+                           $value = preg_replace('/\$'.$pattern_specs.'/',_cleanup($foreignvalue),$value);
+                       }
 					}
 				}
 			}
@@ -320,10 +333,97 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
 							$newsim = similarity($comparetostring,$profilecomparestring[$i]);
 							if (  $newsim > $sim ) {
 								if ( isset($profile_array[$profilefield[$i]]) ) {
+                                    $succes['value'] = true; $success['error'] = '';
 									$replaceby = $profile_array[$profilefield[$i]];
 									$sim = $newsim; 
 								} else {
 									$success['value'] = false; $success['error'] = __FUNCTION__ . ": nötige Profildaten sind nicht gesetzt";
+									$replaceby = '';
+								}
+							}
+						}
+						$value = str_replace($matches[0][$i],_cleanup($replaceby),$value);
+					}
+				}
+			}
+			//replace PUBLIC values, like 
+            // $PUBLIC(~<string containing id or slug>)[key]
+            // $PUBLIC(<keystring>~<string>)[key], like for $PROFILE
+            //
+            //<string ...> must be compatible with public info values created by edit class, e.g. "Jobcenter Celle (_i_46)"            
+			if ( $needPublic ) {
+				$publicInfos = getPublicInfo($conn,true);
+				unset($matches);
+				preg_match_all('/\$PUBLIC\(\s*([^\s~]*)\s*~\s*([^\)]*)\)\[([^\]]*)\]/',$value,$matches);
+				if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($GLOBALS["debugpath"].$GLOBALS["debugfilename"],__FUNCTION__ .": ".json_encode($matches).PHP_EOL,FILE_APPEND); }
+				if ( sizeof($matches[1]) > 0 ) {
+					$publiccompareto = $matches[1];
+					$publiccomparestring = $matches[2];
+					$publicfield = $matches[3];
+					for ( $i = 0; $i < sizeof($matches[1]); $i++ ) {
+						$replaceby = '';
+                        //take slug and id for "$PUBLIC(~string)"
+                        if ( $publiccompareto[$i] == "" ) {
+                            $publicInfosFlipped = flipResults(array('result'=>$publicInfos))['result'];
+                            //$publicInfosFlipped is now numerlically indexed: 0=id, 1=slug, 2=tags, 3=data
+                            //guess id
+                            $_idfound = false;
+                            preg_match_all('/[\d]+/',$publiccomparestring[$i],$_ids);
+                            if ( sizeof($_ids[0]) > 0 ) { 
+                                $_id = $_ids[0][sizeof($_ids[0])-1];
+                                $publicIndex = array_search($_id,$publicInfosFlipped[0]);
+                                if ( $publixIndex !== false ) {
+                                    $_idfound = true;
+                                }
+                            }
+                            if ( ! $_idfound ) {
+                                $publiccompareslug = preg_replace('/ \(_i_.*\)|[\d]*/','',$publiccomparestring);
+                                $publicIndex = array_search($publiccompareslug,$publicInfosFlipped[1]);
+                                if ( $publixIndex !== false ) {
+                                    $_idfound = true;
+                                }
+                            }
+                            if ( $_idfound ) {
+                                    $replaceby = json_decode($publicInfos[$publicIndex]['data'],true)[$publicfield[$i]];
+                                    $value = str_replace($matches[0][$i],_cleanup($replaceby),$value);
+                                    continue;
+                            } else {
+                                $sim = 0.2; //threshold for calling it a hit
+                                foreach ( $publicInfos as $public ) {
+                                    $newsim = similarity($public['slug'],$publiccomparestring[$i]);
+                                    if (  $newsim > $sim ) {
+                                        if ( isset($public_array[$publicfield[$i]]) ) {
+                                            $succes['value'] = true; $success['error'] = '';
+                                            $replaceby = $public_array[$publicfield[$i]];
+                                            $sim = $newsim; 
+                                        } else {
+                                            $success['value'] = false; $success['error'] = __FUNCTION__ . ": nötige öffentliche Daten ".$publicfield[$i]." sind nicht gesetzt";
+                                            $replaceby = '';
+                                        }
+                                    }
+                                }
+						        $value = str_replace($matches[0][$i],_cleanup($replaceby),$value);
+                                continue;
+                            }
+                        }
+                        // case $publiccompareto[$i] is not empty
+						$sim = 0.2; //threshold for calling it a hit
+                        $compareto_array = explode(',',$publiccompareto[$i]);
+						foreach ( $publicInfos as $public ) {
+							$public_array = json_decode($public['data'],true);
+							$comparetostring = '';
+							foreach ($compareto_array as $compareto_field) {
+								if ( isset($public_array[$compareto_field]) ) {
+									$comparetostring .= $public_array[$compareto_field].' ';
+								}
+							}
+							$newsim = similarity($comparetostring,$publiccomparestring[$i]);
+							if (  $newsim > $sim ) {
+								if ( isset($public_array[$publicfield[$i]]) ) {
+									$replaceby = $public_array[$publicfield[$i]];
+									$sim = $newsim; 
+								} else {
+									$success['value'] = false; $success['error'] = __FUNCTION__ . ": nötige öffentliche Daten ".$publicfield[$i]." sind nicht gesetzt";
 									$replaceby = '';
 								}
 							}
@@ -347,6 +447,26 @@ function FUNCTIONreplacePlaceholders(array $_config,array $trigger,array $PARAM,
                                 break;
                             case "datetime":
         						$value = str_replace($matches[0][$i],date('d.m.Y H:m'),$value);
+                                break;
+                        }
+                    }
+                }
+            }
+			//replace FORMAT values, e.g. $FORMAT(2025-08-04,date) for properly (german) formatted date
+			if ( $needFormat ) {
+				unset($matches);
+				preg_match_all('/\$FORMAT\(\s*([^\s,]*),\s*([^\s\)]*)\)/',$value,$matches);
+                if ( sizeof($matches[1]) > 0 ) {
+					for ( $i = 0; $i < sizeof($matches[1]); $i++ ) {
+                        switch($matches[2][$i]) {
+                            case "date":
+        						$value = str_replace($matches[0][$i],DateTime::createFromFormat('Y-m-d',$matches[1][$i])->format('d.m.Y'),$value);
+                                break;
+                            case "time":
+        						$value = str_replace($matches[0][$i],DateTime::createFromFormat('Y-m-d H:i:s',$matches[1][$i])->format('H:i'),$value);
+                                break;
+                            case "datetime":
+        						$value = str_replace($matches[0][$i],DateTime::createFromFormat('Y-m-d H:i:s',$matches[1][$i])->format('d.m.Y H:i'),$value);
                                 break;
                         }
                     }
@@ -524,6 +644,57 @@ function getProfiles(mysqli $conn, string $profilefieldname='', string $searchst
 		$profiles = json_decode(json_encode($filteredprofiles,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),true);
 	}
 	return $profiles;
+}
+
+// returns array of JSON strings of public infos filtered by keyname is (like) searchstring
+// $keyname can id (exact match), slug (contains searchstring), tag (only one; occurs exactly in the tags list) or any keyname in data (closest match)
+// filtering by data keyname returns only the value of the keyname data!
+// $keyname and $searchstring are optional parameters
+// if you want to specify $searchstring but not $keyname use $keyname = "_ALL")
+function getPublicInfo(mysqli $conn, bool $flip=false, string $keyname='', string $searchstring='') {
+	unset($_stmt_array);
+	$_stmt_array['str_types'] = "";
+	$_stmt_array['arr_values'] = array();
+    $_WHERE = "";
+    if ( $keyname == "id" ) { 
+        $_WHERE = " WHERE id_os_public == ?";
+        $_stmt_array['str_types'] .= "i";
+    	$_stmt_array['arr_values'][] = (int) $searchstring;
+        $keyname = '';
+    }
+    if ( $keyname == "tag" ) { 
+        $_WHERE = " WHERE tags LIKE '".$searchstring.",%' OR tags LIKE '%,".$searchstring.",%' OR tags LIKE '%,".$searchstring."' OR tags = ?";
+        $_stmt_array['str_types'] .= "s";
+    	$_stmt_array['arr_values'][] = $searchstring;
+        $keyname = '';
+    }
+    if ( $keyname == "slug" ) { 
+        $_WHERE = " WHERE slug LIKE '%".$searchstring."%'";
+        $_stmt_array['str_types'] .= "i";
+    	$_stmt_array['arr_values'][] = (int) $searchstring;
+        $keyname = '';
+    }
+	$_stmt_array['stmt'] = 'SELECT id_os_public as id, slug, tags, data from `view__os_public__'.$_SESSION['os_role'].'`'.$_WHERE;
+    $publicInfos = execute_stmt($_stmt_array,$conn,$flip)['result'];
+	//filter by fieldname first
+	if ( $keyname != '' AND $keyname != '_ALL') {
+		$filteredinfos = array();
+		foreach ( $publicInfos as $info ) {
+			$filteredinfos[] = array('id' => $info['id'], 'slug' => $info['slug'], 'tags' => $info['tags'], 'data' => json_encode(array($keyname => json_decode($info['data'],true)[$keyname]),JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+		}
+		$publicInfos = json_decode(json_encode($filteredinfos,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),true);
+	}
+	//filter by searchstring
+	if ( $searchstring != '' ) {
+		$filteredinfos = array();
+		foreach ( $publicInfos as $info ) {
+			if ( preg_match($searchstring,json_encode($info,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ) {
+				$filteredinfos[] = $info;
+			}
+		}
+		$publicInfos = json_decode(json_encode($filteredinfos,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),true);
+	}
+	return $publicInfos;
 }
 
 function similarity_asym(string $string1,string $string2) {

@@ -910,7 +910,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
             if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; VIRTUAL') == false AND strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };
             //
             //do not create columns for EXPRESSION modifier (they are created exclusively in the views!)
-            if ( strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) {
+            if ( ! isset($PARAMETER['edittype']) OR strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) {
                 switch($PARAMETER['dbAction']) {
                     case 'edit':
                         unset($_stmt_array);
@@ -1598,9 +1598,9 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 
 $result_sql = importSQL($PARAMETER,$conn);
 //$result_script = importScript($PARAMETER,$conn);
-$result_admin_before = _adminActionBefore($PARAMETER,$conn);
-$result_array = _dbAction($PARAMETER,$conn);
-$result_admin_after = _adminActionAfter($PARAMETER,$conn);
+$result_admin_before = _adminActionBefore($PARAMETER,$conn)??array('dbMessage'=>'');
+$result_array = _dbAction($PARAMETER,$conn)??array('dbMessage'=>'','dbMessageGood'=>true);
+$result_admin_after = _adminActionAfter($PARAMETER,$conn)??array('dbMessage'=>'');
 if ( isset($result_array['result']) ) { $result = $result_array['result']; }
 $dbMessage = $result_admin_before['dbMessage'].$result_array['dbMessage'].$result_admin_after['dbMessage'];
 $dbMessageGood = $result_array['dbMessageGood'];

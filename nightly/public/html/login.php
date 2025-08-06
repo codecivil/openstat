@@ -5,6 +5,7 @@ require_once('../../core/functions/db_functions.php');
 require_once('../../core/classes/auth.php');
 require_once('../../core/data/serverdata.php');
 require_once('../../core/data/logindata.php');
+require_once('../../core/data/debugdata.php');
 require_once('../../core/data/info.php');
 $PARAMETER = array(); 
 $action = '';

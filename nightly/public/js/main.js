@@ -545,7 +545,7 @@ function json_encode(el,obj,obj_root) {
     json_string_input.value = JSON.stringify(obj);
 }
 
-function addJSONKey(el) {
+function addJSONKey(el,keyname=null) {
     let ul = el.closest('ul');
     let plus = ul.querySelector('.json_plus');
     let li = document.createElement('li');
@@ -553,13 +553,39 @@ function addJSONKey(el) {
     input.setAttribute('onchange','json_encode(this)');
     input.setAttribute('spellcheck','false');
     input.setAttribute('placeholder','Schlüssel');
-    input.classList.add('db_formbox','json_key');
+    if ( keyname ) { input.value = keyname; }
+    input.classList.add('db_formbox','db_jsonbox','json_key');
     li.appendChild(input);
     input = document.createElement('input');
     input.setAttribute('onchange','json_encode(this)');
     input.setAttribute('spellcheck','false');
     input.setAttribute('placeholder','Wert');
-    input.classList.add('db_formbox','json_value');
+    input.classList.add('db_formbox','db_jsonbox','json_value');
     li.appendChild(input);
+    ul.insertBefore(li,plus);
+}
+
+function addJSONObj(el,keyname=null) {
+    let ul = el.closest('ul');
+    let plus = ul.querySelector('.json_plus');
+    let li = document.createElement('li');
+    let input = document.createElement('input');
+    input.setAttribute('onchange','json_encode(this)');
+    input.setAttribute('spellcheck','false');
+    input.setAttribute('placeholder','Schlüssel');
+    if ( keyname ) { input.value = keyname; }
+    input.classList.add('db_formbox','db_jsonbox','json_key');
+    li.appendChild(input);
+    let innerul = document.createElement('ul');
+    innerul.classList.add("json");
+    if (keyname) { innerul.classList.add("key_"+keyname); }
+    let innerli = document.createElement('li');
+    innerli.setAttribute('onclick','addJSONKey(this)');
+    innerli.classList.add('json_plus');
+    let i = document.createElement('i');
+    i.classList.add('fas','fa-plus');
+    innerli.appendChild(i);
+    innerul.appendChild(innerli);
+    li.appendChild(innerul);
     ul.insertBefore(li,plus);
 }

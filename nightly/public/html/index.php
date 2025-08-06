@@ -504,6 +504,7 @@ $_v = time();
 </form>
 
 <div id="FUNCTIONresults" hidden></div>
+<div id="publicTemplates" hidden>[]</div>
 
 <script>
 	async function standard500 () {

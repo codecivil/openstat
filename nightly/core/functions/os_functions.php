@@ -3,7 +3,7 @@ function logout(string $redirect = 'login.php') {
 	if ( session_status() === PHP_SESSION_NONE ){ session_start(); } //2021-07-22 seemed not to be necessary, threw Notice: session already started, so we better check
 	// Unset all of the session variables.
 	$_SESSION = array();
-
+    $_COOKIE = array();
 	// If it's desired to kill the session, also delete the session cookie.
 	// Note: This will destroy the session, and not just the session data!
 	if (ini_get("session.use_cookies")) {
@@ -1143,8 +1143,27 @@ function editProfile(array $PARAM, mysqli $conn) {
 	<?php
 }
 
+// only on os_public: load existent templates dynamically (mainly in JS)
+// here: load templates in hidden div publicTemplates
+//scope: TABLES
+//flags : { ["AUTO", "ONTABLES":{"default": ["os_public"]} }
+//target: publicTemplates
+function loadPublicTemplates(array $PARAM, mysqli $conn) {
+    $_isospublic = false;
+    //new entry in os_public
+    if ( isset($PARAM['table']) AND $PARAM['table'] == "os_public" ) { $_isospublic = true; }
+    //exsting entry in os_public
+    if ( isset($PARAM['id_os_public']) AND sizeof($PARAM) == 1 ) { $_isospublic = true; };
+    //
+    if ( ! $_isospublic ) { return; }
+    unset($_stmt_array); $_stmt_array = array();
+    $_stmt_array['stmt'] = "SELECT tags,data FROM `view__os_public__".$_SESSION['os_role']."` WHERE slug = '' OR slug IS NULL";
+    unset($_result);
+    $_result = execute_stmt($_stmt_array,$conn,true);
+    if ( isset($_result['result']) ) { html_echo(json_encode($_result['result'])); }
+}
+
 function updateProfile(array $PARAM, mysqli $conn) {
-//to be continued: save profile PARAMS in os_profiles and return success state
 	//collect fields into json bundles
 	$json = array();
 	foreach ( array('_private','_machine','_public') as $suffix ) {

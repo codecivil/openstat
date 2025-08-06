@@ -1,3 +1,27 @@
+#v1.19.0
+======
+06.08.2025
+
+* fixes: screen lock works again and logging out from openStatAdmin now destroys the session properly and
+  works in debug mode
+
+04.08.2025
+
+* register function loadPublicTemplates() for entries (of table os_public) providing template fields
+  upon entering matching tags
+* os_public now usable for list references and field function placeholders
+  in field functions:
+    $PUBLIC($keystring~$matchstring)[fieldname] is replaced
+    by fieldname of public info where the keystring matches the matchstring most closely
+  as list references:
+    _PUBLIC:<comma separated tag list without spaces>:<string>_
+    is replaced by <string> (with replaced field names) for all public info matching all listed
+    tags
+  (for details look at code)
+
+* field functions have now FORMAT(<sql datetime>,date|time|datetime) for returning german
+  formatted dates and times
+  
 #v1.18.0
 ======
 01.08.2025

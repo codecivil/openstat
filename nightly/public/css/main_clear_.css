@@ -464,6 +464,7 @@ div#wasistneu_wrapper { width: 92%; margin: 0.5rem auto; box-shadow: 0 2px 5px #
 .details { background: var(--background-details); min-width: 50rem;}
 .details.new { background: var(--background-details-new); }
 .details .db_formbox {float: left; width: 60%;}
+.details .db_formbox.db_jsonbox {width: 85%;}
 .details .action { float: left; margin: 0.5rem; background: var(--background-action); border-radius: 5px; width: auto; }
 .details .actionwrapper { position: sticky; top: 5.8rem; overflow: hidden; z-index: 500; margin: 0.5rem; background: var(--background-action); border-radius: 5px; border-bottom: 1px solid black; 	box-shadow: 0 2px 5px #444; width: auto; }
 .details.new .actionwrapper { top: 1rem; }

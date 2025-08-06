@@ -12,6 +12,9 @@ $PARAMETER['database'] = '';
 $action = '';
 $disabled = '';
 
+//always logout first thing
+logout('');
+
 foreach($_GET as $key=>$value)
 {
 	if ( $value != 'none' ) {
