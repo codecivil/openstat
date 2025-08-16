@@ -1,3 +1,16 @@
+#v1.19.2
+======
+15.08.2025
+
+* Video manual for using info templates
+* openStatAdmin: natural sorting of sql and script files instead of alphabetic sorting
+
+#v1.19.1
+======
+14.08.2025
+
+* fix in sql update
+
 #v1.19.0
 ======
 06.08.2025
