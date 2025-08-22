@@ -91,6 +91,7 @@ function execute_stmt(array $stmt_array, mysqli $conn, bool $flip = false)
 	}
 }
 
+//only works for numeric keys, so for flip=true to flip=false, not vice versa
 function flipResults(array $return) {
     if ( isset($return['result']) ) {
         //use array_map with callback "null" on sequence of "inner" arrays of $a, see
@@ -427,6 +428,7 @@ function getDetails($PARAMETER,$conn)
 	//fetch_assoc as used in execute_stmt simply overwrites the values, which is ok:
 	//"If two or more columns of the result have the same name, the last column will take precedence and overwrite any previous data."
 	unset($_stmt_array); $_stmt_array = array();
+    //note: ordering by realid is already done in the view definitions! That's why it is missing here...
 	$_stmt_array['stmt'] = 'SELECT * from `view__' . $table . 'MAIN__' . $_SESSION['os_role'] . '`';
 	//recursively add subtable views
 	function addSubtablesToStmt($table,$_table_result,$_config,$stmt) {

@@ -1,3 +1,10 @@
+#v1.20.0
+======
+22.08.2025
+
+* openStatAdmin: Komponenten von Kombifeldern können nun umsortiert werden
+* Zwei Bugfixes bei der Anzeige von Kombifeldern
+
 #v1.19.2
 ======
 15.08.2025

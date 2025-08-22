@@ -275,7 +275,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						<div>
 						<?php 
 						unset($_stmt_array); $_stmt_array = array(); $key_array = array();
-						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype,subtablemachine FROM ".$table."_permissions ORDER BY realid";
+						$_stmt_array['stmt'] = "SELECT keymachine,keyreadable,edittype,subtablemachine FROM ".$table."_permissions ORDER BY CAST(realid AS DECIMAL(6,3))";
 						$_result_array = execute_stmt($_stmt_array,$conn,true); //keynames as last array field
 						if ($_result_array['dbMessageGood']) { $key_array = $_result_array['result']; };
 						//split in jenks top and bottom natural parts

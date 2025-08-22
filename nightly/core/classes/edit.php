@@ -352,12 +352,13 @@ class OpenStatEdit {
 		$_stmt_array['arr_values'] = array($this->key);
 		$_result = execute_stmt($_stmt_array,$this->connection,true)['result'][0];
 		unset($_stmt_array); $_stmt_array = array();
-		$_stmt_array['stmt'] = 'SELECT keyreadable,subtablemachine FROM `'.$this->table.'_permissions` WHERE keymachine = ?';
+		$_stmt_array['stmt'] = 'SELECT realid,keyreadable,subtablemachine FROM `'.$this->table.'_permissions` WHERE keymachine = ?';
 		$_stmt_array['str_types'] = "s";
 		$_stmt_array['arr_values'] = array();
 		$_stmt_array['arr_values'][] = $this->key;
 		$_result_array = execute_stmt($_stmt_array,$this->connection);
 		if ($_result_array['dbMessageGood']) { 
+			$realid = $_result_array['result']['realid'][0];
 			$keyreadable = $_result_array['result']['keyreadable'][0];
 			$subtablemachine = $_result_array['result']['subtablemachine'][0];
 		};
@@ -399,10 +400,17 @@ class OpenStatEdit {
 		$_result['edittype_array'] = $_tmp_array;
 		$_result['edittype'] = $_tmp_array[0];
 		$_keyreadable_array = explode(' + ',$keyreadable);
+		$_realid_array = explode(' + ',$realid);
 		if ( isset($_tmp_array[1]) ) { 
 			$_result['compound'] = true; 
 			$_keyreadable_headline = explode(': ',$_keyreadable_array[0])[0];
 			$_keyreadable_array[0] = explode(': ',$_keyreadable_array[0])[1];
+            $_realid_array[0] = explode(': ',$_realid_array[0])[1];
+            //sort by realid of compounds and preserver numeric order (SORT_NATURAL)
+            for ( $i = 0; $i < sizeof($_result['edittype_array']); $i++ ) {
+                if ( ! isset($_realid_array[$i]) ) { $_realid_array[$i] = (float) $i; }
+            }
+            asort($_realid_array,SORT_NATURAL);
 		} else { $_result['compound'] = false; };
 		unset($_tmp_array);
 		//
@@ -452,8 +460,9 @@ class OpenStatEdit {
 				<div id="enablable<?php echo($rnd); ?>" class="enablable disabled">
 				<?php
 			}
-			for ($indexedit = 0; $indexedit < $_editsize; $indexedit++ ) {
-				if ( $_editsize == 1 ) { $thiscompound = -1; } else { $thiscompound = $indexedit; }
+			//was: for ($indexedit = 0; $indexedit < $_editsize; $indexedit++ ) {
+    		foreach ( array_keys($_realid_array) as $indexedit ) {
+				if ( $_editsize == 1 ) { $thiscompound = -1; } else { $thiscompound = $indexedit; $_disabled = '';} //never disable a real compound; empty values may then mix up the order of multiple entries!
 				$_result['edittype'] = $_result['edittype_array'][$indexedit];
 				//restore original key for getting options
 				$this->key = $tmpkey;
@@ -1814,8 +1823,12 @@ class OpenStatEdit {
 		return $_extracted;
 	}
 
-    protected function unmarkProfile(string $option) {
-        return str_replace(' _p_','',$option);
+    protected function unmarkProfile($option) {
+        if ( gettype($option) == "array" ) {
+            $option = array_map(array($this,'unmarkProfile'),$option);
+        } else {
+            return str_replace(' _p_','',$option);
+        }
     }
 
 }

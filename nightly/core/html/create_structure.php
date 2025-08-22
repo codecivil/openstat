@@ -910,7 +910,7 @@ function _adminActionBefore(array $PARAMETER, mysqli $conn) {
             if ( isset($PARAMETER['defaultvalue']) AND $PARAMETER['defaultvalue'] != '' AND strpos($PARAMETER['edittype'],'; VIRTUAL') == false AND strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) { $_DEFAULT = ' DEFAULT '.$PARAMETER['defaultvalue']; };
             //
             //do not create columns for EXPRESSION modifier (they are created exclusively in the views!)
-            if ( ! isset($PARAMETER['edittype']) OR strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) {
+            if ( strpos($PARAMETER['edittype'],'; EXPRESSION') == false ) {
                 switch($PARAMETER['dbAction']) {
                     case 'edit':
                         unset($_stmt_array);
@@ -1598,9 +1598,9 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 
 $result_sql = importSQL($PARAMETER,$conn);
 //$result_script = importScript($PARAMETER,$conn);
-$result_admin_before = _adminActionBefore($PARAMETER,$conn)??array('dbMessage'=>'');
-$result_array = _dbAction($PARAMETER,$conn)??array('dbMessage'=>'','dbMessageGood'=>true);
-$result_admin_after = _adminActionAfter($PARAMETER,$conn)??array('dbMessage'=>'');
+$result_admin_before = _adminActionBefore($PARAMETER,$conn);
+$result_array = _dbAction($PARAMETER,$conn);
+$result_admin_after = _adminActionAfter($PARAMETER,$conn);
 if ( isset($result_array['result']) ) { $result = $result_array['result']; }
 $dbMessage = $result_admin_before['dbMessage'].$result_array['dbMessage'].$result_admin_after['dbMessage'];
 $dbMessageGood = $result_array['dbMessageGood'];
@@ -1719,7 +1719,9 @@ $tableel .= "</table>";
 	if ( ! isset($PARAMETER['site']) ) { $PARAMETER['site'] = ''; }
 	switch($PARAMETER['site']) {
 		case 'os_sql':
-			$_sql = scandir('../../sql',SCANDIR_SORT_DESCENDING);
+			//was:$_sql = scandir('../../sql',SCANDIR_SORT_DESCENDING);
+			$_sql = scandir('../../sql');
+            rsort($_sql,SORT_NATURAL); //reverses order and respects version numbers with different numbers of digits
 			$_warning = "Importieren Sie nur SQL-Dateien, denen Sie vertrauen!"
 			?>
 			<div id="message" class="<?php echo($result_sql['dbMessageGood']); ?>"><?php echo($result_sql['dbMessage']); ?></div>
@@ -1759,7 +1761,8 @@ $tableel .= "</table>";
 			}
 			break;
 		case 'os_script':
-			$_scripts = scandir('../../scripts',SCANDIR_SORT_DESCENDING);
+			$_scripts = scandir('../../scripts');
+            rsort($_scripts,SORT_NATURAL); //reverses order and respects version numbers with different numbers of digits
 			$_warning = "Importieren Sie nur Script-Dateien, denen Sie vertrauen!";
 			?>
 			<div id="message" class="<?php echo($result_script['dbMessageGood']); ?>"><?php echo($result_script['dbMessage']); ?></div>

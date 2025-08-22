@@ -1,3 +1,13 @@
+#v1.20.0
+======
+22.08.2025
+
+* realid can now be specified for component order of compound fields, similar to keyreadable, e.g.,
+  13.0: 1 + 3 + 2
+  means that the compound field has realid 13.0 and its components are displayed in order 0,2,1.
+* fix: compound fields failed to display properly due to an error in method unmarkProfile of class OpenStatEdit.
+* fix: empty disabled compound fields led to a mixup of entries for these fields
+
 #v1.19.2
 ======
 15.08.2025
