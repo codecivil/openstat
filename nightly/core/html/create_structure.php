@@ -1533,14 +1533,18 @@ function importSQL(array $PARAMETER,mysqli $conn) {
 			preg_match('/OS_TABLES LIKE \'([_%a-z0-9]*)\'/',$_sqlline,$matches);
 			if ( $matches[1] != '' ) {
 				unset($_stmt_array); $_stmt_array = array();
-				$_stmt_array['stmt'] = "SHOW TABLES LIKE '".$matches[1]."';";
-				$_loop_tables = execute_stmt($_stmt_array,$conn,true)['result'];
+				//was: $_stmt_array['stmt'] = "SHOW TABLES LIKE '".$matches[1]."';";
+                //restrict to base tables only; you canot use TABLES LIKE and WHERE together in a SHOW TABLES statement!
+				$_stmt_array['stmt'] = "SHOW FULL TABLES WHERE Tables_in_".$_SESSION['database']." LIKE '".$matches[1]."' AND Table_type = 'BASE TABLE';";
+				//was: $_loop_tables = execute_stmt($_stmt_array,$conn,true)['result'];
+				$_loop_tables = execute_stmt($_stmt_array,$conn,false)['result']['Tables_in_'.$_SESSION['database']];
 				$_replacement = array ();
 				foreach ($_loop_tables as $_loop_table ) {
-					// $_loop_table has exactly one key, but of unknown name (unless we look up the database name...)
-					foreach ( $_loop_table as $_tablename ) {
-						array_push($_replacement,str_replace($matches[0],$_tablename,$_sqlline));
-					}
+					//obsolete, since we now use the database name...
+                    // $_loop_table has exactly one key, but of unknown name (unless we look up the database name...)
+					//foreach ( $_loop_table as $_tablename ) {
+						array_push($_replacement,str_replace($matches[0],$_loop_table,$_sqlline));
+					//}
 				}
 				array_splice($_sqllines,$_index,1,$_replacement);
 				break;

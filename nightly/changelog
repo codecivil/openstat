@@ -1,3 +1,9 @@
+#v1.20.1
+======
+25.08.2025
+
+* openStatAdmin fix: 'OS_TABLES LIKE' did not restrict to base tables only leading to false error messages
+
 #v1.20.0
 ======
 22.08.2025

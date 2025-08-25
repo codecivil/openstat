@@ -1,3 +1,9 @@
+#v1.20.1
+======
+25.08.2025
+
+* openStatAdmin: Korrektur des Verhaltens von 'OS_TABLES LIKE'
+
 #v1.20.0
 ======
 22.08.2025
