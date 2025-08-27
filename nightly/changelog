@@ -1,3 +1,10 @@
+#v1.20.2
+======
+27.08.2025
+
+* workaround for high cpu load: warn users (once) if queries do not filter
+  also reenables login if query is too "big"
+
 #v1.20.1
 ======
 25.08.2025

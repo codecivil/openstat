@@ -1000,16 +1000,26 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 	if ( isset($display) AND !$display ) { return $_main_stmt_array; }
 	//print_r($_main_stmt_array); //for debug only
 	$filters = generateFilterStatement($PARAMETER,$conn,'os_all',$complement,$searchinresults);
-	$_SESSION['currentfilters'] = $filters;
-    if ( ! $statsonly ) {
-        //add paging info to stmt array and apply it in generateResultTable (but not in generateStatTable!)
-        if ( isset( $_config['paging'] ) ) { $PAGESIZE = min($_SESSION['max_results'],(int)$_config['paging']); } else { $PAGESIZE = min($_SESSION['max_results'],$_SESSION['paging_default']); }
-        $_main_stmt_array['paging'] = [$PAGE,$PAGESIZE];
-    	$table_results = generateResultTable($_main_stmt_array,$conn);
+	//do not apply if no filters are set now but not at the last try (double confirmation to apply empty filters; reenables login if too many tables are selected...)
+    $_doapply = true;
+    if ( $filters == "Keine" ) { $_doapply = false; }
+    if ( isset($_SESSION['currentfilters']) AND $_SESSION['currentfilters'] == "Keine" ) { $_doapply = true;}
+    //
+    $_SESSION['currentfilters'] = $filters;
+    if ( $_doapply ) {
+        if ( ! $statsonly ) {
+            //add paging info to stmt array and apply it in generateResultTable (but not in generateStatTable!)
+            if ( isset( $_config['paging'] ) ) { $PAGESIZE = min($_SESSION['max_results'],(int)$_config['paging']); } else { $PAGESIZE = min($_SESSION['max_results'],$_SESSION['paging_default']); }
+            $_main_stmt_array['paging'] = [$PAGE,$PAGESIZE];
+            $table_results = generateResultTable($_main_stmt_array,$conn);
+        } else {
+            $table_results = "Nur die Statistikansicht ist aktiv.";
+        }
+        $stat_results = generateStatTable($_main_stmt_array,$conn);
     } else {
-        $table_results = "Nur die Statistikansicht ist aktiv.";
+        $table_results = "<p>Du versuchst, ungefilterte Daten anzuzeigen. Das kann zu sehr langen Anfragen führen.</p><p>Wenn Du das trotzdem tun willst, <b>drücke 'filtern' noch einmal</b>.</p>";
+        $stat_results = $table_results;
     }
-	$stat_results = generateStatTable($_main_stmt_array,$conn);
 	?>
 	<?php updateTime(); includeFunctions('RESULTS',$conn); ?>
 	<form class="hidden function"></form>

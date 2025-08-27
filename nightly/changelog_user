@@ -1,3 +1,10 @@
+#v1.20.2
+======
+27.08.2025
+
+* Nutzer wird (einmal) gewarnt, wenn Anfragen (neu) keine Filterung enthalten.
+  Damit ist ein Login auch bei zu allgemeinen Anfragen wieder möglich.
+
 #v1.20.1
 ======
 25.08.2025
