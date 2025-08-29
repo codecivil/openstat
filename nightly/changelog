@@ -2,6 +2,7 @@
 ======
 29.08.2025
 
+* Video explanation for timeouts
 * new setting for maximal SQL statement execution time, defaults to 10 seconds
 * default values for unset variables in settings.php are now taken from settings.php.dist
 * maximal SQL statement execution time is automatically increased if query was timed out before

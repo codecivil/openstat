@@ -2,6 +2,7 @@
 ======
 29.08.2025
 
+* Anleitung für Timeouts und Abbruch von Anfragen (Video:https://cdn.cdcvl.de/v/fe045b33.webm#)
 * Neue Administrator-Einstellung für die Maximalzeit von Datenbankabfragen, Voreinstellung 10 Sekunden
 * Automatische Erhöhung der Maximalzeit für Datenbankabfragen nach Abbruch wegen Zeitüberschreitung; die
   Neuausführung muss aber wieder vom Nutzer angestßen werden.
