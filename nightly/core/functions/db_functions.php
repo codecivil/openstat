@@ -3,11 +3,17 @@
 //logs if $_SESSION['log'] is set and true (in order to avoid changing all execute_stmts), or if parameter $log is set and true
 function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 {
+    mysqli_report(MYSQLI_REPORT_STRICT);
 	global $debugpath, $debugfilename;
 	if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($GLOBALS["debugpath"].$GLOBALS["debugfilename"],'STATEMENT: '.json_encode($stmt_array).PHP_EOL,FILE_APPEND); }
 	$stmt = ''; $str_types = ''; $arr_values = ''; $message = '';
-	if (isset($stmt_array['stmt']) ) { $stmt = $stmt_array['stmt']; };
-	if (isset($stmt_array['str_types']) ) { $str_types = $stmt_array['str_types']; };
+    //use max statement time here
+    if ( ! isset($_SESSION['max_statement_time']) ) { $_SESSION['max_statement_time'] = 0; }
+    if ( ! isset($_SESSION['current_max_statement_time']) OR $_SESSION['current_max_statement_time'] == 0) { $_SESSION['current_max_statement_time'] = $_SESSION['max_statement_time']; }
+	if ( isset($_SESSION['sql_errno']) AND $_SESSION['sql_errno'] == 1969 ) { $_SESSION['current_max_statement_time'] *= 2; $_SESSION['sql_errno'] = 0; }
+    if (isset($stmt_array['stmt']) AND strpos($stmt_array['stmt'],'SET STATEMENT') !== 0) { $stmt = 'SET STATEMENT max_statement_time = '.$_SESSION['current_max_statement_time'].' FOR '.$stmt_array['stmt']; };
+	//
+    if (isset($stmt_array['str_types']) ) { $str_types = $stmt_array['str_types']; };
 	if (isset($stmt_array['arr_values']) ) {
         $arr_values = $stmt_array['arr_values'];
         if ( ! is_array($arr_values) ) { $arr_values = array($arr_values); }
@@ -39,6 +45,14 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
 			else {
 				$dbMessage = $message; $dbMessageGood = "true";
 				$result = $statement->get_result();
+                $sql_errno = $conn->errno;
+                $sql_error = $conn->error;
+                $_SESSION['sql_errno'] = $sql_errno;
+                IF ( $sql_errno > 0 ) { $dbMessageGood = "false"; }
+                if ( $sql_errno == 1969 ) { // "Query execution was interrupted (max_statement_time exceeded)"
+                    $sql_error = "Zeitüberschreitung. Die Wartezeit wurde erhöht. Bitte starte die Aktion erneut (\"filtern\" oder Eintrag neu laden).";
+                }
+                $dbMessage .= $sql_error;
 				//log if log is enabled and stmt is not internal (grants, revokes, selects...)
 				if ( strpos($stmt,'view__') === false AND strpos($stmt,'GRANT') === false AND strpos($stmt,'FLUSH') === false AND strpos($stmt,'SELECT') !== 0 AND strpos($stmt,'REVOKE') === false AND strpos($stmt,'CREATE OR REPLACE') === false AND isset($_SESSION['log']) AND ( $_SESSION['log'] OR $log ) ) {
 					//test for unchanging ALTER TABLE statements

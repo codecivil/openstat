@@ -1,3 +1,14 @@
+#v1.21.0
+======
+29.08.2025
+
+* new setting for maximal SQL statement execution time, defaults to 10 seconds
+* default values for unset variables in settings.php are now taken from settings.php.dist
+* maximal SQL statement execution time is automatically increased if query was timed out before
+* "stop" button now also resets maximal SQL statement execution time
+* choosing and loading configurations now saves filters automatically after loading
+* filters belonging to unchosen tables are not anymore held in reserve but deleted from the config
+
 #v1.20.2
 ======
 27.08.2025

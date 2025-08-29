@@ -199,6 +199,12 @@ function exportConfig (array $config, mysqli $conn)
 //importConfig is initialized on JS side
 function importConfig(array $PARAM, mysqli $conn ){ return; }
 
+function changeFilters(array $PARAM, mysqli $conn) 
+{
+    $newconf = array("filters" => $PARAM);
+    changeConfig($newconf,$conn);
+}
+
 function removeOpenId(array $entry, mysqli $conn)
 {
 	$conf = getConfig($conn);

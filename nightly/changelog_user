@@ -1,3 +1,16 @@
+#v1.21.0
+======
+29.08.2025
+
+* Neue Administrator-Einstellung für die Maximalzeit von Datenbankabfragen, Voreinstellung 10 Sekunden
+* Automatische Erhöhung der Maximalzeit für Datenbankabfragen nach Abbruch wegen Zeitüberschreitung; die
+  Neuausführung muss aber wieder vom Nutzer angestßen werden.
+* "Stop"-Knopf setzt auch die ggf. erhöhte Maximalzeit auf die voreingestellte zurück
+* Laden von Konfigurationsvorlagen speichert nun die Filtereinstellungen automatisch, ohne dass "anwenden"
+  ausgeführt werden muss
+* Filter, die zu nicht mehr ausgewählten Tabellen gehören, werden aus der Konfiguration gelöscht statt wie
+  bisher weiter vorgehalten
+  
 #v1.20.2
 ======
 27.08.2025

@@ -141,7 +141,10 @@ function callAsyncFunction(form,phpfunction,id,add,classes,callback,arg,resolve)
 	document.body.style.cursor = 'progress';	
 	var _request = new XMLHttpRequest();
 	if ( form == '_') { form = document.getElementById('trashForm'); };
-	if ( id == '_popup_' ) {
+    //option _none_ to be sure that no parameters are transferred
+	if ( form == '_none_') { document.getElementById('trash').value = ''; form = document.getElementById('trashForm'); };
+	//
+    if ( id == '_popup_' ) {
 		var popup_wrapper = document.createElement('div');
 		popup_wrapper.className = "popup_wrapper";
 		var popup_close = document.createElement('div');

@@ -1196,16 +1196,24 @@ function updateProfile(array $PARAM, mysqli $conn) {
 	return json_encode($_result);
 }
 
+//kills a running request and resets max_statement_time
 function killRunningRequest(array $PARAM, mysqli $conn) {
+    $_return_statement = '';
+    //reset max_statement_time
+    $_max_s_t_factor = (int)((float)$_SESSION['current_max_statement_time']/(float)$_SESSION['max_statement_time']);
+    if ( $_max_s_t_factor > 1 ) { $_return_statement = "Wartezeitfaktor von ".$_max_s_t_factor." auf 1 gesetzt. "; }
+    $_SESSION['current_max_statement_time'] = $_SESSION['max_statement_time'];
+    //kill request
     if ( isset($_SESSION['running_connection_id']) ) {
         $stmt_array = array();
         $stmt_array['stmt'] = "KILL CONNECTION ".$_SESSION['running_connection_id'];
         _execute_stmt($stmt_array,$conn);
         unset($_SESSION['running_connection_id']);
-        return "Laufende Anfrage wurde abgebrochen.";
+        $_return_statement .= "Laufende Anfrage wurde abgebrochen.";
     } else {
-        return "Es läuft gerade keine Anfrage.";
+        $_return_statement .= "Es läuft gerade keine Anfrage.";
     }
+    return $_return_statement;
 }
 
 function datetime2icsTime(string $_datetime) {

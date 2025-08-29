@@ -144,7 +144,7 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
     changeConfig(array("table_hierarchy" => array_values($_config_hierarchy)),$conn);
 	?>
 	<div id="config" class="section">
-		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;" >
+		<form id="formChooseConfig" class="noform" method="post" action="" onsubmit="callFunction(this,'copyConfig').then(()=>callFunction('_none_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;" >
 		<?php //save button and load input like in openStat.plan explained ?>
 			<label 
 				for="config_save" 
@@ -154,17 +154,17 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 			><i class="fas fa-save"></i></label>
 			<input hidden type="submit" id="config_save">
 			<label class="load <?php echo($config_save_class); ?>" for="config_load" data-title="Konfiguration laden"><i class="fas fa-clipboard-check"></i></label>
-			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ toggleHelpTexts(); return result; });">
+			<input <?php echo($config_save_class); ?> hidden type="button" id="config_load" onclick="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_none_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_none_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formFilters'),'changeFilters')).then((result)=>{ toggleHelpTexts(); return result; });">
 			<label class="config_export <?php echo($config_remove_class); ?>" for="config_export" data-title="Konfiguration exportieren"><i class="fas fa-file-export"></i></label>
 			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_export" onclick="callPHPFunction(this.closest('form'),'exportConfig'); return false;">
 			<label class="config_import" for="config_import" data-title="Konfiguration importieren"><i class="fas fa-file-import"></i></label>
 			<input hidden type="button" id="config_import" onclick="callPHPFunction(this.closest('form'),'importConfig'); return false;">
 			<label class="<?php echo($config_remove_class); ?> " for="config_remove" data-title="Konfiguration löschen"><i class="fas fa-trash-alt"></i></label>
-			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;">
+			<input <?php echo($config_remove_class); ?> hidden type="button" id="config_remove" onclick="_onAction('delete',this.closest('form'),'removeConfig'); document.getElementById('db__config__text').value = 'Default'; document.getElementById('db__config__list').value = 'Default'; callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_none_','updateSidebarCustom','sidebar')).then(()=>{ toggleHelpTexts(); return false; }); return false;">
 			<div class="unite">
 				<label for="db__config__list"></label>
 				<input type="text" id="db__config__text" name="configname" class="db_formbox" value="" autofocus disabled hidden>
-				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_','updateSidebarCustom','sidebar')).then((result)=>{ toggleHelpTexts(); return result; });">
+				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig').then(()=>callFunction('_none_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formChooseTables'),'changeConfig')).then(()=>callFunction('_none_','updateSidebarCustom','sidebar')).then(()=>callFunction(document.querySelector('form#formFilters'),'changeFilters')).then((result)=>{ toggleHelpTexts(); return result; });">
 <!--				<select id="db__config__list" name="configname" class="db_formbox" onchange="callFunction(this.closest('form'),'changeConfig'); callFunction('_','updateSidebarCustom','sidebar'); setTimeout(function(){callFunction(document.querySelector('form#formChooseTables'),'changeConfig'); return callFunction('_','updateSidebarCustom','sidebar');},500);"> -->
 				<!--	<option value="none"></option> -->
 					<?php foreach ( $options as $value ) { 
@@ -390,7 +390,9 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 					if ( ! is_array($checked) OR ! in_array('_all',$checked) ) { continue; } // ignore config settings that do not concern filters				 
 					$tablemachinearray = explode("__",$tabledotkeymachine,2);
 					$table =  $tablemachinearray[0];
-					$keymachine = $tablemachinearray[1];
+                    if ( ! in_array($table,$_config_tables ) ) { continue; } //do not hold filters not belonging to selected tables any more
+                                                                             //this was more confusing than helpful for users
+                    $keymachine = $tablemachinearray[1];
 					unset($_stmt_array); $_stmt_array = array(); $table_array = array();
 					$_stmt_array['stmt'] = "SELECT iconname FROM os_tables WHERE tablemachine = ?";
 					$_stmt_array['str_types'] = "s";
@@ -418,7 +420,6 @@ function updateSidebar(array $PARAMETER, mysqli $conn, string $custom = '')
 						id="<?php html_echo($keymachine); ?>" 
 						class="section" 
 						draggable="true" ondragover="allowDrop(event)" ondrop="drop(event,this)" ondragstart="drag(event)" ondragenter="dragenter(event)" ondragleave="dragleave(event)" ondragend="dragend(event)"
-						<?php if ( ! in_array($table,$_config_tables ) ) { ?> hidden<?php } ?>
 					>
 						<input 
 							class="shownot"

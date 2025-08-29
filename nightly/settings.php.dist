@@ -27,6 +27,11 @@ $_SESSION['max_results'] = 1000;
 //If set to 0, the forecast is always active.
 $_SESSION['exec_forecast_threshold'] = 100;
 
+//Maximal exexution time for sql statements in seconds; may be fractional
+//max_execution_time in php.ini is set to a high value normally (some minutes), so is of little use and mariadb allows
+//for query or user specific max_statement_time; if this value is not enough this time is doubled with each new try.
+$_SESSION['max_statement_time'] = 10;
+
 //Additional JS files can be loaded via an array of filenames, e.g. instance specific. These are to be located in public/js/
 //for instance distributions or v1.0/vendor/js/ for vendor specific files, e.g.
 //$_SESSION['additional_js'] = array("vendor_functions.js");

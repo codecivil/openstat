@@ -1611,7 +1611,6 @@ function _FUNCTIONStatus(el,statusname) {
             id_escaped = el.id.replace('[','\\[').replace(']','\\]');
         } 
     }
-    console.log('id_escaped',id_escaped);
     if ( inputfield.querySelector('div[id='+id_escaped+'_conditions]') ) { 
 		_conditions_element = el.closest('.edit_wrapper').querySelector('div[id='+id_escaped+'_conditions]');
 	}
@@ -1647,6 +1646,5 @@ function _FUNCTIONStatus(el,statusname) {
 		function_field_obj.functions = ["none"];
 	}
 	inputfield.querySelector('#'+id_escaped+' ~ .db_function_field').value = JSON.stringify(function_field_obj);
-    console.log(inputfield.querySelector('#'+id_escaped+' ~ .db_function_field').value);
 	return false
 }

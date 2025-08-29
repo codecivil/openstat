@@ -48,6 +48,8 @@ require_once('../../core/scripts/getParameters.php');
 require_once('../../core/data/filedata.php');
 require_once('../../core/data/info.php');
 require_once('../../core/data/debugdata.php');
+//use distribution template as default settings, overwerite with settings.php
+require_once('../../settings.php.dist');
 require_once('../../settings.php');
 
 //include vendor info data
@@ -416,7 +418,7 @@ $_v = time();
 				<select></select>
 			</form>
 		</div>
-        <div id="stopRequest" data-title="Laufende Anfrage stoppen">
+        <div id="stopRequest" data-title="Laufende Anfrage stoppen und Wartezeit zurücksetzen">
             <span onclick="callPHPFunction('_','killRunningRequest','stopMessage')"><i class="fas fa-circle-stop"></i></span>
             <span id="stopMessage"></span>
         </div>		

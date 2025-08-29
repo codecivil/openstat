@@ -363,7 +363,7 @@ function generateResultTable(array $stmt_array, mysqli $conn, string $table = 'o
 				$table_results .= "</tr> ";
 				$rcount++;
 		}
-	} else { $table_results .= "<tr><td>Ihre Suche liefert leider keine Ergebnisse.</td><tr>"; };
+	} else { $table_results .= "<tr><td>Deine Suche liefert leider keine Ergebnisse.</td><td>".$_result_array['dbMessage']."</td></tr>"; };
 	$table_results .= "</table>";
 	$_SESSION['results']=json_encode($_sessionresults);
 	unset($_sessionresults);
