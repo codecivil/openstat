@@ -420,6 +420,11 @@ function getDetails($PARAMETER,$conn)
 	//}
     //make id an array of integers, to be safe...
     foreach ( $id as $index => $singleid ) { $id[$index] = (int)$singleid; }
+    //saving fails for: 
+    //  //remove duplicates
+    //  $id = array_unique($id);
+    //inquire where the inconsistency comes in
+    
 	//get config
 	$_config = getConfig($conn);
 	//
@@ -495,6 +500,9 @@ function getDetails($PARAMETER,$conn)
 	<div class="content section" onclick="_disableClass(this,'noupdate'); this.onclick = ''; ">
 		<?php $rnd=rand(0,2147483647); ?>
 		<?php 
+        //save $_table_result in a new variable, since it is redefined 44 lines below (and clean up code later) and also used for multiple ids
+        $_tables_here = json_decode(json_encode($_table_result),true);
+        //
 		//only for single edit
 		if ( sizeof($id) == 1 ) { 
 			foreach ( $_table_result as $_potentialtable ) {
@@ -530,9 +538,6 @@ function getDetails($PARAMETER,$conn)
 						if ( isset($_tmp_keys[$index]) AND $_tmp_keys[$index] == $_table_result[$i]['tablemachine'] ) { unset($_tmp_keys[$index]); }
 					}
 				}
-                //save $_table_result in a new variable, since it is redefined a few lines below (and clean up code later)
-                $_tables_here = json_decode(json_encode($_table_result),true);
-                //
 				$_tmp_keys = array_values($_tmp_keys);
 				if ( sizeof($_tmp_keys) == 0 ) { $_tmp_keys = array('id_'.$table); }
 				unset($_stmt_array); $_stmt_array = array();
