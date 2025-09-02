@@ -349,7 +349,7 @@ function updateSelection(el) {
 		_label.style.visibility = 'hidden';
 		setTimeout(function(){
 			el.hidden = true; 
-            if ( depends_local != 'local' ) { el.disabled = true; } //never disable a component; this may mix up orders of multiple entries for some fields!
+            if ( depends_local != 'local' || el.parentElement.classList.contains('enablable') ) { el.disabled = true; } //never disable a component unless it is in mass editing; this may mix up orders of multiple entries for some fields!
 			if ( el.parentElement.querySelector('[for="'+el.id+'"]') ){ el.parentElement.querySelector('[for="'+el.id+'"]').hidden = true; }		
 			}, 700);
 	} else {
@@ -367,7 +367,7 @@ function updateSelection(el) {
 		}
 		//
 		el.hidden = (el.dataset.hidden === 'true');
-        if ( depends_local != 'local') { el.disabled = ( el.dataset.hidden === 'true' ); } //never disable a component; this may mix up orders of multiple entries for some fields!
+        if ( depends_local != 'local' || el.parentElement.classList.contains('enablable') ) { el.disabled = ( el.dataset.hidden === 'true' ); } //never disable a component; this may mix up orders of multiple entries for some fields!
 		if ( el.parentElement.querySelector('[for="'+el.id+'"]') ) { el.parentElement.querySelector('[for="'+el.id+'"]').hidden = ( el.dataset.hidden === 'true' ); }
 		setTimeout(function(){
 			if ( el.dataset.hidden == "false" ) { //new in 2022-02-26

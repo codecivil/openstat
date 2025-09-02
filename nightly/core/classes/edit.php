@@ -462,7 +462,7 @@ class OpenStatEdit {
 			}
 			//was: for ($indexedit = 0; $indexedit < $_editsize; $indexedit++ ) {
     		foreach ( array_keys($_realid_array) as $indexedit ) {
-				if ( $_editsize == 1 ) { $thiscompound = -1; } else { $thiscompound = $indexedit; $_disabled = '';} //never disable a real compound; empty values may then mix up the order of multiple entries!
+				if ( $_editsize == 1 ) { $thiscompound = -1; } else { $thiscompound = $indexedit; if ( $_single ) { $_disabled = '';} } //never disable a real compound unless in mass editing; empty values may then mix up the order of multiple entries!
 				$_result['edittype'] = $_result['edittype_array'][$indexedit];
 				//restore original key for getting options
 				$this->key = $tmpkey;
