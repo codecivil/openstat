@@ -27,6 +27,9 @@ $_SESSION['max_results'] = 1000;
 //If set to 0, the forecast is always active.
 $_SESSION['exec_forecast_threshold'] = 100;
 
+//Maximal PHP execution time is set in php.ini and read into $_SESSION['max_ecxecution_time'] in index.php. Setting it here has no effect.
+//$_SESSION['max_execution_time'] is set in php.ini!
+
 //Maximal exexution time for sql statements in seconds; may be fractional
 //max_execution_time in php.ini is set to a high value normally (some minutes), so is of little use and mariadb allows
 //for query or user specific max_statement_time; if this value is not enough this time is doubled with each new try.

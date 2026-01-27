@@ -139,6 +139,7 @@ class OpenStatEdit {
                         $prflrplc = [];
                         foreach ( $profiles as $profilestring ) {
                             $tmpstring = $matchstring;
+                            if ( strpos($tmpstring,'MY:') === 0 ) { $tmpstring = substr($matchstring,3); }
                             foreach ( $profilekeys as $profilekey ) {
                                 $profile = json_decode($profilestring,true);
                                 if ( isset($profile[$profilekey]) ) {
@@ -405,7 +406,7 @@ class OpenStatEdit {
 			$_result['compound'] = true; 
 			$_keyreadable_headline = explode(': ',$_keyreadable_array[0])[0];
 			$_keyreadable_array[0] = explode(': ',$_keyreadable_array[0])[1];
-            $_realid_array[0] = explode(': ',$_realid_array[0])[1];
+            if ( strpos($_realid_array[0],':') > 0 ) { $_realid_array[0] = explode(': ',$_realid_array[0])[1]; }
             //sort by realid of compounds and preserver numeric order (SORT_NATURAL)
             for ( $i = 0; $i < sizeof($_result['edittype_array']); $i++ ) {
                 if ( ! isset($_realid_array[$i]) ) { $_realid_array[$i] = (float) $i; }
@@ -583,25 +584,31 @@ class OpenStatEdit {
 									$configname = '';
 								}
 								//$ontablesflag is an array with one element containing under "ONTABLES" the array of tables or confignames and the tables..
-								$ontablesflag = array_filter(getFunctionFlags($function,$this->connection), function($_flag) { return is_array($_flag) AND isset($_flag['ONTABLES']); });
-								$necessary_tables_array = array();
-								foreach ( $ontablesflag as $ontables_array ) {
-									if ( $configname != '' AND isset($ontables_array['ONTABLES'][$configname]) ) {
-										$necessary_tables_array = $ontables_array['ONTABLES'][$configname];
-									} else {
-										$necessary_tables_array = $ontables_array['ONTABLES'];
-									}
-								}
-								$tables_array = array();
-								if ( ! empty($necessary_tables_array) ) { //save a db query if there is nothing to test  
-									$tables_array = getConfig($this->connection)['table'];
-								}
-								//compare those two arrays:
-                                if ( $necessary_tables_array == array_map("unserialize",array_intersect(array_map("serialize",$necessary_tables_array),array_map("serialize",$tables_array))) ) {
-								//was: if ( $necessary_tables_array == array_intersect($necessary_tables_array,$tables_array) ) {
-                                //array_intersect cannot handle multidimensional array w/o serializing
-									$_show_option[] = $value;
-								}
+                                $_tmpfunctionflags = getFunctionFlags($function,$this->connection);
+                                if ( isset($_tmpfunctionflags) ) {
+    								$ontablesflag = array_filter($_tmpfunctionflags, function($_flag) { return is_array($_flag) AND isset($_flag['ONTABLES']); });
+                                    $necessary_tables_array = array();
+                                    foreach ( $ontablesflag as $ontables_array ) {
+                                        if ( $configname != '' AND isset($ontables_array['ONTABLES'][$configname]) ) {
+                                            $necessary_tables_array = $ontables_array['ONTABLES'][$configname];
+                                        } else {
+                                            $necessary_tables_array = $ontables_array['ONTABLES'];
+                                        }
+                                    }
+                                    $tables_array = array();
+                                    if ( ! empty($necessary_tables_array) ) { //save a db query if there is nothing to test  
+                                        $tables_array = getConfig($this->connection)['table'];
+                                    }
+                                    //compare those two arrays:
+                                    if ( $necessary_tables_array == array_map("unserialize",array_intersect(array_map("serialize",$necessary_tables_array),array_map("serialize",$tables_array))) ) {
+                                    //was: if ( $necessary_tables_array == array_intersect($necessary_tables_array,$tables_array) ) {
+                                    //array_intersect cannot handle multidimensional array w/o serializing
+                                        $_show_option[] = $value;
+                                    }
+                                } else {
+                                    //do not test or restrict if there are on ONTABLES restrictions
+                                    $_show_option[] = $value;
+                                }
 							}
 						}
 						if ( empty($_show_option) ) { break; }

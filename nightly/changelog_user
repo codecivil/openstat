@@ -1,3 +1,9 @@
+#v1.21.2
+======
+27.01.2026
+
+* openStatAdmin: recreateViews sortierte Felder falsch und Korrekturen für Verhalten bei ungülitgen JSON-Angaben
+
 #v1.21.1
 ======
 02.09.2025
