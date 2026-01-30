@@ -1394,6 +1394,7 @@ function transportAttribution(el) {
 		else { _info._icon = ''; }
 		sessionStorage.setItem('attribution_clipboard',JSON.stringify(_info));
 		document.getElementById('clipboard').innerHTML = '<label class="unlimitedWidth"><i class="fas fa-clipboard-check"></i> <small><i class="'+_info._icon+'"></i> '+_info._id+'</small></label>';
+        _animate(el,_info._icon,true);
 	} else {
 		//paste in attribution field
 		_info = JSON.parse(sessionStorage.getItem('attribution_clipboard'));
@@ -1402,6 +1403,7 @@ function transportAttribution(el) {
 			el.querySelector('i').nextSibling.textContent = ' (ID: '+_info._id+'; Änderung muss noch abgeschickt werden)';
 			if (el.querySelector('b')) { el.querySelector('b').remove(); }
 		}
+        _animate(el,_info._icon,false);
 	}
 	return false;
 }
@@ -1409,6 +1411,27 @@ function transportAttribution(el) {
 function emptyClipboard() {
 	sessionStorage.removeItem('attribution_clipboard');
 	document.getElementById('clipboard').innerHTML = '<label class="unlimitedWidth"><i class="fas fa-clipboard"></i></label>';
+}
+
+//_icon: fa name; direction: boolean: true: from el to clipboard; false: from clipboard to el
+function _animate(el,icon,direction) {
+    let elMoving;
+    let elRect = el.getBoundingClientRect();
+    let _icon = document.createElement('div');
+    _icon.classList.add('tmpicon');
+    _icon.innerHTML = '<i class="'+icon+'"></i>';
+    _icon.style.top = elRect.y + "px";
+    _icon.style.left = elRect.x + "px";
+    document.body.append(_icon);
+    if ( direction ) {
+        elMoving = [ { transform: "translateY(0) scale(1)", opacity: 1 }, { transform: "translateY(-10rem) scale(0)", opacity: 0 } ];
+    } else {
+        elMoving = [ { transform: "translateY(-10rem) scale(0)", opacity: 0 }, { transform: "translateY(0) scale(1)", opacity: 1 } ];
+    }
+    const elTiming = { duration: 500, iterations: 1 };
+    _icon = document.querySelector('.tmpicon');
+    _icon.animate(elMoving, elTiming);
+    setTimeout(function(){_icon.remove();},400);
 }
 
 function myScrollIntoView(el) {

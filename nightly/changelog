@@ -1,8 +1,16 @@
+#v1.22.0
+======
+30.01.2026
+
+* icon animation as right-click clipboard action feedback
+
 #v1.21.2
 ======
 27.01.2026
 
 * fix: recreateViews sorted fields in views by realid alphabetically instead of numerically
+* fix: recreateViews crashed for invalid json in delete_roles
+* fix: edit.php edit exited for FUNCTIONs if ONTABLES restriction was not set or invalid json
 
 #v1.21.1
 ======
