@@ -1,3 +1,10 @@
+#v1.22.1
+======
+29.05.2026
+
+* fix: db_functions.php contained an updateConfig call without waiting
+* added default settings for fontSize, color and table; can be configured in settings.php
+
 #v1.22.0
 ======
 30.01.2026

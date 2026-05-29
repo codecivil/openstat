@@ -10,10 +10,6 @@
 //Enable debug by uncommenting (see core/data/debugdata.php for path and filename settings)
 //$_SESSION['DEBUG'] = true;
 
-//Default page size for results if no value was set as yet by the user
-//Limited by max_results
-$_SESSION['paging_default'] = 100;
-
 //Maximal number of results to be displayed in the details pane
 //The statistics pane counts all results independently of this setting
 //The user may reduce this limit but cannot exceed it
@@ -38,4 +34,13 @@ $_SESSION['max_statement_time'] = 10;
 //Additional JS files can be loaded via an array of filenames, e.g. instance specific. These are to be located in public/js/
 //for instance distributions or v1.0/vendor/js/ for vendor specific files, e.g.
 //$_SESSION['additional_js'] = array("vendor_functions.js");
+
+//Layout - Default settings if user has not set
+$_SESSION['fontSize_default'] = 14;
+$_SESSION['colors_default'] = 'dark';
+$_SESSION['paging_default'] = 100; //Limited by max_results
+
+//Default array of tables if user has not set any
+//If not set here, os_public is uses since this is always present and should have universal access permissions
+$_SESSION['table_default'] = array("os_public");
 ?>

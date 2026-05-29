@@ -494,7 +494,7 @@ function getDetails($PARAMETER,$conn)
 	}
 	//update config
 	$_config['_openids'] = $_SESSION['os_opennow'];
-	updateConfig($_config,$conn);
+	$_wait = updateConfig($_config,$conn); //wait for finish updating; not ot wait may have been source of rare config corruption.
 	?>
 	<div class="hidden"><div class="_table_"><?php html_echo($table); ?></div><div class="_id_"><?php if ( sizeof($id) == 1 ) { html_echo($id[0]); } else { echo('-1'); }; ?></div></div>
 	<div class="content section" onclick="_disableClass(this,'noupdate'); this.onclick = ''; ">

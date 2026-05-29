@@ -116,13 +116,21 @@ $_config = getConfig($conn);
 //update version
 $whatsnewclass = "changed";
 if ( isset($_config['version']) AND $_config['version'] == $versionnumber ) { $whatsnewclass = ""; $oldversion = $_config['version']; }
-changeConfig(array("version"=>$versionnumber),$conn);
+$_wait = changeConfig(array("version"=>$versionnumber),$conn);
 
+//set missing layout parameters
+if ( ! isset($_config['_fontSize']) ) { $_config['_fontSize'] = $_SESSION['fontSize_default'] ?? 14; $_wait = changeConfig(array("_fontSize"=>$_SESSION['fontSize_default'] ?? 14),$conn); }
+if ( ! isset($_config['_colors']) ) { $_config['_colors'] = $_SESSION['colors_default'] ?? 'dark'; $_wait = changeConfig(array("_colors"=>$_SESSION['colors_default'] ?? 'dark'),$conn); }
+
+//set missing tables; take os_public if nowhere set
+if ( ! isset($_config['table']) ) {
+    $_config['table'] = $_SESSION['table_default'] ?? array('os_public'); $_wait = changeConfig(array("table"=>$_SESSION['table_default'] ?? array('os_public')),$conn);
+}
 //update and parse CSS choice
 $_firsttimecss = false;
-if ( ! isset($_config['css']) ) { changeConfig(array("css"=>""),$conn); $_config['css'] = ""; $_firsttimecss = true; }
-if ( $_config['css'] == '_' ) { changeConfig(array("css"=>""),$conn); $_config['css'] = ""; }
-if ( isset($PARAMETER['css']) ) { changeConfig(array("css"=>$PARAMETER['css']),$conn); $_config['css'] = $PARAMETER['css']; }
+if ( ! isset($_config['css']) ) { $_wait = changeConfig(array("css"=>""),$conn); $_config['css'] = ""; $_firsttimecss = true; }
+if ( $_config['css'] == '_' ) { $_wait = changeConfig(array("css"=>""),$conn); $_config['css'] = ""; }
+if ( isset($PARAMETER['css']) ) { $_wait = changeConfig(array("css"=>$PARAMETER['css']),$conn); $_config['css'] = $PARAMETER['css']; }
  
 //get changelog
 if ( isset($_config['version']) AND $_config['version'] != $versionnumber ) {
