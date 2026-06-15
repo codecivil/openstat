@@ -406,8 +406,10 @@ class OpenStatEdit {
 			$_result['compound'] = true; 
 			$_keyreadable_headline = explode(': ',$_keyreadable_array[0])[0];
 			$_keyreadable_array[0] = explode(': ',$_keyreadable_array[0])[1];
-            if ( strpos($_realid_array[0],':') > 0 ) { $_realid_array[0] = explode(': ',$_realid_array[0])[1]; }
-            //sort by realid of compounds and preserver numeric order (SORT_NATURAL)
+            // "else ... unset" was missing: this lead to the first component getting intern realid = external realid if no internal realid was set!
+            // This, of course, is totally wrong!
+            if ( strpos($_realid_array[0],':') > 0 ) { $_realid_array[0] = explode(': ',$_realid_array[0])[1]; } else { unset($_realid_array[0]); }
+            //sort by realid of compounds and preserve numeric order (SORT_NATURAL)
             for ( $i = 0; $i < sizeof($_result['edittype_array']); $i++ ) {
                 if ( ! isset($_realid_array[$i]) ) { $_realid_array[$i] = (float) $i; }
             }

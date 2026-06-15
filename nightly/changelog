@@ -1,3 +1,16 @@
+#v1.22.2
+======
+15.06.2026
+
++ fix: edit.php assigned global realid to internal first compound if no internal
+  realids were specified
+* fix: this led to wrongly ordered compound form inputs which in turn led to stringy keys instead
+  of numerical for the compounds; this has been fixed in callFunction.php by reordering the
+  request keys before processing them and allows now for reordering compounds for technical reasons in html
+* applyFilters is now adapted to also handle stringy numerical keys but this should only be transitional
+  resp. for backward compatibility for entries created in the unpatched perios
+* some typos were corrected
+  
 #v1.22.1
 ======
 29.05.2026

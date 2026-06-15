@@ -61,6 +61,7 @@ while ( $tries < $_maxtries AND ( ( isset($return['dbMessageGood']) AND $return[
 		//this has been handled inside dbAction: FILE_Action is called there and $PARAMETER sanitised...
 		//do not care about files unless callfunction = FILE_...
 		if ( strpos($call_function,'FILE_') != 0 AND $call_function != 'dbAction' ) { unset($PARAMETER['FILES']); }
+    	if ( isset($_SESSION['DEBUG']) AND $_SESSION['DEBUG'] ) { file_put_contents($GLOBALS["debugpath"].$GLOBALS["debugfilename"],'CALLPARAM: '.json_encode($PARAMETER).PHP_EOL,FILE_APPEND); }
 		$return = $call_function($PARAMETER,$conn);
 		unset($_connerror);
 		$conn->close();

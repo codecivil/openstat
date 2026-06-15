@@ -840,7 +840,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 								if ( ! isset($cmp_values[$compoundnumber][1001][$i]) OR $cmp_values[$compoundnumber][1001][$i] === '' ) { $cmp_values[$compoundnumber][1001][$i] = '1000-01-01'; }
 					//			$_WHERE .= $komma3."((";
 					//			$_WHERE .= "((";
-								$_WHERE .= "(IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),'') ".$_ge." \"".$cmp_values[$compoundnumber][1001][$i]."\")";
+								$_WHERE .= "(IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$.".$compoundnumber."'),'$[".$j."]'),'')) ".$_ge." \"".$cmp_values[$compoundnumber][1001][$i]."\")";
 					//			$_WHERE .= ')';
 								$komma2 = $_komma_date_multiple_inner;
 		//						$komma2 = $_komma_date_inner;
@@ -848,8 +848,8 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 								if ( ! isset($cmp_values[$compoundnumber][1002][$i]) OR  $cmp_values[$compoundnumber][1002][$i] === '' ) { $cmp_values[$compoundnumber][1002][$i] = '9999-12-31'; }
 					//			$_WHERE .= $komma2."(";
 								$_WHERE .= $komma2;
-								$_WHERE .= "(IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),'') ".$_le." \"".$cmp_values[$compoundnumber][1002][$i]."\")";
-								if ( $_nullallowed ) { $_WHERE .= " OR (IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),'') = '' )"; }
+								$_WHERE .= "(IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$.".$compoundnumber."'),'$[".$j."]'),'')) ".$_le." \"".$cmp_values[$compoundnumber][1002][$i]."\")";
+								if ( $_nullallowed ) { $_WHERE .= " OR (IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$.".$compoundnumber."'),'$[".$j."]'),'')) = '' )"; }
 					//			$_WHERE .= '))';
 								$komma2 = $_komma_cmp;
 								$bracket = ')';
@@ -860,13 +860,14 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 								if ( ! isset($cmp_values[$compoundnumber][5001][$i]) OR $cmp_values[$compoundnumber][5001][$i] === '' ) { $cmp_values[$compoundnumber][5001][$i] = '0'; }
 					//			$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." '".$cmp_values[$compoundnumber][5001][$i]."'";
                     //          DO NOT USE TICKS FOR NUMBER VALUES, see above
-								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_ge." ".$cmp_values[$compoundnumber][5001][$i];
+                    //          2026-06-15: removed a tick in next line; must have been a typo...
+								$_WHERE .= $komma2."(IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$.".$compoundnumber."'),'$[".$j."]')) ".$_ge." ".$cmp_values[$compoundnumber][5001][$i];
 								$komma2 = $_komma_date_inner;
 								$bracket = ')';
 								if ( ! isset($cmp_values[$compoundnumber][5002][$i]) OR  $cmp_values[$compoundnumber][5002][$i] === '' ) { $cmp_values[$compoundnumber][5002][$i] = '1000000000'; }
 					//			$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." '".$cmp_values[$compoundnumber][5002][$i]."')";
                     //          DO NOT USE TICKS FOR NUMBER VALUES, see above
-								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY('.$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]') ".$_le." ".$cmp_values[$compoundnumber][5002][$i].")";
+								$_WHERE .= $komma2."(IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$.".$compoundnumber."'),'$[".$j."]')) ".$_le." ".$cmp_values[$compoundnumber][5002][$i].")";
 								$komma2 = $_komma_cmp;
 								$bracket = ')';
 							}			
@@ -877,7 +878,7 @@ function applyFilters(array $parameter, mysqli $conn, bool $_complement = false,
 								//if ( array_key_exists(4001,$cmp_values[$compoundnumber]) ) { $cmp_values[$compoundnumber] = $cmp_values[$compoundnumber][4001]; }
 					//			$_WHERE .= $komma2.'`'.$key."` = '".$value."'";
 //								$_WHERE .= $komma2.'(JSON_VALUE(JSON_QUERY(`view__' . $table . '__' . $_SESSION['os_role'].'`.`'.$key."`,'$[".$compoundnumber."]'),'$[".$j."]') ".$_negation."LIKE CONCAT('%','".$cmp_values[$compoundnumber][$i]."','%')) ";
-								$_WHERE .= '(IFNULL(JSON_VALUE(JSON_QUERY('.$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),'') ".$_negation.$_MATCHSTART.$cmp_values[$compoundnumber][$i].$_MATCHEND.") ";
+								$_WHERE .= "(IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$[".$compoundnumber."]'),'$[".$j."]'),IFNULL(JSON_VALUE(JSON_QUERY(".$_sqlforkey.",'$.".$compoundnumber."'),'$[".$j."]'),'')) ".$_negation.$_MATCHSTART.$cmp_values[$compoundnumber][$i].$_MATCHEND.") ";
 			//					$komma2 = " OR ";	
 								$komma2 = $_komma_cmp;
 								$bracket = ')';
