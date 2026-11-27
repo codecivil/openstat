@@ -54,11 +54,12 @@ function _execute_stmt(array $stmt_array, mysqli $conn, bool $log = false)
                 }
                 $dbMessage .= $sql_error;
 				//log if log is enabled and stmt is not internal (grants, revokes, selects...)
-				if ( strpos($stmt,'view__') === false AND strpos($stmt,'GRANT') === false AND strpos($stmt,'FLUSH') === false AND strpos($stmt,'SELECT') !== 0 AND strpos($stmt,'REVOKE') === false AND strpos($stmt,'CREATE OR REPLACE') === false AND isset($_SESSION['log']) AND ( $_SESSION['log'] OR $log ) ) {
+                $core_stmt = preg_replace('/SET STATEMENT max_statement_time = [0-9]* FOR /',"",$stmt);
+				if ( strpos($core_stmt,'view__') === false AND strpos($core_stmt,'GRANT') === false AND strpos($core_stmt,'FLUSH') === false AND strpos($core_stmt,'SELECT') !== 0 AND strpos($core_stmt,'REVOKE') === false AND strpos($core_stmt,'CREATE OR REPLACE') === false AND isset($_SESSION['log']) AND ( $_SESSION['log'] OR $log ) ) {
 					//test for unchanging ALTER TABLE statements
-					$_stmt_exploded = explode('`',$stmt); // index 3 aand 5 are the old and new id_-names
+					$_stmt_exploded = explode('`',$core_stmt); // index 3 aand 5 are the old and new id_-names
 					if ( ! isset($_stmt_exploded[3]) OR ! isset($_stmt_exploded[5]) OR $_stmt_exploded[3] != $_stmt_exploded[5] ) {
-						$logstring = $stmt;
+						$logstring = $core_stmt;
 						foreach ( $arr_values as $value ) {
 							$logstring = preg_replace('/\?/',"'".$value."'",$logstring,1);
 						}

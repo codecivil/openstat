@@ -1,9 +1,20 @@
+#v1.22.3
+======
+27.11.2026
+
+* WONTFIX: JSON_VALUE returns null instead of empty strings in mariadb-10.11.14 (current version on bookworm); 
+  this is already fixed upstream in 10.11 (since 2025-09-19) and hard to handle here. As long as the bug persists, filters will not return
+  some entries with empty string components of combi fields although the filter would match.
+* fix: set empty $_SESSION['results'] at login in order to allow 'searchinresults' at login default config
+* fix: unreliable filter dropdown due to wrong regular expression
+* fix: empty string as username resulting in lockout was allowed
+ 
 #v1.22.2
 ======
 15.06.2026
 
 + fix: edit.php assigned global realid to internal first compound if no internal
-  realids were specified
+  realids were specified; this bug was introduce in v1.21.2.
 * fix: this led to wrongly ordered compound form inputs which in turn led to stringy keys instead
   of numerical for the compounds; this has been fixed in callFunction.php by reordering the
   request keys before processing them and allows now for reordering compounds for technical reasons in html

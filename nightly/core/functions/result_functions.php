@@ -112,8 +112,8 @@ function _generateFilterStatementForKey($values) {
 	$_diff_results = str_replace($_old_filter_results,'',$filter_results);
 	$_diff_results = str_replace('<b>'.$keyreadable.'</b> = ','',$_diff_results);
 	$_diff_results = str_replace('<b>'.$keyreadable.'</b> &#8800; ','',$_diff_results);
-	preg_match('/[^(\[ungefiltert\])(\[unbestimmt\])(von)(bis) +]/',$_diff_results,$_foundfilters);
-	if ( ! isset($_foundfilters[0]) ) {
+	preg_match('/^(?!.*\[ungefiltert\]|.*\[unbestimmt\]|.*von|.*bis|.*[ +]).*$/',$_diff_results,$_foundfilters);
+	if ( ! isset($_foundfilters[0]) OR $_foundfilters[0] == '' ) {
 		$filter_results = $_old_filter_results;
 	} else {
 		$filter_results .= '<br />';
@@ -180,8 +180,8 @@ function generateFilterStatement(array $parameters, mysqli $conn, string $_table
 			$_diff_results = str_replace($_old_filter_results,'',$filter_results);
 			$_diff_results = str_replace('<b>'.$keyreadable.'</b> = ','',$_diff_results);
 			$_diff_results = str_replace('<b>'.$keyreadable.'</b> &#8800; ','',$_diff_results);
-			preg_match('/[^(\[ungefiltert\])(\[unbestimmt\])(von)(bis) +]/',$_diff_results,$_foundfilters);
-			if ( ! isset($_foundfilters[0]) ) {
+			preg_match('/^(?!.*\[ungefiltert\]|.*\[unbestimmt\]|.*von|.*bis|.*[ +]).*$/',$_diff_results,$_foundfilters);
+			if ( ! isset($_foundfilters[0]) OR $_foundfilters[0] == '' ) {
 				$filter_results = $_old_filter_results;
 			} else {
 				$filter_results .= '<br />';

@@ -70,6 +70,7 @@ class OpenStatAuth {
 			$_SESSION['os_rolename'] = $_rolename;
 			$_SESSION['os_parent'] = $_parentid;
 			$_SESSION['os_parentname'] = $_parentname;
+            $_SESSION['results'] = '{}'; //prevents php error if default config at login time contains 'searchinresults'
 			$_SESSION['os_secret'] = array();
 			unset($_stmt_array); $_stmt_array = array();
 			$_stmt_array['stmt'] = "SELECT password,salt,nonce,secretname FROM os_passwords WHERE userid = ?"; 

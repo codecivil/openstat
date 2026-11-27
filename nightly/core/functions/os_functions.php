@@ -589,13 +589,16 @@ function exportCSV (array $PARAM, $conn) {
 }
 
 function changeUserName(array $PARAM, $conn) {
-	unset($_stmt_array); $_stmt_array = array();
-	$_stmt_array['stmt'] = "UPDATE os_users_".$_SESSION['os_user']." SET username=? ";
-	$_stmt_array['str_types'] = "s";
-	$_stmt_array['arr_values'] = array();
-	$_stmt_array['arr_values'][] = $PARAM['userName'];
-	unset($_result_array);
-	$_result_array = _execute_stmt($_stmt_array,$conn); 
+    //prevent empty username (cannot be done in database since there is a dummy entry with NULL values)
+    if ( isset($PARAM['userName']) AND $PARAM['userName'] != '' ) {
+        unset($_stmt_array); $_stmt_array = array();
+        $_stmt_array['stmt'] = "UPDATE os_users_".$_SESSION['os_user']." SET username=? ";
+        $_stmt_array['str_types'] = "s";
+        $_stmt_array['arr_values'] = array();
+        $_stmt_array['arr_values'][] = $PARAM['userName'];
+        unset($_result_array);
+        $_result_array = _execute_stmt($_stmt_array,$conn);
+    } 
 	unset($_stmt_array); $_stmt_array = array();
 	$_stmt_array['stmt'] = "SELECT username from os_users_".$_SESSION['os_user'];
 	unset($_result_username);
